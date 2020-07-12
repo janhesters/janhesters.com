@@ -1,4 +1,5 @@
 import { Dialog } from '@reach/dialog';
+import { SkipNavContent, SkipNavLink } from '@reach/skip-nav';
 import PropTypes from 'prop-types';
 import React, { Fragment } from 'react';
 
@@ -15,6 +16,7 @@ const LayoutComponent = ({
   t,
 }) => (
   <Fragment>
+    <SkipNavLink />
     <HeaderContainer onBurgerMenuClick={onBurgerMenuClick} open={open} />
     <Dialog
       onDismiss={onDismiss}
@@ -23,6 +25,7 @@ const LayoutComponent = ({
     >
       <DrawerContainer />
     </Dialog>
+    <SkipNavContent />
     {children}
 
     <style jsx global>{`

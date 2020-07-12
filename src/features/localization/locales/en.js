@@ -5,8 +5,13 @@ export const en = {
       'Jan Hesters is a developer at Hopin. After studying physics, he ventured into the startup world and became a programmer. He is specialized in React and Node and has a strong passion for crypto.',
     imprint: 'Imprint',
   },
+  archive: {
+    description:
+      "Bonus posts consists of special content that doesn't fit the main feed and archived articles (because of various reasons). Enjoy reading them.",
+  },
   common: {
     about: 'About',
+    archive: 'Bonus Posts',
     burgerMenuContent: 'Burger Menu Content',
     cancel: 'Cancel',
     closeBurgerMenu: 'Close Burger Menu',
@@ -17,6 +22,7 @@ export const en = {
     openBurgerMenu: 'Open Burger Menu',
     subscribe: 'Subscribe',
     subscribeToJanHesters: 'Subscribe to Jan Hesters',
+    more: 'More',
     twitter: 'Twitter',
   },
   subscribe: {

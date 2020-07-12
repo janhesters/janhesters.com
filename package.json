@@ -4,20 +4,28 @@
     "url": "https://twitter.com/janhesters"
   },
   "dependencies": {
+    "@mdx-js/loader": "1.6.6",
+    "@mdx-js/react": "1.6.6",
+    "@next/mdx": "9.4.4",
     "@reach/dialog": "0.10.4",
+    "@reach/skip-nav": "0.10.5",
     "@reach/visually-hidden": "0.10.4",
     "@unly/universal-language-detector": "2.0.3",
     "classnames": "2.2.6",
+    "cuid": "2.1.8",
     "formik": "2.1.4",
     "js-cookie": "2.2.1",
-    "next": "9.4.4",
+    "next": "9.5.2",
     "next-cookies": "2.0.3",
+    "next-seo": "4.7.1",
+    "prism-react-renderer": "1.1.1",
     "prop-types": "15.7.2",
     "ramda": "0.27.0",
     "react": "16.13.1",
     "react-dom": "16.13.1",
     "react-toggle": "4.1.1",
     "rosetta": "1.0.1",
+    "slugify": "1.4.4",
     "use-dark-mode": "2.3.1",
     "yup": "0.29.1"
   },
@@ -50,6 +58,9 @@
   },
   "name": "janhesters",
   "private": true,
+  "resolutions": {
+    "webpack": "^5.0.0-beta.22"
+  },
   "scripts": {
     "build": "next build",
     "dev": "next dev",

@@ -1,4 +1,5 @@
 import Head from 'next/head.js';
+import Link from 'next/link.js';
 import PropTypes from 'prop-types';
 import React, { Fragment } from 'react';
 
@@ -10,7 +11,7 @@ const AboutPageComponent = ({ t }) => (
 
     <main className="about-page--root">
       <img
-        alt={t('commen.janHesters')}
+        alt={t('common.janHesters')}
         className="about-page--profile-photo"
         src="/jan.jpeg"
       />
@@ -21,9 +22,9 @@ const AboutPageComponent = ({ t }) => (
     </main>
 
     <footer className="about-page--footer">
-      <button className="about-page--imprint-button">
-        {t('about.imprint')}
-      </button>
+      <Link href="/imprint">
+        <a className="about-page--imprint-button">{t('about.imprint')}</a>
+      </Link>
     </footer>
   </Fragment>
 );

@@ -53,6 +53,17 @@ test("'Jan Hesters' title should navigate to the home page", async t => {
   await t.expect(actual).eql(expected);
 });
 
+test("'Archive' button should navigate to the archive page", async t => {
+  const archiveButton = screen.getByText('Bonus Posts');
+
+  await t.click(archiveButton).wait(500); // wait for navigation to happen
+
+  const actual = Selector('title').innerText;
+  const expected = 'Bonus Posts | Jan Hesters';
+
+  await t.expect(actual).eql(expected);
+});
+
 fixture`Mobile: Jan Hesters home page`
   .page(`${protocol}://${host}:${port}`)
   .beforeEach(async t => {
@@ -87,6 +98,17 @@ test("'About' button should navigate to the about page", async t => {
 
   const actual = Selector('title').innerText;
   const expected = 'About Jan Hesters';
+
+  await t.expect(actual).eql(expected);
+});
+
+test("'Archive' button should navigate to the archive page", async t => {
+  const archiveButton = screen.getByText('Bonus Posts');
+
+  await t.click(archiveButton).wait(500); // wait for navigation to happen
+
+  const actual = Selector('title').innerText;
+  const expected = 'Bonus Posts | Jan Hesters';
 
   await t.expect(actual).eql(expected);
 });

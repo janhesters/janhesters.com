@@ -1,0 +1,205 @@
+import { createPostMetaData } from 'features/posts/posts-factories.js';
+import { withPost } from 'hocs/with-post.js';
+
+export const meta = createPostMetaData({
+  date: '2020-08-05',
+  description: 'Ensure the reducer returns a valid initial state. Test actions together with their handlers and set these tests up with factory functions. For each action test how it modifies the reducer with initial as well as with populated state. Test selectors in conjunction with the root reducer. Set up selector tests by reducing over actions.',
+  id: 'ckc92u60f0000utjofcuv9v2g',
+  tags: ['redux','reducers', 'unit-testing', 'testing', 'riteway', 'useReducer'],
+  title: 'Unit Testing Reducers',
+});
+
+export default withPost(meta);
+
+Pure functions are simple and so should be their tests (when using the correct techniques). Reducers, action creators (which aren't thunks) and selectors are pure functions. After you read this article, when you apply these techniques, you'll simplify your tests and improve your code.
+
+The tests in the examples are written with [RITEway](https://medium.com/javascript-scene/rethinking-unit-test-assertions-55f59358253f) because it has a genius API that forces you to write good tests. RITEway only exposes an equality assertion, which is perfect for testing [pure functions](https://medium.com/javascript-scene/master-the-javascript-interview-what-is-a-pure-function-d1c076bec976).
+
+I'll let you read the code now first, and afterwards we analyse the structure of the tests.
+
+```js
+import { combineReducers } from 'redux';
+import { describe } from 'riteway';
+
+const slice = 'count';
+const initial = {
+  count: 0,
+};
+
+const incrementBy = payload => ({ type: incrementBy.type, payload });
+incrementBy.type = `${slice}/incrementBy`;
+
+const reducer = (state = initial, { type, payload } = {}) => {
+  switch (type) {
+    case incrementBy.type:
+      return { ...state, count: state.count + payload };
+    default:
+      return state;
+  }
+};
+
+const getCount = ({ [slice]: { count } }) => count;
+
+const rootReducer = combineReducers({ [slice]: reducer });
+
+const createState = ({ count = 0 } = {}) => ({ count });
+
+describe('counter reducer', async assert => {
+  assert({
+    given: 'no arguments',
+    should: 'return the valid initial state',
+    actual: reducer(),
+    expected: createState(),
+  });
+
+  {
+    const summand = 5;
+
+    assert({
+      given: 'no state and an increment by action',
+      should: 'increment the count by the payload',
+      actual: reducer(undefined, incrementBy(summand)),
+      expected: createState({ count: summand }),
+    });
+  }
+
+  {
+    const count = 41;
+    const summand = 1;
+    const state = createState({ count });
+
+    assert({
+      given: 'state with a count and an increment by action',
+      should: 'increment the count by the payload',
+      actual: reducer(state, incrementBy(summand)),
+      expected: createState({ count: 42 }),
+    });
+  }
+
+  assert({
+    given: 'default state and a get count selector',
+    should: 'return 0',
+    actual: getCount(rootReducer()),
+    expected: 0,
+  });
+
+  {
+    const summand = 42;
+    const state = rootReducer(undefined, incrementBy(summand));
+
+    assert({
+      given: 'state with a count and a get count selector',
+      should: 'return the current count',
+      actual: getCount(state),
+      expected: summand,
+    });
+  }
+});
+```
+
+In the example above, we combined the logic and the tests. Usually, the code would live in at least three files (`counter-reducer.js`, `counter-reducer.test.js` and `root-reducer.js`):
+
+```
+src/
+├── ...
+├── features/
+│   ├── ...
+│   └── counter/
+│       ├── ...
+│       └── counter-reducer.js
+│       └── counter-reducer.test.js
+├── redux/
+│   ├── root-reducer.js
+│   ├── root-saga.js
+│   └── store.js
+└── index.test.js
+```
+
+The first test tests the reducer without arguments. A reducer that returns its initial state when called without arguments is not in Redux' official reducer specification. However, it's helpful for tests (- we will see below exactly how -) or to populate initial state for [the `useReducer` Hook](https://reactjs.org/docs/hooks-reference.html#usereducer).
+
+```js
+const [state, dispatch] = useReducer(reducer, reducer());
+```
+
+Suppose you can't call your reducers without arguments (for example because you're using [Redux Toolkit](https://redux-toolkit.js.org/)). In that case, you can write this test by passing `undefined` and an empty object.
+
+```js
+assert({
+  given: 'no state with an empty action',
+  should: 'return the valid initial state',
+  actual: reducer(undefined, {}),
+  expected: createState(),
+});
+```
+
+**Note:** If you are looking for an alternative to Redux Toolkit that supports empty argument reducers, check out [Autodux](https://github.com/ericelliott/autodux).
+
+Test the action creators tightly coupled to your reducer by invoking both in your tests. Avoid action creator tests that assert on their returned action object because all you care about is how they modify the state of your reducer. Using action creators and their handlers together is the most efficient and effective way to test action creators and reducer functions.
+
+Use a factory function like `createState` to set up the tests for action creators. (For selectors, directly use the `rootReducer` in conjunction with your actions to compose the state.) You can easily debug the factory function, which allows you to describe the exact state shape that you want. Favor a factory function over inlining the reducer's complete state because it's shorter to overwrite the relevant keys. Avoid using actions creators in the setup for your action creator tests because you don't know whether they behave correctly at that point. Sometimes (e.g. for complex reducers with many keys) you should additionally use a `createPopulatedState` factory function.
+
+```js
+const createPopulatedState = ({
+  count: 14
+  /* , ... more populated values for more keys */
+} = {}) => createState({ count /* , ... more keys */ });
+```
+
+Furthermore, notice how the action creators are tightly coupled to their actions and the case statements, so there is no need to worry about importing or using the right constant. If you have an action creator, you have its type (via `incrementBy.type`, or `incrementBy().type`).
+
+You should always write at least two tests for each action creator. One to test how it affects the reducer with no prior state (= initial state), and one to test how it interacts with existing state (of the same slice, obviously). (Sometimes you need more than one test for the "with state" scenario.)
+
+Using `createPopulatedState` you can simplify your "with existing state" action creator test cases.
+
+```js
+{
+  const summand = 1;
+  const state = createPopulatedState();
+
+  assert({
+    given: 'state with a count and an increment by action',
+    should: 'increment the count by the payload',
+    actual: reducer(state, incrementBy(summand)),
+    expected: createPopulatedState({ count: 42 /* , ... rest untouched */ }),
+  });
+}
+```
+
+And best of all, if your action creator tests pass, you know that they change the state the way you intended. At this point, it's okay to use them in your selector tests to set up state. You also want to test the selectors with your `rootReducer`. (For local state with `useReducer`, you replace `rootReducer` with the `reducer` you're testing.) Using selectors in conjunction with action creators and your `rootReducer` gives you confidence that:
+
+1. You hooked up your reducer to your `rootReducer`, and you did it correctly.
+2. Your action creators work when interacting with each other  (- if you use several to set up the test).
+3. Your selectors return the correct value.
+
+You should test selectors with at least two cases, too: One with default state and one with the state you desire. For the default state, you can call the `rootReducer` without arguments to get the global initial state. And again, if you can't call your `rootReducer` without arguments to produce the default state (for example because you're using [Redux Persist](https://github.com/rt2zz/redux-persist)), you can create and export the `rootState` from your `root-reducer.js` file.
+
+```js
+// root-reducer.js
+const rootReducer = combineReducers({ /* ... */ });
+
+const rootState = rootReducer(undefined, {});
+
+export { rootReducer, rootState };
+
+// in counter-reducer.test.js
+import { rootReducer, rootState } from 'redux/root-reducer.js';
+import { setOffset } from 'features/offset/offset-reducer.js';
+
+// ...
+
+assert({
+  given: 'default state and a get count selector',
+  should: 'return 0',
+  actual: getCount(rootState),
+  expected: 0,
+});
+
+{
+  const actions = [incrementBy(10), setOffset(10), incrementBy(12)];
+  const state = actions.reduce(rootReducer, rootState);
+
+  assert({
+    given: 'state with a count, an offset and a get count selector',
+```
+
+To test the selectors behavior with state, you can create an `actions` array and `reduce` over it to build up the state. This is an excellent technique because it works well even if your reducer depends on several pieces of state controlled by multiple actions (and slices e.g. `setOffset`).
