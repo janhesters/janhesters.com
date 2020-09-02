@@ -40,7 +40,7 @@ const Code = ({ children, className, isDarkModeActive }) => {
   const language = className?.replace(/language-/, '');
 
   const theme = isDarkModeActive
-    ? mergeDeepRight(nightOwl, { plain: { backgroundColor: '#000' } })
+    ? mergeDeepRight(nightOwl, { plain: { backgroundColor: '#141414' } })
     : mergeDeepRight(nightOwlLight, { plain: { backgroundColor: '#ffffff' } });
 
   return (

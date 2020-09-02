@@ -72,7 +72,13 @@ fixture`Mobile: Jan Hesters home page`
     });
   })
   .afterEach(async t => {
-    await t.resizeWindow(1024, 768);
+    try {
+      await t.resizeWindow(1024, 768);
+    } catch (error) {
+      if (!error.errStack.includes('ResizeObserver')) {
+        throw error;
+      }
+    }
   });
 
 test("'Twitter' button should navigate to Jan's Twitter profile", async t => {

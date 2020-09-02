@@ -1,6 +1,7 @@
 import Link from 'next/link.js';
 import PropTypes from 'prop-types';
 import React from 'react';
+import { toUSDate } from 'utils/fp';
 
 const PostListItemComponent = ({ date, description, slug, t, title }) => (
   <li className="post-list-item">
@@ -9,7 +10,7 @@ const PostListItemComponent = ({ date, description, slug, t, title }) => (
         <a>{title}</a>
       </Link>
     </h2>
-    <div className="post-list-item--date">{date}</div>
+    <div className="post-list-item--date">{toUSDate(date)}</div>
     <p className="post-list-item--description">
       {description}
       <Link href="/[postSlug]" as={`/${slug}`}>

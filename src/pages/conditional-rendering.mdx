@@ -1,4 +1,4 @@
-import { createPostMetaData } from 'features/posts/posts-factories.js';
+import { createRelatedPostMetaData, createPostMetaData } from 'features/posts/posts-factories.js';
 import { withPost } from 'hocs/with-post.js';
 
 export const meta = createPostMetaData({
@@ -7,6 +7,18 @@ export const meta = createPostMetaData({
   id: 'ckcj6b2pm0000z2joezus5bof',
   tags: ['conditional rendering', 'react', 'operand selector operators'],
   title: 'Conditional Rendering',
+  related: [
+    createRelatedPostMetaData({
+      date: '2019-07-09',
+      id: 'ckchzar3200003ojo6haeg3xm',
+      title: 'Arrow Functions',
+    }),
+    createRelatedPostMetaData({
+      date: '2019-05-14',
+      id: 'ckcjcnsep0000xzjo62plbw3q',
+      title: 'useCallback vs useMemo',
+    }),
+  ]
 });
 
 export default withPost(meta);
@@ -213,5 +225,3 @@ const bar = getName(anon); // {}
 foo.hasOwnProperty('name'); // true
 bar.hasOwnProperty('name'); // false
 ```
-
-If you liked this article you might also like ["useCallback vs. useMemo"](/usecallback-vs-usememo) where we explore the differences between the two Hooks or the more beginner friendly post: ["Arrow Functions."](/arrow-functions)

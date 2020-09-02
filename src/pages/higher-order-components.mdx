@@ -1,4 +1,4 @@
-import { createPostMetaData } from 'features/posts/posts-factories.js';
+import { createPostMetaData, createRelatedPostMetaData } from 'features/posts/posts-factories.js';
 import { withPost } from 'hocs/with-post.js';
 
 export const meta = createPostMetaData({
@@ -7,6 +7,13 @@ export const meta = createPostMetaData({
   id: 'ckchyrqzl00003ejoh11mbjh6',
   tags: ['react', 'hoc', 'higher-order'],
   title: 'Higher-Order Components',
+  related: [
+    createRelatedPostMetaData({
+      date: '2019-05-14',
+      id: 'ckcjcnsep0000xzjo62plbw3q',
+      title: 'useCallback vs useMemo',
+    })
+  ]
 });
 
 export default withPost(meta);

@@ -13,7 +13,7 @@ export const SEO = {
     description,
     images: [
       {
-        url: 'https://janhesters.com/logo.png',
+        url: 'https://janhesters.com/logo.jpg',
         alt: title,
         width: 1200,
         height: 700,

@@ -2,7 +2,7 @@ export const en = {
   about: {
     aboutJanHesters: 'About Jan Hesters',
     description:
-      'Jan Hesters is a developer at Hopin. After studying physics, he ventured into the startup world and became a programmer. He is specialized in React and Node and has a strong passion for crypto.',
+      'Jan Hesters is a developer at Hopin. After studying physics, he ventured into the startup world and became a programmer. He is specialized in React and Node and has a strong passion for blockchain.',
     imprint: 'Imprint',
   },
   archive: {

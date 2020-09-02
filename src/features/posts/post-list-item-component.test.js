@@ -13,7 +13,7 @@ describe('PostListItem component', async assert => {
     const props = createPostMetaData({
       title: 'How to Write React?',
       description: 'The comprehensive React guide.',
-      date: 'Jul 21, 2020',
+      date: '2020-07-21',
       id: 'ckc90uw0300000jjocrtpgccs',
     });
     const $ = createPostListItem(props);
@@ -34,9 +34,9 @@ describe('PostListItem component', async assert => {
 
     assert({
       given: 'a post',
-      should: 'render the date',
+      should: 'render the date in human readable form',
       actual: $('.post-list-item--date').text(),
-      expected: props.date,
+      expected: 'Jul 21, 2020',
     });
 
     assert({

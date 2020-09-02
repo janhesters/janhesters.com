@@ -1,13 +1,16 @@
 import { MDXProvider } from '@mdx-js/react';
 import { NextSeo } from 'next-seo';
+import Link from 'next/link';
 import PropTypes from 'prop-types';
+import { map } from 'ramda';
 import React, { Fragment } from 'react';
+import { toUSDate } from 'utils/fp.js';
 
 import { components } from './mdx-components.js';
 
 const PostPageComponent = ({
   children,
-  meta: { date, slug, title, description, tags },
+  meta: { date, slug, title, description, tags, related },
 }) => (
   <Fragment>
     <NextSeo
@@ -20,7 +23,7 @@ const PostPageComponent = ({
         description: description,
         article: {
           authors: ['Jan Hesters'],
-          publishedTime: date,
+          publishedTime: toUSDate(date),
           tags,
         },
       }}
@@ -31,10 +34,38 @@ const PostPageComponent = ({
         <h2 className="post-page--title">{title}</h2>
         <MDXProvider components={components}>{children}</MDXProvider>
       </article>
+      <aside className="post-page--aside">
+        <p className="post-page--related-paragraph">Related</p>
+        <ul className="post-page--related-list">
+          {map(
+            ({ id, title, date, slug }) => (
+              <li className="post-page--related-list-item" key={id}>
+                <Link href="/[postSlug]" as={`/${slug}`}>
+                  <a>{title}</a>
+                </Link>
+                <span>{toUSDate(date)}</span>
+              </li>
+            ),
+            related,
+          )}
+        </ul>
+      </aside>
+      <aside className="post-page--aside">
+        <hr />
+        <p className="post-page--paragraph">
+          Do you want to message me about anything? My{' '}
+          <a
+            className="mdx-component--a"
+            href="https://twitter.com/janhesters"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            DMs on Twitter
+          </a>{' '}
+          are open.
+        </p>
+      </aside>
     </main>
-    {/* <aside>
-      List Related Posts
-    </aside> */}
   </Fragment>
 );
 

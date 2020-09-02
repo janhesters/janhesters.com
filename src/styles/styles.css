@@ -1,6 +1,6 @@
 :root {
-  --black: #000;
-  /* --black: #141414; */
+  /* --black: #000; */
+  --black: #141414;
   --black-light: #424242;
   --white: #fff;
   --white-dark: #e7e7e7;
@@ -30,7 +30,7 @@
 
 .light-mode {
   --background-color: var(--white);
-  --text-color: var(--black);
+  --text-color: #000;
   --text-color-alt: var(--black-light);
 }
 
@@ -638,10 +638,50 @@ header a:hover {
   max-width: 800px;
 }
 
+.post-page--aside {
+  margin: 0 auto;
+  max-width: 800px;
+}
+
+.post-page--paragraph {
+  line-height: var(--large);
+}
+
 .post-page--title {
   font-size: var(--x-large);
   font-weight: 500;
   margin: var(--medium) 0;
+}
+
+.post-page--related-paragraph {
+  line-height: var(--large);
+  margin-top: var(--x-large);
+}
+
+.post-page--related-list {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  margin-bottom: var(--x-large);
+}
+
+.post-page--related-list-item {
+  display: flex;
+  flex-direction: column;
+  margin-right: auto;
+}
+
+.post-page--related-list-item a {
+  color: var(--text-color);
+  font-family: Helvetica, system-ui;
+  text-decoration: none;
+  margin-bottom: var(--small);
+  font-size: var(--large);
+}
+
+.post-page--related-list-item a:hover {
+  color: var(--primary-color);
 }
 
 @media only screen and (max-width: 800px) {
@@ -654,5 +694,14 @@ header a:hover {
 
   .post-page--title {
     margin: var(--small) 0;
+  }
+
+  .post-page--related-list {
+    flex-direction: column;
+    margin-bottom: var(--medium);
+  }
+
+  .post-page--related-list-item {
+    margin-bottom: var(--medium);
   }
 }

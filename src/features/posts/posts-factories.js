@@ -20,4 +20,16 @@ const createPostMetaData = ({
   type,
 });
 
-export { createPostMetaData };
+const createRelatedPostMetaData = ({
+  id,
+  title,
+  slug = slugify(title, { lower: true, remove: /[*+~.,()'"!?:@]/g }),
+  date,
+} = {}) => ({
+  id,
+  title,
+  slug,
+  date,
+});
+
+export { createPostMetaData, createRelatedPostMetaData };
