@@ -34,22 +34,24 @@ const PostPageComponent = ({
         <h2 className="post-page--title">{title}</h2>
         <MDXProvider components={components}>{children}</MDXProvider>
       </article>
-      <aside className="post-page--aside">
-        <p className="post-page--related-paragraph">Related</p>
-        <ul className="post-page--related-list">
-          {map(
-            ({ id, title, date, slug }) => (
-              <li className="post-page--related-list-item" key={id}>
-                <Link href="/[postSlug]" as={`/${slug}`}>
-                  <a>{title}</a>
-                </Link>
-                <span>{toUSDate(date)}</span>
-              </li>
-            ),
-            related,
-          )}
-        </ul>
-      </aside>
+      {related.length > 0 && (
+        <aside className="post-page--aside">
+          <p className="post-page--related-paragraph">Related</p>
+          <ul className="post-page--related-list">
+            {map(
+              ({ id, title, date, slug }) => (
+                <li className="post-page--related-list-item" key={id}>
+                  <Link href="/[postSlug]" as={`/${slug}`}>
+                    <a>{title}</a>
+                  </Link>
+                  <span>{toUSDate(date)}</span>
+                </li>
+              ),
+              related,
+            )}
+          </ul>
+        </aside>
+      )}
       <aside className="post-page--aside">
         <hr />
         <p className="post-page--paragraph">

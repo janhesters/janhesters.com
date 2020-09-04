@@ -42,9 +42,28 @@ describe('PostPage component', async assert => {
 
     assert({
       given: 'related posts',
+      should: 'render the related aside',
+      actual: $('.post-page--related-paragraph').length,
+      expected: 1,
+    });
+
+    assert({
+      given: 'related posts',
       should: 'render the related posts',
       actual: $('.post-page--related-list-item').length,
       expected: props.meta.related.length,
+    });
+  }
+
+  {
+    const props = createProps({ meta: { ...createProps().meta, related: [] } });
+    const $ = createPostPage(props);
+
+    assert({
+      given: 'no related posts',
+      should: 'NOT render the related aside',
+      actual: $('.post-page--related-paragraph').length,
+      expected: 0,
     });
   }
 });
