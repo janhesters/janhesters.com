@@ -116,7 +116,27 @@ src/
 └── index.test.js
 ```
 
-The first test tests the reducer without arguments. A reducer that returns its initial state when called without arguments is not in Redux' official reducer specification. However, it's helpful for tests (- we will see below exactly how -) or to populate initial state for [the `useReducer` Hook](https://reactjs.org/docs/hooks-reference.html#usereducer).
+The first test ensures the reducer has the correct initial state. Use a `createState` factory function for this test and avoid exporting the initial state and using it for the assertion.
+
+```js
+// 👇 Avoid exporting your initial state 🚫
+export const initialState = {
+  wrongKey: 'foo',
+  correctKey: 'wrong value'
+  /* missing keys ... */
+};
+
+assert({
+  given: 'no arguments',
+  should: 'return the valid initial state',
+  actual: reducer(),
+  expected: initialState, // 😣 Missed errors 👎
+});
+```
+
+You need to ensure the initial state is correct before you can use it in your tests. If you export it and use it in your assertion, an error might slip through. The initial state could have wrong keys, or the wrong initial values for correct keys or be missing keys and your tests would still pass.
+
+The first test tests the reducer without arguments. A reducer that returns its initial state when called without arguments is not in Redux' official reducer specification. However, it's helpful for selector tests (- we will see below exactly how -) or to populate initial state for [the `useReducer` Hook](https://reactjs.org/docs/hooks-reference.html#usereducer).
 
 ```js
 const [state, dispatch] = useReducer(reducer, reducer());
