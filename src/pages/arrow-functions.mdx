@@ -1,4 +1,4 @@
-import { createPostMetaData } from 'features/posts/posts-factories.js';
+import { createPostMetaData, createRelatedPostMetaData } from 'features/posts/posts-factories.js';
 import { withPost } from 'hocs/with-post.js';
 
 export const meta = createPostMetaData({
@@ -7,6 +7,13 @@ export const meta = createPostMetaData({
   id: 'ckchzar3200003ojo6haeg3xm',
   tags: ['javascript', 'arrow functions', 'beginner', 'difference'],
   title: 'Arrow Functions',
+  related: [
+    createRelatedPostMetaData({
+      date: '2019-07-02',
+      id: 'ckcj6b2pm0000z2joezus5bof',
+      title: 'Conditional Rendering',
+    })
+  ]
 });
 
 export default withPost(meta);
@@ -177,5 +184,3 @@ decr(3); // 2 because decr remembers a as -1
 ```
 
 `add` is a function that takes in `a` and returns a function that takes in `b` that returns the sum of `a` and `b`. The function that takes in `b` remembers `a` in its closure.
-
-If you liked this article, you might also like ["Conditional Rendering"](/conditional-rendering) because we explore `||` and `&&` in it in-depth.
