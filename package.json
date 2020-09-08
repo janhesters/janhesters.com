@@ -60,9 +60,6 @@
   },
   "name": "janhesters",
   "private": true,
-  "resolutions": {
-    "webpack": "^5.0.0-beta.22"
-  },
   "scripts": {
     "build": "next build",
     "dev": "next dev",
