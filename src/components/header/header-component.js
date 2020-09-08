@@ -47,7 +47,7 @@ const HeaderComponent = ({
     {showSubscribe && (
       <div className="header--subscribe-container">
         {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
-        <SubscribeContainer autoFocus={true} onSubmit={onCancelClick} />
+        <SubscribeContainer autoFocus={true} onCancelClick={onCancelClick} />
         <button className="header--cancel-button" onClick={onCancelClick}>
           {t('common.cancel')}
         </button>

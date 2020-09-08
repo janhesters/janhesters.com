@@ -38,7 +38,17 @@ In other words, `useCallback` gives you **[referential equality](https://develop
 
 `useCallback` and `useMemo` both expect a function and an array of dependencies. The difference is that `useCallback` returns its function when the dependencies change while `useMemo` calls its function and returns the result.
 
-Since JavaScript has [first-class functions](https://developer.mozilla.org/en-US/docs/Glossary/First-class_Function), `useCallback(fn, deps)` is equivalent to `useMemo(() => fn, deps)`.
+Since JavaScript has [first-class functions](https://developer.mozilla.org/en-US/docs/Glossary/First-class_Function), 
+
+```js
+useCallback(fn, deps)
+``` 
+
+is equivalent to:
+
+```js
+useMemo(() => fn, deps)
+```
 
 ## Translation
 

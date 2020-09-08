@@ -55,6 +55,7 @@ test('Entering an invalid email should disable the submit button', async t => {
 });
 
 test('Entering a valid email should let you submit it and close the subscribe container', async t => {
+  await t.setNativeDialogHandler(() => true);
   const subscribeButton = screen.getByText('Subscribe');
   await t.click(subscribeButton);
   const emailInput = screen.getByPlaceholderText('Email');
@@ -81,6 +82,7 @@ fixture`Mobile: Subscribe container`
   });
 
 test('Entering a valid email should let you submit it', async t => {
+  await t.setNativeDialogHandler(() => true);
   const burgerMenuButton = Selector('.burger-menu-button');
 
   await t.click(burgerMenuButton);

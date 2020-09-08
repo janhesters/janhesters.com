@@ -5,11 +5,27 @@ import React from 'react';
 import { SubscribeComponent } from './subscribe-component.js';
 import { subscribeValidationSchema } from './validation-schema.js';
 
+const subscribe = async email => {
+  try {
+    const res = await fetch('/api/subscribe', {
+      body: JSON.stringify({ email }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+    });
+
+    const { message } = await res.json();
+
+    alert(message);
+  } catch (error) {
+    alert(error);
+  }
+};
+
 const formikConfig = {
-  onSubmit: ({ email }, { setFieldValue, onSubmit }) => {
-    console.log('email', email);
-    setFieldValue('email', '');
-    onSubmit();
+  onSubmit: ({ email }) => {
+    subscribe(email);
   },
   initialValues: { email: '' },
   validationSchema: subscribeValidationSchema,
@@ -33,15 +49,25 @@ const mapFormikBagToProps = ({
     setFieldValue('email', currentTarget.value),
   onEmailFocus: () => setFieldTouched('email', false),
   onSubmit: handleSubmit,
+  setFieldValue,
+});
+
+const mergeProps = ({ onSubmit, onCancelClick, setFieldValue, ...rest }) => ({
+  onSubmit: (...args) => {
+    onSubmit(...args);
+    setFieldValue('email', '');
+    typeof onCancelClick === 'function' && onCancelClick();
+  },
+  ...rest,
 });
 
 const SubscribeContainer = withTranslation(ownProps => {
   const formikBag = useFormik(formikConfig);
 
-  const props = {
+  const props = mergeProps({
     ...mapFormikBagToProps(formikBag),
     ...ownProps,
-  };
+  });
 
   return <SubscribeComponent {...props} />;
 });
