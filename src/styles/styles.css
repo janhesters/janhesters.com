@@ -622,6 +622,18 @@ header a:hover {
   }
 }
 
+table {
+  border-collapse: collapse;
+}
+
+table, th, td {
+  border: 1px solid var(--text-color);
+}
+
+th, td {
+  padding: var(--x-small);
+}
+
 /* Post */
 
 .post-page--root {

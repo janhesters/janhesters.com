@@ -1,0 +1,453 @@
+import { createPostMetaData } from 'features/posts/posts-factories.js';
+import { withPost } from 'hocs/with-post.js';
+
+export const meta = createPostMetaData({
+  date: '2020-09-20',
+  description: 'Write integration tests with simple and readable assertions that closely resemble how your app is used. Setup RITEway with jsdom and jsdom-global to be able to use Testing Library.',
+  id: 'ckfbehlgn0000lhjof3g8gvy2',
+  tags: ['testing', 'library', 'riteway', 'react', 'integration', 'unit', 'testing', 'javascript', 'node', 'babel', 'setup'],
+  title: 'Testing Library the RITE Way',
+  type: 'hidden',
+});
+
+[RITEway](https://github.com/ericelliott/riteway) shines at creating meaningful assertions. Since React is so popular, RITEway also ships with a built-in `render` function to test React components. You can test pure React components with `render`.
+
+RITEway's API forces you to write good tests that answer [the five questions every unit test must answer](https://medium.com/javascript-scene/what-every-unit-test-needs-f6cd34d9836d). Additionally, RITEway intentionally exposes no interface for mocking because [mocking is a code smell](https://medium.com/javascript-scene/mocking-is-a-code-smell-944a70c90a6a) for tight coupling. But RITEway also exposes no way to fire DOM events.
+
+Therefore RITEway lacks the ability to create integration tests for the DOM out of the box.
+
+One of the most popular tools for DOM integration tests is [Testing Library](https://testing-library.com/). It makes it easy for you to avoid [testing implementation details](https://kentcdodds.com/blog/testing-implementation-details).
+
+You are going to learn how to combine Testing Library with RITEway to **write integration tests with simple and readable assertions that closely resemble how your app is used.**
+
+## General Setup
+
+Feel free to skip this section, if you already have a project set up.
+
+Create a new Next.js app.
+
+```
+npx create-next-app riteway-react-testing-library
+```
+
+Create a `src/` folder at the root of the project and move the `pages/` directory into it. Remove the `styles/` directory.
+
+Delete the styles import in `_app.js` (`import '../styles/globals.css'`).
+
+Create a folder called `features/`. Create another folder `home/` in it.
+
+In `src/pages/index.js` remove all code, then import and export the home component (- which we will create later -) from it.
+
+```js
+import HomePage from 'features/home/home-page-container';
+
+export default HomePage;
+```
+
+[Enable absolute imports](https://nextjs.org/blog/next-9-5#customizable-base-path) by creating `jsconfig.json`.
+
+```json
+{
+  "compilerOptions": {
+    "baseUrl": "./src"
+  }
+}
+```
+
+Install the packages.
+
+```
+yarn add --dev @babel/core @babel/register babel-plugin-module-resolver eslint eslint-config-prettier eslint-plugin-import eslint-plugin-jsx-a11y eslint-plugin-prettier eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-simple-import-sort prettier riteway tap-nirvana watch
+```
+
+Create a `.eslintrc.json` to configure ESLint.
+
+```json
+{
+  "env": {
+      "browser": true,
+      "commonjs": true,
+      "es6": true,
+      "node": true
+  },
+  "extends": [
+      "eslint:recommended",
+      "plugin:react/recommended",
+      "plugin:import/errors",
+      "plugin:import/warnings",
+      "plugin:jsx-a11y/recommended",
+      "plugin:prettier/recommended",
+      "prettier",
+      "prettier/react"
+  ],
+  "parserOptions": {
+      "ecmaFeatures": {
+          "jsx": true
+      },
+      "ecmaVersion": 2020,
+      "sourceType": "module"
+  },
+  "plugins": [
+      "react-hooks",
+      "simple-import-sort",
+      "prettier"
+  ],
+  "rules": {
+      "prettier/prettier": "error",
+      "import/order": "off",
+      "jsx-a11y/anchor-is-valid": [
+          "error",
+          {
+              "components": [
+                  "Link"
+              ],
+              "specialLink": [
+                  "hrefLeft",
+                  "hrefRight"
+              ],
+              "aspects": [
+                  "invalidHref",
+                  "preferButton"
+              ]
+          }
+      ],
+      "react/react-in-jsx-scope": "off",
+      "react/display-name": "off",
+      "react/prop-types": "off",
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+      "simple-import-sort/sort": "error"
+  },
+  "settings": {
+    "import/resolver": {
+        "node": {
+          "paths": ["src"]
+        }
+      },
+      "react": {
+          "version": "detect"
+      }
+  }
+}
+```
+
+Configure Prettier in your `.prettierrc`.
+
+```json
+{
+  "arrowParens": "avoid",
+  "bracketSpacing": true,
+  "htmlWhitespaceSensitivity": "css",
+  "insertPragma": false,
+  "jsxBracketSameLine": false,
+  "jsxSingleQuote": false,
+  "printWidth": 80,
+  "proseWrap": "always",
+  "quoteProps": "as-needed",
+  "requirePragma": false,
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "trailingComma": "all",
+  "useTabs": false
+}
+```
+
+Configure Babel in your `.babelrc`.
+
+```json
+{
+  "env": {
+    "test": {
+      "plugins": [
+        [
+          "module-resolver",
+          {
+            "root": [
+              "."
+            ],
+            "alias": {
+              "features": "./src/features"
+            }
+          }
+        ]
+      ]
+    }
+  },
+  "presets": [
+    [
+      "next/babel"
+    ]
+  ],
+  "plugins": []
+}
+```
+
+Add the scripts to `package.json`.
+
+```js
+"format": "echo 'Linting ...' && npm run -s lint --fix && echo 'Lint complete.'",
+"lint": "eslint --ignore-path .gitignore .",
+"test": "NODE_ENV=test riteway -r @babel/register 'src/**/*.test.js'",
+"watch": "watch 'clear && npm run -s test | tap-nirvana && npm run -s format' src"
+```
+
+## RITEway
+
+RITEway encourages another good practice: separation of concerns through presentation (or display) and container components.
+
+- **Presentation components** are responsible for what's being rendered. They are pure functions and given the same props return the same JSX.
+- **Container components** contain the component's logic. They isolate side-effects and are usually connected to Redux and contain Hooks.
+
+Create the skeleton for a display component in `home-page-component.js` (from now on I'm going to leave out the `src/features/home/` prefix of the file path.)
+
+```jsx
+import React, { Fragment } from 'react';
+
+function HomePage() {
+  return <Fragment></Fragment>
+}
+
+export default HomePage;
+```
+
+This article's example is going to be very contrived so we can focus on the essential.
+
+Create tests for a component that displays a count and has a button to increment the count in `home-page-component.test.js`.
+
+```jsx
+import React from 'react';
+import { describe } from 'riteway';
+import render from 'riteway/render-component.js';
+
+import HomePage from './home-page-component.js';
+
+const createProps = ({ count = 0 } = {}) => ({ count });
+
+describe('HomePage component', async assert => {
+  const createHomePage = (props = {}) => render(<HomePage {...props} />);
+
+  {
+    const props = createProps();
+    const $ = createHomePage(props);
+
+    assert({
+      given: 'a count',
+      should: 'render the count',
+      actual: $('.count').text(),
+      expected: props.count.toString(),
+    });
+  }
+
+  {
+    const props = createProps({ count: 5 });
+    const $ = createHomePage(props);
+
+    assert({
+      given: 'a count',
+      should: 'render the count',
+      actual: $('.count').text(),
+      expected: props.count.toString(),
+    });
+  }
+
+  {
+    const props = createProps();
+    const $ = createHomePage(props);
+
+    assert({
+      given: 'just rendering',
+      should: 'render the increment button',
+      actual: $('.increment-button').length,
+      expected: 1,
+    });
+  }
+});
+```
+
+Run `yarn watch` to start the watch script. All tests should fail. Now make them pass.
+
+```jsx
+import React from 'react';
+
+const HomePage = ({ count, onIncrementClick = () => {} }) => (
+  <main>
+    <p className="count" data-testid="count">
+      {count}
+    </p>
+    <button className="increment-button" onClick={onIncrementClick}>
+      Increment
+    </button>
+  </main>
+);
+
+export default HomePage;
+```
+
+All tests should pass now. (Notice that we need the `data-testid` attribute for the Testing Library tests.)
+
+```
+  HomePage component
+    ✔  Given a count: should render the count
+    ✔  Given a count: should render the count
+    ✔  Given just rendering: should render the increment button
+
+
+  passed: 3,  failed: 0  of 3 tests  (1.3s)
+Linting ...
+Lint complete.
+```
+
+## Testing Library
+
+Install Testing Library as well as jsdom and jsdom-global. The purpose of the latter is to inject `document`, `window` and other DOM API into the Node.js environment.
+
+```
+yarn add --dev @testing-library/react jsdom jsdom-global
+```
+
+Amend your `"test"` script to require jsdom.
+
+```json
+"test": "NODE_ENV=test riteway -r @babel/register -r jsdom-global/register 'src/**/*.test.js'",
+```
+
+Next, create the skeleton for the home page's container component.
+
+```jsx
+import React, { Fragment } from 'react';
+
+function HomePage() {
+  return <Fragment></Fragment>
+}
+
+export default HomePage;
+```
+
+The integration test should test that the button click works and correctly increments the count.
+
+```jsx
+import { fireEvent, render } from '@testing-library/react';
+import { describe } from 'riteway';
+
+import HomePage from './home-page-container.js';
+
+describe('HomePage container', async assert => {
+  const { getByText, getByTestId } = render(<HomePage />);
+
+  fireEvent.click(getByText(/increment/i));
+
+  assert({
+    given: "a click on the 'Increment' button",
+    should: 'increment the count',
+    actual: getByTestId('count').textContent,
+    expected: '1',
+  });
+});
+```
+
+This test should fail. Use `useState` to make it pass.
+
+```jsx
+import React, { useState } from 'react';
+
+import HomePageComponent from './home-page-component.js';
+
+function HomePage() {
+  const [count, setCount] = useState(0);
+
+  function handleIncrementClick() {
+    setCount(c => c + 1);
+  }
+
+  const props = {
+    count,
+    onIncrementClick: handleIncrementClick,
+  };
+
+  return <HomePageComponent {...props} />;
+}
+
+export default HomePage;
+```
+
+All tests are passing now.
+
+```
+  HomePage component
+    ✔  Given a count: should render the count
+    ✔  Given a count: should render the count
+    ✔  Given just rendering: should render the increment button
+
+  HomePage container
+    ✔  Given a click on the 'Increment' button: should increment the count
+
+
+  passed: 4,  failed: 0  of 4 tests  (2.4s)
+Linting ...
+Lint complete.
+```
+
+## When to Use What?
+
+As a rule of thumb use RITEway's `render` to test your pure components and RITEway with Testing Library for your container components. Isolate side-effects and test them with RITEway unit tests. Cover your app's crucial paths with E2E tests.
+
+There is always a trade-off between using RITEway, Testing Library, and E2E testing tools (such as TestCafe or Cypress) in the form of coverage duplication, execution speed and confidence.
+
+| Tool            | Pros                                                                                                                                                                                                                                           | Cons                                                                                                                                   |
+|-----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
+| RITEway         | - runs the fastest (basically instant after Babel compiled) <br/> - good for pure components (map props to JSX) <br/> - good for other unit tests ([reducers](https://janhesters.com/unit-testing-reducers), sagas, other pure functions etc.) | - No way to do user interactions <br/> - jQuery selectors                                                                                    |
+| Testing Library | - faster than E2E tests <br/> - ability to simulate user interactions <br/> - implementation independent selectors                                                                                                                             | - lower confidence than E2E tests <br/> - can lead to mocking hell (used wrongly)                                                            |
+| E2E             | - actual API requests <br/> - no / few mocks <br/> - UI actually rendered in browser <br/> - ability to test cross browser functionality                                                                          | - slow <br/> - sometimes flaky <br/> - difficult to write well (e.g. [isolated](https://janhesters.com/test-desiderata), parallelized) |
+
+Choose the right tool for the right job.
+
+**Note:** I list jQuery selectors as a con for RITEway here because I compare them to the confidence of Testing Library's selectors. RITEway's selectors are fantastic for the job they're intended to do.
+
+## `fn`
+
+Maybe you encountered an edge case where you need a Jest-like `fn` function to mock something. You can define a mock function and import it in your tests.
+
+```js
+function fn(implementation = () => {}) {
+  const mockFn = (...args) => {
+    mockFn.calls.push(args);
+    return implementation(...args);
+  };
+
+  mockFn.calls = [];
+  return mockFn;
+}
+
+export default fn;
+```
+
+You can use it to mock function calls and track with which arguments the mock has been called. Remember to properly teardown and restore your mocked functions.
+
+```js
+import { describe } from 'riteway';
+
+import fn from './mock-fn.js';
+
+describe('fn - the mock function', async assert => {
+  const mockedFn = fn((a, b) => a + b);
+
+  assert({
+    given: 'calling a mocked function',
+    should: 'should return the correct result',
+    actual: mockedFn(21, 21),
+    expected: 42,
+  });
+
+  assert({
+    given: "a mocked function's calls",
+    should: 'return the correct args',
+    actual: mockedFn.calls,
+    expected: [[21, 21]],
+  });
+});
+```
+
+Check out [this GitHub repository](https://github.com/janhesters/riteway-testing-library), which contains the complete code.
+
+export default withPost(meta);
