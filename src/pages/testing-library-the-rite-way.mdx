@@ -327,7 +327,7 @@ export default HomePage;
 The integration test should test that the button click works and correctly increments the count.
 
 ```jsx
-import { fireEvent, render } from '@testing-library/react';
+import { cleanup, fireEvent, render } from '@testing-library/react';
 import { describe } from 'riteway';
 
 import HomePage from './home-page-container.js';
@@ -343,6 +343,8 @@ describe('HomePage container', async assert => {
     actual: getByTestId('count').textContent,
     expected: '1',
   });
+
+  cleanup()
 });
 ```
 

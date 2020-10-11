@@ -6,6 +6,7 @@ import {
 
 const withIsDarkModeActive = Component => props => {
   const isDarkModeActive = useContext(IsDarkModeActiveContext);
+  console.log(isDarkModeActive);
 
   return <Component isDarkModeActive={isDarkModeActive} {...props} />;
 };
