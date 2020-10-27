@@ -38,7 +38,6 @@ class MyDocument extends Document {
           <meta name="theme-color" content="#82AAFF" />
         </Head>
         <body>
-          <script src="noflash.js" />
           <Main />
           <NextScript />
         </body>

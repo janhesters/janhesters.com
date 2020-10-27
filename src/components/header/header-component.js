@@ -1,6 +1,5 @@
 import VisuallyHidden from '@reach/visually-hidden';
 import classNames from 'classnames';
-import { DarkModeToggleContainer } from 'features/dark-mode/dark-mode-toggle-container.js';
 import { SubscribeContainer } from 'features/subscribe/subscribe-container';
 import Link from 'next/link.js';
 import PropTypes from 'prop-types';
@@ -24,11 +23,6 @@ const HeaderComponent = ({
           <a>{t('common.janHesters')}</a>
         </Link>
       </h1>
-
-      <DarkModeToggleContainer
-        className="theme-toggle theme-toggle--mobile"
-        name="theme-toggle"
-      />
 
       <button className="burger-menu-button" onClick={onBurgerMenuClick}>
         <VisuallyHidden>
@@ -79,12 +73,6 @@ const HeaderComponent = ({
           >
             {t('common.subscribe')}
           </button>
-        </li>
-        <li>
-          <DarkModeToggleContainer
-            className="theme-toggle theme-toggle--desktop"
-            name="theme-toggle"
-          />
         </li>
       </ul>
     </nav>

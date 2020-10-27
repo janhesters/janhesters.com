@@ -20,6 +20,10 @@
   --xxx-large: 128px;
 
   --mobile-breakpoint: 800px;
+
+  --background-color: var(--black);
+  --text-color: var(--white);
+  --text-color-alt: var(--white-dark);
 }
 
 .dark-mode {
@@ -29,10 +33,15 @@
 }
 
 .light-mode {
+  --background-color: var(--black);
+  --text-color: var(--white);
+  --text-color-alt: var(--white-dark);
+}
+/* .light-mode {
   --background-color: var(--white);
   --text-color: #000;
   --text-color-alt: var(--black-light);
-}
+} */
 
 /* React Toggle */
 

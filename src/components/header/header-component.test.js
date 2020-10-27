@@ -26,13 +26,6 @@ describe('Header component', async assert => {
 
     assert({
       given: 'just rendering',
-      should: 'render two toggles',
-      actual: $('.theme-toggle').length,
-      expected: 2,
-    });
-
-    assert({
-      given: 'just rendering',
       should: "render an 'About' button",
       actual: $('.header--about').length,
       expected: 1,

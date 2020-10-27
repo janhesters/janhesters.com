@@ -5,7 +5,6 @@ import 'styles/styles.css';
 
 import { DefaultSeo } from 'next-seo';
 import React, { Fragment } from 'react';
-import { ThemeProvider } from 'styles/theme-provider.js';
 
 import { SEO } from '../../next-seo.config';
 
@@ -14,9 +13,7 @@ function MyApp({ Component, pageProps }) {
   return (
     <Fragment>
       <DefaultSeo {...SEO} />
-      <ThemeProvider>
-        <Component {...pageProps} />
-      </ThemeProvider>
+      <Component {...pageProps} />
     </Fragment>
   );
 }

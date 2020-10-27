@@ -1,46 +1,10 @@
 /* eslint-disable react/prop-types */
-import { withIsDarkModeActive } from 'hocs/theme.js';
 import NativeLink from 'next/link';
 import Highlight, { defaultProps } from 'prism-react-renderer';
 import nightOwl from 'prism-react-renderer/themes/nightOwl';
 import nightOwlLight from 'prism-react-renderer/themes/nightOwlLight';
 import { mergeDeepRight } from 'ramda';
 import React from 'react';
-
-export const determineDarkMode = () => {
-  const isServerSide = typeof window === 'undefined';
-
-  if (isServerSide) {
-    return false;
-  }
-
-  const storageKey = 'darkMode';
-  const classNameDark = 'dark-mode';
-
-  const preferDarkQuery = '(prefers-color-scheme: dark)';
-  const mql = window.matchMedia(preferDarkQuery);
-  const supportsColorSchemeQuery = mql.media === preferDarkQuery;
-
-  let localStorageTheme = null;
-
-  try {
-    localStorageTheme = localStorage.getItem(storageKey);
-  } catch (err) {
-    console.log(err);
-  }
-  const localStorageExists = localStorageTheme !== null;
-  if (localStorageExists) {
-    localStorageTheme = JSON.parse(localStorageTheme);
-  }
-
-  if (localStorageExists) {
-    return localStorageTheme;
-  } else if (supportsColorSchemeQuery) {
-    return mql.matches;
-  } else {
-    return document.body.classList.contains(classNameDark);
-  }
-};
 
 export const GenericLink = props => {
   if (props.href.startsWith('/') && !props.href.startsWith('/docs')) {
@@ -73,8 +37,7 @@ const BlockQuote = ({ children }) => (
 
 const Code = ({ children, className }) => {
   const language = className?.replace(/language-/, '');
-  const isDarkModeActive = determineDarkMode();
-  console.log('isDarkModeActive in MDX', isDarkModeActive);
+  const isDarkModeActive = true;
 
   const theme = isDarkModeActive
     ? mergeDeepRight(nightOwl, { plain: { backgroundColor: '#141414' } })
@@ -124,7 +87,7 @@ const P = ({ children }) => {
 const components = {
   a: GenericLink,
   blockquote: BlockQuote,
-  code: withIsDarkModeActive(Code),
+  code: Code,
   h2: H2,
   img: Img,
   inlineCode: InlineCode,
