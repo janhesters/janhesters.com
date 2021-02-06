@@ -224,3 +224,30 @@ assert({
 ```
 
 To test the selectors behavior with state, you can create an `actions` array and `reduce` over it to build up the state. This is an excellent technique because it works well even if your reducer depends on several pieces of state controlled by multiple actions (and slices e.g. `setOffset`).
+
+## Tips for TypeScript
+
+You can create the state of a specific slice using the `ReturnType` type.
+
+```ts
+export type CountState = ReturnType<typeof reducer>;
+```
+
+I tend to create a general `StateFactory` type - usually inside of `src/utils/types.ts`, with which I can create the types for factory functions such as `createState` and `createPopulatedState`.
+
+```ts
+// ... in a general types file
+export type StateFactory<T> = (state?: Partial<T>) => T;
+
+// ... inside of the tests
+import {
+  CountState,
+  reducer,
+  // ... more imports
+} from './count-reducer';
+
+type CountStateFactory = StateFactory<CountState>;
+
+const createState: CountStateFactory = ({ /* ... */ }) => ({ /* ... */ });
+const createPopulatedState: CountStateFactory = ({ /* ... */ }) => ({ /* ... */ });
+```

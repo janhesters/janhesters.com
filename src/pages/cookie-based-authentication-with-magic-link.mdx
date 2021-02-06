@@ -1,0 +1,558 @@
+import { createPostMetaData } from 'features/posts/posts-factories.js';
+import { withPost } from 'hocs/with-post.js';
+
+export const meta = createPostMetaData({
+  date: '2020-08-22',
+  description: 'Create a secure cookie-based authentication flow with Magic.',
+  id: 'ckjr9xz8r0000mssnegbl5tfa',
+  tags: ['next.js', 'authentication', 'magic', 'magic.link', 'cookie', 'cookies', 'email'],
+  title: 'Cookie Based Authentication with Magic Link',
+  type: 'hidden',
+});
+
+export default withPost(meta);
+
+[Magic](https://magic.link/) offers an easy and [secure](https://docs.magic.link/security) way to authenticate your users.
+
+There are two ways to authenticate users with Magic.
+
+
+We are going to do it with HTTP session cookies because it allows you to maintain your own sessions without storing user secrets.
+
+
+If it's a web3 app and needs users to be able to sign messages, then you'll need to rely on Magic for sessions because Magic controls the key management. If it's a web2 app (basically any non crypto or non-blockchain app) then you can/should handle your own sessions for 2 reasons.
+
+1) Magic's session lengths aren't customizable. Once a user logs in, they remain logged in for 7 days. By issuing a cookie, you can make its expiration 1 day, 1 week, 1 month, 1 year, etc. You can in control of how ofter a user has to sign in.
+
+2) Some users have privacy settings on their browsers which block 3rd party cookies. Magic relies on storing 3rd party cookies in your users browsers to track sessions. If magic's cookies are being blocked, user sessions don't persist. If you're issuing first party cookies then they will never get blocked by the browser
+
+This tutorial assumes you have an existing project in which you're going to implement authentication. This tutorial will be based on top of the project that gets created in ["How to Set Up Next.js for Production"](/how-to-set-up-nextjs-for-production). It uses Next.js with TypeScript and Jest.
+
+Before we get started, make sure you have your Magic publishable key and your Magic secret. You can obtain them by creating an account on the Magic dashboard.
+
+Install the `devDependencies`. We'll need them for TypeScript and faking test data.
+
+```
+yarn add --dev @jackfranklin/test-data-bot @testing-library/user-event @types/cookie @types/ramda redux-saga-test-plan
+```
+
+Then install [@hapi/iron](https://hapi.dev/module/iron), the Magic client and admin SDKs, the cookie package, Ramda, as well as Formik with Yup.
+
+```
+yarn add @hapi/iron @magic-sdk/admin cookie formik magic-sdk yup ramda
+```
+
+## Serverless Handlers
+
+Let's start by creating some utilities.
+
+Create a `src/utils/types` folder that contains generic type helpers (for this tutorial only `Omit`, which we'll use later for a HOC).
+
+```ts
+export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+```
+
+Create an `src/utils/asyncPipe` function that allows us to compose promises.
+
+```ts
+export type MaybePromise<T> = Promise<T> | T;
+
+export function asyncPipe<A, B>(
+  ab: (a: A) => MaybePromise<B>,
+): (a: MaybePromise<A>) => Promise<B>;
+export function asyncPipe<A, B, C>(
+  ab: (a: A) => MaybePromise<B>,
+  bc: (b: B) => MaybePromise<C>,
+): (a: MaybePromise<A>) => Promise<C>;
+export function asyncPipe<A, B, C, D>(
+  ab: (a: A) => MaybePromise<B>,
+  bc: (b: B) => MaybePromise<C>,
+  cd: (c: C) => MaybePromise<D>,
+): (a: MaybePromise<A>) => Promise<D>;
+export function asyncPipe<A, B, C, D, E>(
+  ab: (a: A) => MaybePromise<B>,
+  bc: (b: B) => MaybePromise<C>,
+  cd: (c: C) => MaybePromise<D>,
+  de: (d: D) => MaybePromise<E>,
+): (a: MaybePromise<A>) => Promise<E>;
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+export function asyncPipe(...fns: Function[]) {
+  return (x: unknown) =>
+    fns.reduce(async (y, function_) => function_(await y), x);
+}
+```
+
+Use `asyncPipe` to create a `src/utils/request` helper function.
+
+```ts
+import { asyncPipe } from './async-pipe';
+
+type RequestArguments = {
+  body?: Record<string, unknown>;
+  includeCredentials?: boolean;
+  method?: string;
+  route: string;
+  token?: string;
+};
+
+const liftedFetch = async ({
+  body,
+  includeCredentials = false,
+  method = 'GET',
+  route,
+  token,
+}: RequestArguments) =>
+  /* istanbul ignore next */
+  await fetch(route, {
+    ...(method !== 'GET' && { body: JSON.stringify(body) }),
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+    method,
+    ...(includeCredentials && { credentials: 'include' }),
+  });
+
+const toJson = async (response: Response) => {
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
+
+  try {
+    const json = await response.json();
+    return json;
+  } catch {
+    return {
+      context: `Nothing parsed in toJson. The response's type was: ${response.type}.`,
+    };
+  }
+};
+
+/**
+ * @returns JSON of request if the response is ok, otherwise it throws.
+ */
+const request = asyncPipe(liftedFetch, toJson);
+
+export default request;
+```
+
+Create an instance of the Magic admin SDK in `src/utils/magic`, which we'll use for our serverless functions.
+
+```ts
+import { Magic } from '@magic-sdk/admin';
+
+const magic = new Magic(process.env.MAGIC_SECRET_KEY);
+
+export default magic;
+```
+
+We need helper methods for our cookie management, so create them in `src/utils/cookies.ts`.
+
+```ts
+import { parse, serialize } from 'cookie';
+import type { NextApiRequest, NextApiResponse } from 'next';
+
+const TOKEN_NAME = 'magic-auth-token';
+const MAX_AGE = 60 * 60 * 24 * 365; // 1 year
+
+function setTokenCookie<T>(response: NextApiResponse<T>, token: string) {
+  const cookie = serialize(TOKEN_NAME, token, {
+    expires: new Date(Date.now() + MAX_AGE * 1000),
+    httpOnly: true,
+    maxAge: MAX_AGE,
+    path: '/',
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+  });
+
+  response.setHeader('Set-Cookie', cookie);
+}
+
+function removeTokenCookie<T>(response: NextApiResponse<T>) {
+  const cookie = serialize(TOKEN_NAME, '', {
+    maxAge: -1,
+    path: '/',
+  });
+
+  response.setHeader('Set-Cookie', cookie);
+}
+
+function parseCookies(request: NextApiRequest) {
+  if (request.cookies) {
+    return request.cookies;
+  }
+
+  const cookie = request.headers?.cookie;
+  return parse(cookie || '');
+}
+
+function getTokenCookie(request: NextApiRequest) {
+  const cookies = parseCookies(request);
+  return cookies[TOKEN_NAME];
+}
+
+export { getTokenCookie, removeTokenCookie, setTokenCookie };
+```
+
+We hardcode the token name so our cookie helper functions operate on the same cookie. 
+
+- `setTokenCookie` takes a response and a token - which will be our [DID token](https://docs.magic.link/decentralized-id) - and attaches it as a cookie to the response.
+- `removeTokenCookie` does the reverse and removes the cookie from a response.
+- `parseCookies` takes a request and extracts an object from a cookie header string.
+- `getTokenCookie` takes a request and extracts the cookie from it using `parseCookies`.
+
+Create some session helpers in `src/utils/sessions.ts`.
+
+```ts
+import Iron from '@hapi/iron';
+import type { NextApiRequest } from 'next';
+
+import { getTokenCookie } from './cookies';
+
+const TOKEN_SECRET = process.env.TOKEN_SECRET || '';
+
+function encryptSession(session: Record<string, unknown>) {
+  return Iron.seal(session, TOKEN_SECRET, Iron.defaults);
+}
+
+function getSession(request: NextApiRequest) {
+  const token = getTokenCookie(request);
+  return token && Iron.unseal(token, TOKEN_SECRET, Iron.defaults);
+}
+
+export { encryptSession, getSession };
+```
+
+- `encryptSession` takes a session object and creates a cookie from it.
+- `getSession` takes a request and returns the decrypted object from it.
+
+Create your first route in `src/features/user-authentication/get-current-user-handler`.
+
+```ts
+import { NextApiHandler } from 'next';
+import { getSession } from 'utils/sessions';
+
+type Data = {
+  user?: {
+    issuer?: string;
+    publicAddress?: string;
+    email?: string;
+  };
+};
+
+const getCurrentUserHandler: NextApiHandler<Data> = async (
+  request,
+  response,
+) => {
+  const session = await getSession(request);
+  response.status(200).json({ user: session || undefined });
+};
+
+export default getCurrentUserHandler;
+```
+
+It decrypts the users session and returns it.
+
+Create a `src/features/user-authentication/logout` handler.
+
+```ts
+import { NextApiHandler } from 'next';
+import { removeTokenCookie } from 'utils/cookies';
+import magic from 'utils/magic';
+import { getSession } from 'utils/sessions';
+
+const logoutHandler: NextApiHandler = async (request, response) => {
+  const session = await getSession(request);
+  await magic.users.logoutByIssuer(session.issuer);
+  removeTokenCookie(response);
+  response.writeHead(302, { Location: '/' });
+  response.end();
+};
+
+export default logoutHandler;
+```
+
+The logout handler simply removes the users session cookie and redirects them to the home page.
+
+Create a `src/features/user-authentication/login` handler.
+
+```ts
+import type { NextApiHandler } from 'next';
+import { setTokenCookie } from 'utils/cookies';
+import magic from 'utils/magic';
+import { encryptSession } from 'utils/sessions';
+
+type ErrorResponse = {
+  message: string;
+};
+
+type SuccessResponse = {
+  done: true;
+};
+
+type Data = ErrorResponse | SuccessResponse;
+
+const loginHandler: NextApiHandler<Data> = async (request, response) => {
+  try {
+    const authHeaders = request.headers.authorization;
+
+    if (authHeaders) {
+      const didToken = magic.utils.parseAuthorizationHeader(authHeaders);
+      const metadata = await magic.users.getMetadataByToken(didToken);
+      const session = { ...metadata };
+      const token = await encryptSession(session);
+      setTokenCookie(response, token);
+      return response.status(200).json({ done: true });
+    }
+
+    return response.status(401).json({ message: 'No token found in request.' });
+  } catch (error) {
+    return response
+      .status(error.status || 500)
+      .json({ message: error.message });
+  }
+};
+
+export default loginHandler;
+```
+
+The login handler expects a DID token in the header of the request. If its there, it decrypts it and creates a cookie for it which it attaches to the response.
+
+Wire up the handlers within `src/pages/api/` and then in `user.ts`, `logout.ts` and `login.ts` respectively by importing and default exporting them.
+
+## HOCs & State
+
+So far this tutorial was pretty setup agnostic because it doesn't matter whether you use [Next.js serverless functions](https://nextjs.org/docs/api-routes/introduction) like we do above, or create these routes on an actual Node.js server. Now, since this tutorial is based on ["How to Set Up Next.js for Production"](/how-to-set-up-nextjs-for-production), we're going to use Redux, which is more setup specific. The general principles are state management tool independent though.
+
+Create a `user-authentication-reducer`.
+
+```ts
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { pipe, prop } from 'ramda';
+import { clear } from 'redux/clear';
+import { RootState } from 'redux/root-reducer';
+
+const slice = 'userAuthentication';
+const initialState = { isAuthenticated: false, loading: false };
+
+export const {
+  actions: { setIsAuthenticated, setLoading },
+  reducer,
+} = createSlice({
+  name: slice,
+  initialState,
+  reducers: {
+    setIsAuthenticated: (state, { payload }: PayloadAction<boolean>) => {
+      state.isAuthenticated = payload;
+    },
+    setLoading: (state, { payload }: PayloadAction<boolean>) => {
+      state.loading = payload;
+    },
+  },
+  extraReducers: {
+    [clear.type]: () => initialState,
+  },
+});
+
+const getUserAuthenticationSlice = (state: RootState) => state[slice];
+
+const getIsAuthenticated = pipe(
+  getUserAuthenticationSlice,
+  prop<'isAuthenticated'>('isAuthenticated'),
+);
+const getAuthenticationLoading = pipe(
+  getUserAuthenticationSlice,
+  prop<'loading'>('loading'),
+);
+
+export type UserAuthenticationState = ReturnType<typeof reducer>;
+
+export { getAuthenticationLoading, getIsAuthenticated, slice };
+```
+
+If you're using TypeScript, it will yell about `redux/clear` not existing and `state[slice]`.
+
+Create `redux/clear` to fix the former.
+
+```ts
+import { createAction } from '@reduxjs/toolkit';
+
+const clear = createAction('all/clear');
+
+export { clear };
+```
+
+Then import the user authentication reducer in your root reducer.
+
+```ts
+import { combineReducers } from '@reduxjs/toolkit';
+import {
+  reducer as userAuthenticationReducer,
+  slice as userAuthenticationSlice,
+} from 'features/user-authentication/user-authentication-reducer';
+
+const rootReducer = combineReducers({
+  [userAuthenticationSlice]: userAuthenticationReducer,
+});
+
+const rootState = rootReducer(undefined, { type: '' });
+
+export type RootState = ReturnType<typeof rootReducer>;
+
+export { rootReducer, rootState };
+```
+
+`src/features/user-authentication/user-authentication-component.tsx`
+
+```tsx
+import {
+  ErrorMessage,
+  Field,
+  Form,
+  Formik,
+  FormikHelpers,
+} from 'formik';
+import { TFunction } from 'next-i18next';
+import * as Yup from 'yup';
+
+export type FormValues = { email: string };
+export type SubmitFunction = (
+  values: FormValues,
+  formikHelpers: FormikHelpers<FormValues>,
+) => void;
+
+type Props = {
+  initialValues: FormValues;
+  loading: boolean;
+  onSubmit: SubmitFunction;
+  readonly t: TFunction;
+};
+
+const UserAuthenticationComponent = ({
+  initialValues,
+  onSubmit,
+  loading,
+  t,
+}: Props) => (
+  <main>
+    <div>
+      <h1>{t('user-authentication:signup-login')}</h1>
+      <p>{t('user-authentication:enter-your-email')}</p>
+
+      <Formik
+        initialValues={initialValues}
+        onSubmit={onSubmit}
+        initialErrors={{ email: '' }}
+        validationSchema={Yup.object().shape({
+          email: Yup.string()
+            .email(t('user-authentication:invalid-email'))
+            .required(t('user-authentication:email-required')),
+        })}
+      >
+        {({ errors, isSubmitting, isValid, touched }) => (
+          <Form>
+            <Field
+              aria-describedby={
+                errors.email && touched.email ? 'email-error' : undefined
+              }
+              aria-label={t('user-authentication:email')}
+              aria-invalid={errors.email && touched.email ? 'true' : undefined}
+              aria-required="true"
+              name="email"
+              placeholder={t('user-authentication:email-placeholder')}
+              type="email"
+            />
+
+            <ErrorMessage name="email">
+              {errorMessage => (
+                <dev id="email-error">{errorMessage}</dev>
+              )}
+            </ErrorMessage>
+
+            <button
+              type="submit"
+              disabled={isSubmitting || !isValid || loading}
+            >
+              {t('user-authentication:signup-login')}
+            </button>
+          </Form>
+        )}
+      </Formik>
+    </div>
+  </main>
+);
+
+export default UserAuthenticationComponent;
+```
+
+
+
+`user-authentication-container.tsx`
+
+```tsx
+import { Magic } from 'magic-sdk';
+import { TFunction, withTranslation } from 'next-i18next';
+import { connect, ConnectedProps } from 'react-redux';
+import { RootState } from 'redux/root-reducer';
+
+import UserAuthenticationComponent, {
+  FormValues,
+  SubmitFunction,
+} from './user-authentication-component';
+import { getAuthenticationLoading } from './user-authentication-reducer';
+import { login } from './user-authentication-saga';
+
+const apiKey = process.env.NEXT_PUBLIC_MAGIC_PUBLISHABLE_KEY || '';
+
+const mapStateToProps = (state: RootState) => ({
+  loading: getAuthenticationLoading(state),
+});
+
+const mapDispatchToProps = { login };
+
+const connector = connect(mapStateToProps, mapDispatchToProps);
+
+type PropsFromRedux = ConnectedProps<typeof connector>;
+
+const initialValues: FormValues = { email: '' };
+
+type Props = {
+  readonly t: TFunction;
+} & PropsFromRedux;
+
+function UserAuthenticationContainer({ login, t, ...ownProps }: Props) {
+  const handleSubmit: SubmitFunction = async (
+    { email },
+    { setSubmitting, setErrors },
+  ) => {
+    try {
+      const magic = new Magic(apiKey);
+      const didToken = await magic.auth.loginWithMagicLink({ email });
+
+      if (didToken) {
+        login({ didToken, email });
+      } else {
+        setErrors({ email: t('user-authentication:login-failed') });
+      }
+    } catch {
+      setErrors({ email: t('user-authentication:login-failed') });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const props = {
+    onSubmit: handleSubmit,
+    initialValues,
+    t,
+    ...ownProps,
+  };
+
+  return <UserAuthenticationComponent {...props} />;
+}
+
+export default withTranslation()(connector(UserAuthenticationContainer));
+```
+
+## Magic! 🧙‍♂️
