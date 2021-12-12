@@ -1,0 +1,19 @@
+import { createPostMetaData } from 'features/posts/posts-factories.js';
+import { withPost } from 'hocs/with-post.js';
+
+export const meta = createPostMetaData({
+  date: '2021-12-12',
+  description: 'Discover Nikolas Chapoupis\' blog.',
+  id: 'ckx3bzklx0000j2xh1kaiefop',
+  slug: 'saas-and-product-led-growth',
+  tags: [
+    'Nikolas Chapoupis',
+    'SaaS'
+  ],
+  title: 'SaaS and Product-Led Growth',
+  type: 'archived',
+});
+
+export default withPost(meta);
+
+My friend Nikolas Chapoupis has launched his blog over at [https://nikolas-chapoupis.com/](https://nikolas-chapoupis.com/). Check it out if you want to learn more about product management.
