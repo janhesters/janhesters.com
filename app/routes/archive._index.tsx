@@ -1,9 +1,10 @@
-import type { MetaFunction } from '@remix-run/node';
 import { Link, useLoaderData } from '@remix-run/react';
+import type { MetaFunction } from '@vercel/remix';
 
 import { buttonVariants } from '~/components/button';
 import { getAllPostsMetaSortedByDate } from '~/features/blog/blog-helpers.server';
-import { cn, getSocialsMeta } from '~/lib/utils';
+import { getSocialsMeta } from '~/lib/misc';
+import { cn } from '~/lib/utils';
 
 export const meta: MetaFunction = () =>
   getSocialsMeta({

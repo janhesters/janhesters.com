@@ -1,6 +1,5 @@
 import './styles/tailwind.css';
 
-import type { LinksFunction, MetaFunction } from '@remix-run/node';
 import {
   isRouteErrorResponse,
   Link,
@@ -13,13 +12,17 @@ import {
   useLocation,
   useRouteError,
 } from '@remix-run/react';
+import type { LinksFunction, MetaFunction } from '@vercel/remix';
 import { Menu } from 'lucide-react';
 import { ComponentProps } from 'react';
 
 import { Button, buttonVariants } from '~/components/button';
 import { Sheet, SheetContent, SheetTrigger } from '~/components/sheet';
 
-import { cn, getSocialsMeta } from './lib/utils';
+import { getSocialsMeta } from './lib/misc';
+import { cn } from './lib/utils';
+
+export const config = { runtime: 'edge' };
 
 export const links: LinksFunction = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },

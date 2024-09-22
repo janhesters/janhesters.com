@@ -1,4 +1,4 @@
-import { getSocialsMeta } from '~/lib/utils';
+import { getSocialsMeta } from '~/lib/misc';
 
 import { BlogPostMeta } from './blog-helpers.server';
 

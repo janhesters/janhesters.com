@@ -1,6 +1,7 @@
 import mdx from '@mdx-js/rollup';
 // import { transformerCopyButton } from '@rehype-pretty/transformers';
 import { vitePlugin as remix } from '@remix-run/dev';
+import { vercelPreset } from '@vercel/remix/vite';
 import type { Options, Theme } from 'rehype-pretty-code';
 import { rehypePrettyCode } from 'rehype-pretty-code';
 import remarkFrontmatter from 'remark-frontmatter';
@@ -34,7 +35,11 @@ export default defineConfig({
         unstable_lazyRouteDiscovery: true,
         unstable_optimizeDeps: true,
       },
+      presets: [vercelPreset()],
     }),
     tsconfigPaths(),
   ],
+  ssr: {
+    noExternal: ['tailwind-merge'],
+  },
 });

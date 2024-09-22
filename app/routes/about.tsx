@@ -1,7 +1,7 @@
-import type { MetaFunction } from '@remix-run/node';
+import type { MetaFunction } from '@vercel/remix';
 
 import { PlatformsComponent } from '~/features/landing/platforms-component';
-import { getSocialsMeta } from '~/lib/utils';
+import { getSocialsMeta } from '~/lib/misc';
 
 export const meta: MetaFunction = () =>
   getSocialsMeta({

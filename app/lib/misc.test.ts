@@ -5,7 +5,7 @@ import {
   getSlugFromUrl,
   getUrl,
   removeTrailingSlash,
-} from './utils';
+} from './misc';
 
 describe('getDomainUrl()', () => {
   test('given a request with X-Forwarded-Host header: returns the correct domain URL', () => {

@@ -1,10 +1,10 @@
 import Cal from '@calcom/embed-react';
-import type { MetaFunction } from '@remix-run/node';
+import type { MetaFunction } from '@vercel/remix';
 import { ArrowRight, Code, Lightbulb, Users } from 'lucide-react';
 
 import { Button } from '~/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/card';
-import { getSocialsMeta } from '~/lib/utils';
+import { getSocialsMeta } from '~/lib/misc';
 
 export const meta: MetaFunction = () =>
   getSocialsMeta({

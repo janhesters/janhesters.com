@@ -1,5 +1,5 @@
 /* eslint-disable unicorn/no-null */
-import { LoaderFunctionArgs, redirect } from '@remix-run/node';
+import { LoaderFunctionArgs, redirect } from '@vercel/remix';
 
 /**
  * A mapping of target paths to arrays of source paths for redirects.
