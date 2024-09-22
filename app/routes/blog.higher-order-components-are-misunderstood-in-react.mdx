@@ -1,0 +1,674 @@
+---
+title: 'Higher-Order Components Are Misunderstood In React'
+datePublished: '2024-09-18'
+description: 'What is higher-order component? And what are some real-world use-cases? This tutorial breaks down why React has higher-order components and what you can do with them.'
+thumbnailUrl: '/images/thumbnails/higher-order-components-are-misunderstood-in-react.jpeg'
+---
+
+import { getUrl } from '../lib/utils';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+When you interview 100s of "senior" React developers, you'd be surprised how many fail to answer this simple question:
+
+> “What is a higher-order component?”
+
+And even less can answer the follow-up question:
+
+> “Why do higher-order components in React exist?”
+
+In other words:
+
+> “Did any React team member consciously create higher-order components as a concept and put them into React?”
+
+In this article, you're going to find out the ***correct*** answers to these questions. And you will learn everything you need to know about HOCs.
+
+**Note:** Make sure you are understanding [arrow functions](https://janhesters.com/arrow-functions) and the basics of [React](https://react.dev/learn).
+
+<iframe
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  allowFullScreen
+  className="aspect-video w-full"
+  frameBorder="0"
+  referrerPolicy="strict-origin-when-cross-origin"
+  src="https://www.youtube.com/embed/FtPv5s7O2x8?si=MISP-QWofgqyL8LO"
+  title="Higher-Order Components Are Misunderstood In React"
+></iframe>
+
+### Abstract
+
+You're first going to see the formal definition of HOCs and through the rest of this article you're going to understand the theory behind it.
+
+A Higher-Order component is a function that takes a component and returns a new component. 
+
+The [React docs](https://reactjs.org/docs/higher-order-components.html) further state:
+
+> "A higher-order component (HOC) is an advanced technique in React for reusing component logic. HOCs are not part of the React API, per se. They are a pattern that emerges from React’s compositional nature."
+
+The theory behind HOCs comes from ...
+
+### Function Composition  
+
+In mathematics, [function composition](https://en.wikipedia.org/wiki/Function_composition) is the act of combining functions to form a new function or a result, by applying one function to the result of another.
+
+In JavaScript, this looks this:
+```js
+const inc = n => n + 1; // f
+const double = n => n * 2; // g
+
+// h(x) = (f ∘ g)(x) = f(g(x))
+
+const doubleThenInc = x => inc(double(x)); // h
+```
+
+Notice how you assign the combined functions to a new variable called `doubleThenInc`, which you can do because JavaScript has **first-class** functions.
+
+You can learn more about first-class functions in [this article](https://www.reactsquad.io/blog/usecallback-vs-usememo), which also explains the difference between `useCallback` and `useMemo`.
+
+A programming language has first-class functions if it allows you to assign functions to variables.
+
+You can abstract the composition to combine any two functions:
+
+```js
+const compose2 = (f, g) => x => f(g(x));
+
+const doubleThenInc2 = compose2(inc, double);
+```
+
+You omit the argument `x` in the definition of `doubleThenInc2`. This means `doubleThenInc2` is defined **point-free**, which is when you define a function without mentioning its arguments.
+
+```js
+const doubleThenInc = x => inc(double(x)); // mentions X 👉 pointed
+const doubleThenInc2 = compose2(inc, double); // point-free
+```
+  
+If you want to compose an arbitrary amount of functions, you need to [generalize the composition](https://medium.com/javascript-scene/curry-and-function-composition-2c208d774983) function. 
+
+```js
+const compose = (...fns) => x => fns.reduceRight((y, f) => f(y), x);
+
+const square = n => n * n;
+
+const doubleThenInc3 = compose(inc, double);
+const doulbeThenIncThenSquare = compose(square, inc, double);
+```
+
+More sophisticated versions of the `compose` function are frequently exposed by libraries that leverage HOCs such as Redux and Apollo.
+
+The arguments and return values of functions have to line up to compose them. For example, you can't compose a function that accepts an object and returns a string with a function that receives an array and returns a number. 
+
+```js
+// (number, number) => number[]
+const echo = (value, times) => Array(times).fill(value);
+// number[] => number[]
+const doubleMap = array => array.map(x => x * 2);
+
+// Correct composition. ✅
+const echoAndDoubleMap = compose(doubleMap, echo);
+
+console.log(echoAndDoubleMap(3, 4)); // [6, 6, 6, 6]
+
+// Incorrect composition that will throw an error. ❌
+const wrongOrder = compose(echo, doubleMap);
+
+try {
+  // This will fail because doubleMap expects an array, 
+  // instead of two numbers.
+  console.log(wrongOrder(3, 4));
+} catch (error) {
+  console.error("Error:", error.message); // Error: array.map is not a function
+}
+```
+
+Since `inc` and `double` both take and return numbers, you can compose them in any order.
+
+```js
+// Composition that doubles then increments. ✅
+const doubleThenInc = compose(inc, double);
+console.log(doubleThenInc(3)); // 7
+
+// Composition that increments then doubles. ✅
+const incThenDouble = compose(double, inc);
+console.log(incThenDouble(3)); 8
+```
+
+Additionally, `compose2` and `compose` are **higher-order functions**. 
+
+A higher-order function is a function that either receives or returns a function or does both.
+
+```js
+const multiply = multiplier => multiplicant => multiplier * multiplicant;
+const double = multiply(2);
+  
+const map = f => arr => arr.map(f);
+
+const doubleMap = map(double);
+ 
+const numbers = [1, 2, 3];  
+
+doubleMap(numbers); // [2, 4, 6]
+``` 
+
+- `multiply` IS a higher-order function because it takes in a number and returns a function.
+- `double` IS NOT a higher-order function because it neither receives nor returns a function. It is defined point-free.
+- `map` IS a higher-order function because it both accepts and returns a function.
+- `doubleMap` IS NOT a higher-order function because it neither receives nor returns a function. It is defined point-free. 
+
+React components can either be functions or classes.
+
+```jsx
+import { Component } from 'react'
+
+function MyFunctionComponent() {
+  return <div>Function</div>
+}
+
+class MyClassComponent extends Component {
+  render() {
+    return <div>Class</div>
+  }
+}
+```
+
+In JavaScript, [the `class` keyword](https://github.com/getify/You-Dont-Know-JS/blob/1st-ed/es6%20%26%20beyond/ch3.md#classes) is essentially a wrapper for the `function` keyword and handles prototypal inheritance. In other words, classes compile to constructor functions.
+
+Therefore, since all components are functions in React and JavaScript has higher-order functions, you get HOCs for free.  That is what the docs mean when they say HOCs "are a pattern that emerges from React’s compositional nature."
+
+Now you should understand the basic definition of HOCs: 
+
+> A Higher-Order component is a function that takes a component and returns a new component.
+
+Any function whose input and output is a React component is a HOC.
+
+### HOCs by Example
+
+You probably want to see what a higher-order component looks like. Follow the rest of this tutorial to write your own using TDD. You're going to use [Vitest](https://vitest.dev/) with [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) to write the tests.
+
+You can deduce two requirements from the definition of a higher-order component: 
+
+1. HOCs are functions.
+2. HOCs take a component and return a component.
+
+You can capture these requirements in a unit test.
+  
+```jsx
+import { render, screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
+
+import myHOC from './my-hoc';
+
+function MyComponent({ title = 'Hello' }) {
+  return <p>{title}</p>;
+}
+
+describe('myHOC', () => {
+  test('given a component: returns the component with a default title', () => {
+    const WrappedComponent = myHOC(MyComponent);
+
+    render(<WrappedComponent />);
+
+    expect(screen.getByText('Hello')).toHaveTextContent('Hello');
+  });
+});
+```
+
+The test checks both requirements because when this test passes, you can logically deduce that your HOC is a function and that it returns a component without spelling out those requirements explicitly. If the HOC were ***not*** a function and you tried to call it, it would throw, and your unit test would fail with a clear stack trace. Likewise, the test renders the return value of the HOC, which ensures it is a React component.
+
+Notice how you did NOT test for `typeof function` here. Unit tests which only test types are an anti-pattern. It's redundant with simply calling the function and checking its output value. In general, type checks are redundant with well-written unit tests. This is why unit tests can catch most type errors, without the need for additional measures like type annotations (though annotations and type inference can still be useful to enable IDE tooling).
+
+You can get the test to pass by making your HOC the [identity function](https://en.wikipedia.org/wiki/Identity_function).
+
+```jsx
+export default Component => Component;
+```
+
+Your test result should now look like this.
+
+```bash
+ ✓ app/my-hoc.test.jsx (1)
+   ✓ myHOC (1)
+     ✓ given a component: returns the component with a default title
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  16:07:11
+   Duration  128ms
+
+
+ PASS  Waiting for file changes...
+       press h to show help, press q to quit
+```
+
+### Why HOCs?
+
+Your current HOC does nothing.  And you're going to change that, soon.
+
+In general, **HOCs excel at abstracting logic or styling.** They allow you to avoid unnecessary code duplication. If you find yourself repeating certain JSX or logic patterns in your component, you might be able to abstract them away using HOCs. 
+
+For example, if you have a page for your web site or a screen for your React Native app, most pages or screens have the same layout. They all share elements such as headers, footers or formatting containers.
+
+### Making Your HOC Useful
+
+You can add styling abilities to our HOC and call it `withLayout` instead of `MyHOC`.
+
+Start by adding a test that verifies that your HOC adds a layout to your component.
+
+```jsx
+import { render, screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
+
+import withLayout from './with-layout';
+
+function MyComponent({ title = 'Hello' }) {
+  return <p>{title}</p>;
+}
+
+describe('withLayout', () => {
+  test('given a component: returns the component with a default title', () => {
+    const WrappedComponent = withLayout(MyComponent);
+
+    render(<WrappedComponent />);
+
+    expect(screen.getByText('Hello')).toHaveTextContent('Hello');
+  });
+
+  test('given a component: renders the layout around the component', () => {
+    const WrappedComponent = withLayout(MyComponent);
+
+    render(<WrappedComponent />);
+
+    expect(screen.getByRole('heading')).toHaveTextContent(/some title/i);
+    expect(screen.getByRole('main')).toContainElement(screen.getByText('Hello'));
+    expect(screen.getByRole('contentinfo')).toHaveTextContent(/some footer/i);
+  });
+});
+```
+
+Watch your test fail, then create a layout component.
+
+```jsx
+export function Layout({ children }) {
+  return (
+    <div>
+      <header>
+        <h1>Some Title</h1>
+      </header>
+
+      <main>
+        {children}
+      </main>
+
+      <footer>
+        <p>Some footer</p>
+      </footer>
+    </div>
+  );
+}
+```
+
+Layouts can vary depending on the app and framework that you're using. In React Native app, you find yourself writing similar layout HOCs using [React Navigation's `<SafeAreaView />`](https://reactnavigation.org/docs/en/handling-iphonex.html). In a Remix app, you won't need a layout HOC because you can export a layout component from your `root.tsx` file.
+
+Now, make your test pass by using the `Layout` component in your HOC.
+
+```jsx
+import { Layout } from './layout';
+
+export default Component => () => (
+  <Layout>
+    <Component />
+  </Layout>
+);
+```
+
+Your tests should both pass now.
+
+```bash
+ ✓ app/with-layout.test.jsx (2)
+   ✓ withLayout (2)
+     ✓ given a component: returns the component with a default title
+     ✓ given a component: renders the layout around the component
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  16:05:39
+   Duration  128ms
+
+
+ PASS  Waiting for file changes...
+       press h to show help, press q to quit
+```
+
+Notice how the `withLayout` HOC now takes in a component and then returns a function because before this change it actually was NOT a higher-order component.
+
+This also shows the most common misconception about HOCs. Many developers answer the question of "What is a higher-order component" with "it's a *component* that takes in a React component and returns it". 
+
+They probably think of something like this.
+
+```jsx
+// Wrong! ❌
+function NotAHigherOrderComponent({ Component }) {
+  return (
+    <div>
+      <h1>Header added by NotAHigherOrderComponent</h1>
+      <Component />
+    </div>
+  );
+}
+
+function MyComponent() {
+  return <p>Hello, I am a regular component.</p>;
+}
+
+function App() {
+  return (
+    <div>
+      <NotAHigherOrderComponent Component={MyComponent} />
+    </div>
+  );
+}
+```
+
+What you see above is a React component that takes in another React component as a prop.
+
+But that's is NOT a higher-order component because HOCs are functions and NOT components. You can NOT render a HOC.
+
+Looking back at the your `withLayout` HOC, it contains a bug. Can you spot it?
+
+If not, that is okay. You can write the following test to expose the error.
+
+```jsx
+describe('withLayout', () => {
+  // ... your other tests
+
+  test('given props for the wrapped component: passes on the props to the wrapped component', () => {
+    const WrappedComponent = withLayout(MyComponent);
+    const customTitle = 'Custom Title';
+
+    render(<WrappedComponent title={customTitle} />);
+
+    expect(screen.getByText(customTitle)).toHaveTextContent(customTitle);
+  });
+});
+```
+
+  The new test fails. 
+
+```bash
+ ❯ app/with-layout.test.jsx (3)
+   ❯ withLayout (3)
+     ✓ given a component: returns the component with a default title
+     ✓ given a component: renders the layout around the component
+     × given props for the wrapped component: passes on the props to the wrapped component
+```
+
+The test exposes the problem: You fail to pass `props` to the wrapped component. You can make the test pass by passing on the props the HOC receives.
+  
+```jsx
+import { Layout } from './layout';
+
+export default Component => props => (
+  <Layout>
+    <Component {...props} />
+  </Layout>
+);
+```
+
+Now your tests pass because your HOC correctly passes on the props to the wrapped component.
+
+```bash
+ ✓ app/with-layout.test.jsx (3)
+   ✓ withLayout (3)
+     ✓ given a component: returns the component with a default title
+     ✓ given a component: renders the layout around the component
+     ✓ given props for the wrapped component: passes on the props to the wrapped component
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  16:55:45
+   Duration  139ms
+
+
+ PASS  Waiting for file changes...
+       press h to show help, press q to quit
+```
+
+However, the abstraction capabilities of HOCs wouldn't be as useful if they didn't have another key feature. [Eric Elliott describes](https://slack-redir.net/link?url=https%3A%2F%2Fmedium.com%2Fjavascript-scene%2Fdo-react-hooks-replace-higher-order-components-hocs-7ae4a08b7b58) it like this:
+
+> "The primary benefit of HOCs is not what they enable (there are other ways to do it); it's how they compose together at the page root level."
+
+In other words, **the key to using HOCs well is to know how and when you want to compose them**. You you write a test to demonstrate the "how". _Spoiler:_ it is fundamentally function composition.
+
+Here is a test that shows how you compose HOCs.
+
+```jsx
+import { render, screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
+
+import withLayout from './with-layout';
+
+function MyComponent({ title }) {
+  return <p>{title}</p>;
+}
+
+describe('withLayout', () => {
+  // ... your other tests
+  
+  test('given used in composition with other HOCs: passes on the props of the other HOCs', () => {
+    const compose = (...fns) => x => fns.reduceRight((y, f) => f(y), x);
+    const withTitle = Component => props => (
+      <Component title="foo" {...props} />
+    );
+    const ComposedComponent = compose(
+      withLayout,
+      withTitle
+    )(MyComponent);
+
+    render(<ComposedComponent />);
+
+    expect(screen.getByText('foo')).toHaveTextContent('foo');
+  });
+});
+```
+
+This test already passes.
+
+You compose `withLayout` with `withTitle`. `withTitle` is a HOC that injects a `title` prop to a component.
+
+### Configuring HOCs
+
+It is common for HOCs to accept configuration objects. You probably encounter this when using [React Redux' `connect`](https://react-redux.js.org/api/connect) with `mapStateToProps`. (In fact, it accepts two more arguments: `mapDispatchToProps` and `mergeProps`.) 
+
+Assume that some pages should render without the header, so you modify your layout component to take in a prop that let's you show and hide the header.
+
+```jsx
+export function Layout({ children, showHeader = true }) {
+  return (
+    <div>
+      {showHeader && (
+        <header>
+          <h1>Some Title</h1>
+        </header>
+      )}
+
+      <main>{children}</main>
+
+      <footer>
+        <p>Some footer</p>
+      </footer>
+    </div>
+  );
+}
+```
+
+Now write a test that allows you to modify your HOC. You'll also need to modify your existing tests to accommodate the fact that your HOC now takes in a configuration object.
+
+```jsx
+import { render, screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
+
+import withLayout from './with-layout';
+
+function MyComponent({ title = 'Hello' }) {
+  return <p>{title}</p>;
+}
+
+describe('withLayout', () => {
+  test('given a component: returns the component with a default title', () => {
+    const WrappedComponent = withLayout()(MyComponent);
+
+    render(<WrappedComponent />);
+
+    expect(screen.getByText('Hello')).toHaveTextContent('Hello');
+  });
+
+  test('given a component: renders the layout around the component', () => {
+    const WrappedComponent = withLayout()(MyComponent);
+
+    render(<WrappedComponent />);
+
+    expect(screen.getByRole('heading')).toHaveTextContent(/some title/i);
+    expect(screen.getByRole('main')).toContainElement(
+      screen.getByText('Hello'),
+    );
+    expect(screen.getByRole('contentinfo')).toHaveTextContent(/some footer/i);
+  });
+
+  test('given props for the wrapped component: passes on the props to the wrapped component', () => {
+    const WrappedComponent = withLayout()(MyComponent);
+    const customTitle = 'Custom Title';
+
+    render(<WrappedComponent title={customTitle} />);
+
+    expect(screen.getByText(customTitle)).toHaveTextContent(customTitle);
+  });
+
+  test('given used in composition with other HOCs: passes on the props of the other HOCs', () => {
+    const compose =
+      (...fns) =>
+      x =>
+        fns.reduceRight((y, f) => f(y), x);
+    const withTitle = Component => props => (
+      <Component title="foo" {...props} />
+    );
+    const ComposedComponent = compose(withLayout(), withTitle)(MyComponent);
+
+    render(<ComposedComponent />);
+
+    expect(screen.getByText('foo')).toHaveTextContent('foo');
+  });
+
+  test('given a component and NOT rendering the header: does NOT render the header', () => {
+    const WrappedComponent = withLayout({ showHeader: false })(MyComponent);
+
+    render(<WrappedComponent />);
+
+    expect(screen.queryByRole('heading')).toBeNull();
+  });
+});
+```
+
+Watch all your tests fail because your component still lacks the configuration object. Add it to make them pass.
+
+```jsx
+import { Layout } from './layout';
+
+export default ({ showHeader = true } = {}) =>
+  Component =>
+  props => (
+    <Layout showHeader={showHeader}>
+      <Component {...props} />
+    </Layout>
+  );
+```
+
+To answer the question of _when_ to use composition for HOCs, remember what I told you learned earlier. HOCs are excellent if you want to abstract away common logic between many components. You chose to give your function a layout functionality because that is one area that most screens of your application will share. Using `compose` you can define a HOC that you can use to wrap all your pages with.
+
+### Real-World Example 
+
+Here is a real-world example of a `SignInForm` container component. See if you understand it, then read the explanation to check if you were correct.
+
+```js
+import { withFormik } from 'formik';
+import compose from 'ramda/src/compose.js';
+import { connect } from 'react-redux';
+import { withRouter } from 'react-router';
+import SignInComponent from './sign-in-form-component.js';
+import { isAuthenticating, signIn } from './user-authentication-reducer.js';
+import { signInValidationSchema } from './validation-schema.js';
+
+const initialFormValues = { email: '', password: '' };
+
+const mapStateToProps = state => ({ loading: isAuthenticating(state) });
+
+const formikConfig = {
+  handleSubmit: ({ email, password }, { props: { signIn } }) => {
+    signIn({ email, password });
+  },
+  mapPropsToValues: () => initialFormValues,
+  validationSchema: signInValidationSchema,
+};
+
+export default compose(
+  withRouter,
+  connect(
+    mapStateToProps,
+    { signIn }
+  ),
+  withFormik(formikConfig),
+)(SignInComponent);
+```
+
+In the example above, you composed 3 different HOCs.
+
+1. `withRouter` is a HOC from React Router DOM. It injects the `history` object, which you can use to navigate to the password reset screen, when the user clicks the "Forgot Password" button.
+2. `connect` is a HOC from React Redux. You use it to connect your component to your Redux store. You inject the `loading` prop and the `signIn` action creator.
+3. `withFormik` is a HOC from Formik. Formik let's you control local form state and handles form validation for you. 
+
+Sometimes you need to [copy over](https://reactjs.org/docs/higher-order-components.html#static-methods-must-be-copied-over) static properties such as `propTypes`, `defaultProps` and [`getStaticProps` (if you are using Next.js)](https://nextjs.org/learn/basics/fetching-data-for-pages) from the inner component to the resulting component. Here is a Higher-Order HOC (a function that returns a HOC), which does this for you.
+
+```jsx
+import hoistNonReactStatics from 'hoist-non-react-statics'; 
+
+const hoistStatics = higherOrderComponent => Component => {
+	const WrappedComponent = higherOrderComponent(Component);
+	hoistNonReactStatics(WrappedComponent, Component);
+	return WrappedComponent;
+};
+```
+
+  **BTW:** [When using HOCs you need to treat `ref`s special, too.](https://reactjs.org/docs/higher-order-components.html#refs-arent-passed-through) If you need to pass `ref`s through a component hierarchy, you should probably be using a hook for the `ref` instead of a HOC.
+
+### HOC Composition
+
+You know from function composition that you can only compose functions whose types line up. Similarly, you need to pay attention to the order in which you compose your HOCs. One HOC can inject props that another might depend on. If the one that depends on the props gets injected before the prop injecting HOC, your app might break.
+
+```jsx
+const formatTitleProp = ({ title, ...otherProps }) => ({
+  title: title.toUpperCase(),
+  ...otherProps,
+});
+
+const withTitle = Component => props => <Component title="Hello" {...props} />;
+
+const withFormattedTitle = Component => props => (
+  <Component {...formatTitleProp(props)} />
+);
+
+const breakingApp = compose(withFormattedTitle, withTitle)(App); // 🔴 Breaks!
+
+const workingApp = compose(withTitle, withFormattedTitle)(App); // ✅ Correct order!
+```
+
+If you switch the order of HOCs in the real-world example above, it will break, too. `withFormik(formikConfig)` depends on `signIn` being defined, and `transformProps` depends on both `history` and the `formikBag` props. 
+
+HOCs with implicit dependencies on each other may be a code smell. In some cases, it may be better to make those dependencies explicit, by importing the shared functionality into the components that need them, or taking the dependency as a configuration parameter of the HOC. It's probably ok to implicitly depend on something that's pretty universal to all your pages, such as your store provider.

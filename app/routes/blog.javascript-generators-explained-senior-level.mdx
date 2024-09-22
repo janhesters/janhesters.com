@@ -1,0 +1,388 @@
+---
+title: 'JavaScript Generators Explained, But On A Senior-Level'
+datePublished: '2024-07-27'
+description: "In this video, you'll dive deep into how JavaScript generators work, exploring concepts like push and pull streams, lazy and eager data processing, and specific use cases of JavaScript generators."
+thumbnailUrl: '/images/thumbnails/javascript-generators-explained-senior-level.jpg'
+---
+
+import { getUrl } from '../lib/utils';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+Generators are powerful and underused in JavaScript.
+
+And many tutorials on generators only scratch the surface. In this article, you're going to go deep and you'll develop an advanced understanding about theory behind generators.
+
+Generators are most commonly seen in sagas, but there are more use cases, and you're going to see some of them in this article.
+
+<iframe
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  allowFullScreen
+  className="aspect-video w-full"
+  frameBorder="0"
+  referrerPolicy="strict-origin-when-cross-origin"
+  src="https://www.youtube.com/embed/FAK1YR4X-8I?si=vS5xZGl8ysKvdQea"
+  title="JavaScript Generators Explained, But On A Senior-Level"
+></iframe>
+
+The short answer to the question "**What is a generator?**" is:
+
+**Generators are pull streams** in JavaScript.
+
+Let's dissect this definition and then jump into some examples.
+
+You need to understand two terms: "pull" and "stream".
+
+### What is a stream?
+
+A **stream** is **data over time**. There are two types of streams: push streams and pull streams.
+# What is a push stream?
+
+A **push stream** is a mechanism where you are **NOT** in control **WHEN** the data comes through.
+
+Examples for push streams include:
+
+- a websocket,
+- reading a file from disk, and
+- server-sent events.
+
+You can see a JavaScript example of a pull stream using Node.js to read a large file from disk below.
+
+```js
+const fs = require('fs');
+const readStream = fs.createReadStream('./largeFile.txt');
+
+readStream.on('data', chunk => { 
+  console.log('data received', chunk.length)
+});
+
+readStream.on('end', () => {
+  console.log('finished reading file');
+});
+
+readStream.on('error', error => {
+  console.log('an error occured while reading the file', error);
+});
+```
+
+### What is a pull stream?
+
+A **pull stream** is when you **ARE** in control **WHEN** you want to request the data.
+
+You will see code examples for pull streams in JavaScript soon when you're going to see generator code, but first you need to understand another concept.
+
+### Lazy vs. eager
+
+In programming, data can be processed in two fundamental ways: eagerly or lazily.
+
+#### Eager
+
+**Eager** means data is evaluated immediately, regardless of whether the result is needed in that moment. A push stream is **eager**. (Other examples: array methods, promises)
+
+```js
+// Eager evaluation with array methods:
+const numbers = [1, 2, 3, 4, 5];
+
+// Map immediately processes all elements in the array.
+const squares = numbers.map(num => {
+    console.log(`Squaring ${num}`);
+    return num * num;
+});
+
+console.log('squares:', squares); // [1, 4, 9, 16, 25]
+```
+
+You might be thinking: "Okay, but why are promises eager? Their result comes in late."
+
+Promises in JavaScript exhibit eager evaluation for several reasons.
+
+1. **Immediate Execution**: The function passed to a new Promise (known as the executor function) is executed immediately when the Promise is constructed.
+2. **Irreversible Operations**: Once the executor function begins executing, it cannot be stopped or paused by the consuming code. The results of the operation it performs (either resolution or rejection) will be queued in the JavaScript event loop to be handled as soon as possible.
+3. **No Lazy Option**: A promise lacks any built-in mechanism to defer or cancel the execution of its executor until a value is needed.
+4. **Side Effects**: The eager nature of promises means that any side effects included in the executor (like API calls, timeouts, or I/O operations) will happen immediately as part of the promise creation.
+
+The following example demonstrates how demonstrates how promises are executed immediately.
+
+```js
+// Eager evaluation with promises and array methods
+
+console.log("Before promise");
+
+let promise = new Promise((resolve, reject) => {
+    console.log("Inside promise executor");
+    resolve("Resolved data");
+});
+
+console.log("After promise");
+
+promise.then(result => {
+    console.log(result);
+});
+```
+
+This results in the following output.
+
+```bash
+$ node eager-promise-example.js
+Before promise
+Inside promise executor
+After promise
+Resolved data
+```
+
+#### Lazy
+
+**Lazy** means only evaluated when the value is needed (not before). A pull stream is **lazy**.
+
+A synchronous example would be the operand selector operators.
+
+```js
+// Lazy evaluation with logical operators
+
+function processData(data) {
+    console.log(`Processing ${data}`); // This never logs out 🚫
+    return data * data;
+}
+
+console.log('Lazy evaluation starts');
+const data = 5;
+const isDataProcessed = false;
+
+// Lazy evaluation using the logical AND operator.
+const result = isDataProcessed && processData(data);
+console.log('Result:', result); // false
+```
+
+When you run this code, you'll observe the following output.
+
+```bash
+$ node lazy-evaluation-example.js
+Lazy evaluation starts
+Result: false
+```
+
+Since `isDataProcessed` is `false`, the `processData` function never runs and you never see "Processing 5" in the console. This shows that the expression only evaluates what is needed to get the result.
+
+### What is a generator?
+
+A generator is a pull stream in JavaScript. This means its a special kind of function where you can **pause execution** and **resume** it later. 
+
+The **`Generator`** object is returned by a [generator function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*) and it conforms to both the [iterable protocol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterable_protocol) and the [iterator protocol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterator_protocol).
+
+```js
+function* myGenerator() {
+  yield "Hire senior";
+  yield "React engineers";
+  yield "at ReactSquad.io";  
+}
+
+const iterator = myGenerator();
+
+// Using the generator as an iterator.
+console.log(iterator.next()); // { done: false, value: "Hire senior" }
+console.log(iterator.next()); // { done: false, value: "React engineers" }
+console.log(iterator.next()); // { done: false, value: "at ReactSquad.io" }
+console.log(iterator.next()); // { done: true, value: undefined }
+
+// Using the generator as an iterable.
+for (let string of myGenerator()) {
+  console.log(number); // "Hire senior" "React engineers" "at ReactSquad.io"
+}
+```
+
+Apart from the `.next()` method, generators also have `.return()` and `.throw()`.
+
+- **`.return()`** - The `.return()` method terminates the generator's execution and returns the specified value, also triggering any `finally` blocks.
+- **`.throw()`** - The `.throw()` method allows you to throw an error inside the generator at the point of the last yield, which can be caught and handled or allow the generator to clean up through a `finally` block. If uncaught, it stops the generator and marks it as done.
+
+```js
+function* numberGenerator() {
+  try {
+    yield 1;
+    yield 2;
+    yield 3;
+  } finally {
+    console.log("Cleanup complete");
+  }
+}
+
+const generator = numberGenerator();
+
+// Using the generator normally.
+console.log(generator.next()); // { done: false, value: 1 }
+console.log(generator.next()); // { done: false, value: 2 }
+
+// Using return() to finish the generator early.
+console.log(generator.return(10)); // { done: true, value: 10 }
+// After return(), no more values are yielded.
+console.log(generator.next()); // { done: true, value: undefined }
+
+// Resetting the generator for throw example.
+const newGenerator = numberGenerator();
+console.log(newGenerator.next()); // { done: false, value: 1 }
+
+// Using throw() to signal an error.
+try {
+  newGenerator.throw(new Error("Something went wrong"));
+} catch (e) {
+  console.log(e.message); // "Something went wrong"
+}
+// After throw(), the generator is closed.
+console.log(newGenerator.next()); // { done: true, value: undefined }
+```
+
+You can also pass in numbers or any other value to generators when you call `next()` with an argument.
+
+Try to predict *what* will log out and *when* in the following example.
+
+```js
+function* moreNumbers(x) {
+    console.log('x', x);
+    const y = yield x + 2;
+    console.log('y', y);
+    const z = yield x + y;
+    console.log('z', z);
+}
+
+const it2 = moreNumbers(40);
+
+console.log(it2.next());
+console.log(it2.next(2012));
+console.log(it2.next());
+```
+
+This example demonstrates how the generator function `moreNumbers` manipulates and yields values based on the input it receives during the sequence of `.next()` calls.
+
+Take look at the output and check your prediction.
+
+```js
+const it2 = moreNumbers(40);
+
+// x: 40
+console.log(it2.next()); // { value: 42, done: false }
+
+// y: 2012
+console.log(it2.next(2012)); // { value: 2052, done: false }
+
+// z: undefined
+console.log(it2.next()); // { value: undefined, done: true }
+```
+
+Let's breakdown of each step of the `moreNumbers` generator function, so you understand it fully.
+
+| Step | Code Line                      | Console Output                     | Explanation                                                      |
+| ---- | ------------------------------ | ---------------------------------- | ---------------------------------------------------------------- |
+| 1    | `const it2 = moreNumbers(40)`  |                                    | Initializes the generator with `x` set to `40`.                  |
+| 2    | `console.log(it2.next());`     | `{ value: 42, done: false }`       | Generator starts and logs `x` as 40, then yields `42` (`x + 2`). |
+| 3    | `console.log(it2.next(2012));` | `{ value: 2052, done: false }`     | Resumes with `y` as 2012, logs `y`, and yields `2052` (`x + y`). |
+| 4    | `console.log(it2.next());`     | `{ value: undefined, done: true }` | Resumes, logs `z` as undefined (no new input), and finishes.     |
+
+### Use Cases for Generators
+
+There are three main uses cases for generators.
+
+1. **Lazy evaluation** - generate data on demand or process large or infinite data sets.
+2. **Asynchronous programming** - handle asynchronous operations.
+3. **Iterators** - allowing to stop in between steps for complex flows.
+
+Earlier, you saw an example of reading a file from disk as a push stream. Below is how you would write the data reading using a generator to turn it into a pull stream.
+
+```js
+const fs = require('fs');
+
+function getChunkFromStream(stream) {
+    return new Promise((resolve, reject) => {
+        stream.once('data', (chunk) => {
+            stream.pause();
+            resolve(chunk);
+        });
+
+        stream.once('end', () => {
+            resolve(null);
+        });
+
+        stream.once('error', (err) => {
+            reject(err);
+        });
+
+        stream.resume();
+    });
+}
+
+async function* readFileChunkByChunk(filePath) {
+    const stream = fs.createReadStream(filePath);
+    let chunk;
+
+    while (chunk = await getChunkFromStream(stream)) {
+        yield chunk;
+    }
+}
+
+const generator = readFileChunkByChunk('./largeFile.txt');
+
+(async () => {
+    for await (const chunk of generator) {
+        console.log("data received", chunk.length);
+    }
+})();
+```
+
+### Real-World Examples
+
+Sagas are a prime example of handling asynchronous I/O operations. But you're going to learn how to use sagas in a future article, in a series of articles on Redux.
+
+And then generally you use generators when you want to be in control WHEN to get a value.
+
+Take a look at this test example.
+
+```ts
+test('given an onboarded owner user: shows the invite link creation UI as well as the members of the organization, and lets the user change their role', async ({ page }) => {
+  // Generator for roles in the organization.
+  function* roleGenerator() {
+    const allRoles = Object.values(ORGANIZATION_MEMBERSHIP_ROLES);
+    for (const role of allRoles) {
+      yield role;
+    }
+  }
+  const roleIterator = roleGenerator();
+  const data = await setup({
+    page,
+    role: ORGANIZATION_MEMBERSHIP_ROLES.OWNER,
+    numberOfOtherTeamMembers: allRoles.length,
+  });
+  const { organization, sortedUsers, user } = data;
+
+  // Navigate to team members settings page.
+  await page.goto(`/organizations/${organization.slug}/settings/team-members`);
+
+  // Loop through each team member to assign roles using the generator.
+  for (let index = 0; index < sortedUsers.length; index++) {
+    const memberListItem = page.getByRole('list', { name: /team members/i }).getByRole('listitem').nth(index);
+    const otherUser = sortedUsers[index];
+
+    // Change role for each team member, except the current user.
+    if (otherUser.id !== user.id) {
+      await memberListItem.getByRole('button', { name: /member/i }).click();
+      const role = roleIterator.next().value!;
+      await page.getByRole('option', { name: role }).getByRole('button').click();
+      await page.keyboard.press('Escape');
+    }
+  }
+
+  await teardown(data);
+});
+```
+
+In this test, you define a `roleGenerator` to sequentially provide a list of roles for users within an organization. This approach allows the test to dynamically assign each user a unique role from a predefined list as part of a role management feature in a UI.
+
+The reason a generator - as opposed to an array - was used for this example is that the position of the main user in the test is unknown in the `sortedUsers` array and since a generator is a pull stream you can get the role values on demand.
