@@ -78,11 +78,7 @@ export default function WorkWithJan() {
                   </p>
 
                   <Button asChild>
-                    <a
-                      href={service.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
+                    <a href={service.link}>
                       {service.cta} <ArrowRight className="ml-2 size-4" />
                     </a>
                   </Button>

@@ -50,7 +50,6 @@ async function createSubscription(email: string) {
       referring_site: 'https://www.janhesters.com/blog',
     },
   );
-  console.log('createSubscription response.data', response.data);
 
   return response.data.data;
 }
@@ -60,7 +59,6 @@ async function addSubscriptionTag(subscriptionId: string) {
     `/publications/${BEEHIIV_PUBLICATION_ID}/subscriptions/${subscriptionId}/tags`,
     { tags: ['janhesters.com'] },
   );
-  console.log('addSubscriptionTag response.data', response.data);
 
   return response.data.data;
 }

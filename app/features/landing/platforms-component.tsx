@@ -77,8 +77,6 @@ export function PlatformsComponent() {
                   '-mx-4 flex items-center gap-4 py-6',
                 )}
                 href={platform.url}
-                rel="noopener noreferrer"
-                target="_blank"
               >
                 <div className="relative flex size-10 flex-none items-center justify-center rounded-md">
                   <img

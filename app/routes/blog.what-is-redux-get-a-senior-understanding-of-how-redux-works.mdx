@@ -85,7 +85,7 @@ This diagram shows you the data flow in Redux and how these 6 components work to
 
 ![Redux Data Flow](redux-data-flow.png)
 
-Your React components have access to your store's `dispatch` method. You'll learn how this works later in the video.
+Your React components have access to your store's `dispatch` method. You'll learn how this works later in this article.
 
 You then dispatch an action which get's passed to your middleware for processing and handling side-effects before reaching your reducers.
 
@@ -95,7 +95,7 @@ The updated state flows back into your React components through your selectors, 
 
 ### Project Setup
 
-This video will contain many code examples, and I highly recommend you code along because that way you will retain the most knowledge.
+This article will contain many code examples, and I highly recommend you code along because that way you will retain the most knowledge.
 
 So create a new Next.js 15 project.
 
@@ -103,7 +103,7 @@ So create a new Next.js 15 project.
 npx create-next-app@latest
 ```
 
-And then configure your project by hitting `yes` on everything except TypeScript. The third video in this series covers Redux with TypeScript.
+And then configure your project by hitting `yes` on everything except TypeScript. The third article in this series covers Redux with TypeScript.
 
 ```sh
 ✔ **What is your project named?** … redux-mastery-part-one
@@ -198,7 +198,7 @@ The `default` case returns the current state unchanged, which is important for h
 Remember, **reducers must be pure functions** - that means:
 
 - they do ***NOT*** modify the inputs,
-- they do ***NOT*** perform side effects like API calls, and
+- they do ***NOT*** perform side-effects like API calls, and
 - they do ***NOT*** call non-pure functions like `Date.now()` or `Math.random()`.
 
 And make sure that each case uses the `return` statement to prevent any case from falling through.
@@ -1119,7 +1119,7 @@ There is also a third parameter for the `connect` higher-order component called 
 
 ### The Two Benefits Of Selectors
 
-Earlier you set up two slices: the example slice and the user profile slice. The first reason to show two slices in this video is to show you `combineReducers`. The second is that because the user profile slice is more complex, you can see the benefits of selectors.
+Earlier you set up two slices: the example slice and the user profile slice. The first reason to show two slices in this article is to show you `combineReducers`. The second is that because the user profile slice is more complex, you can see the benefits of selectors.
 
 Add some new selectors to your `src/app/user-profile-reducer.js`.
 
@@ -1403,7 +1403,7 @@ To learn how your can memoize your selectors, read the third article in this Red
 
 #### Refactoring Selectors With Functional Programming
 
-The goal of this video is to provide you with a senior-level understanding of Redux. So let's raise the code quality level further. 
+The goal of this article is to provide you with a senior-level understanding of Redux. So let's raise the code quality level further. 
 
 You can clean up your selectors even more using functional programming.
 
@@ -1768,7 +1768,7 @@ dispatching { type: 'data/fetchFailure', error: { message: 'Error message' } }
 next state { example: { count: 0 }, userProfile: { currentUserId: null, users: {} } }
 ```
 
-You can imagine that importing these wrapper functions in every component and compose all the wrappers where you use `dispatch` is inconvenient. And you'd need a new wrapper function for every new requirement.
+You can imagine that importing these wrapper functions in every component and composing all the wrappers where you use `dispatch` is inconvenient. And you'd need a new wrapper function for every new requirement.
 
 #### What Is Middleware?
 
@@ -1999,7 +1999,7 @@ Your `createStore` function should now accept a third parameter called `enhancer
 
 Now, let's jump ahead and see how to use your updated `createStore` function. You pass `applyMiddleware` as the third argument, and `applyMiddleware` is called with your middleware. Since `applyMiddleware` returns a function with the same signature as `createStore` - taking in a `reducer` and `initialState`, and returning the store - this preserves the original behavior when middleware is applied. If you call the `createStore` function inside `applyMiddleware` without an `enhancer`, it functions normally.
 
-Middleware makes solving the logging problem simple. The `logger` middleware logs the current action and calls the next middleware in the chain. After all middleware has processed the action, logs the store's state and returns the result.
+Middleware makes solving the logging problem simple. The `logger` middleware logs the current action and calls the next middleware in the chain. After all middleware has processed the action, it logs the store's state and returns the result.
 
 The `thunk` middleware expands the capabilities of Redux's dispatch function, allowing you to handle asynchronous operations or complex synchronous logic. If the dispatched action is a function instead of a regular object, the `thunk` middleware intercepts it and passes `dispatch` and `getState` as arguments to that function.
 
@@ -2091,6 +2091,11 @@ But as stated in the beginning of this article, Redux is still used heavily in m
 
 This article was very theory heavy and in this series, you're going to code two real-world apps using Redux so that you get some hands-on practice.
 
-I love you very much. Thank you for reading this article. If you've liked it, please follow me on [X*](https://x.com/janhesters) and let me know what you've learned.
+import { ReadNext } from '../features/blog/read-next';
+import { frontmatter as reduxSagaIsHardUntilYouLookUnderTheHood } from './blog.redux-saga-is-hard-until-you-look-under-the-hood.mdx';
 
-(* = formerly known as Twitter)
+<ReadNext
+  posts={[
+    { ...reduxSagaIsHardUntilYouLookUnderTheHood, slug: 'redux-saga-is-hard-until-you-look-under-the-hood' },
+  ]}
+/>

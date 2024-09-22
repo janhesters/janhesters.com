@@ -1,0 +1,1169 @@
+---
+title: 'Redux Saga Is Hard Until You Look Under The Hood'
+datePublished: '2024-10-22'
+description: 'Learn how to isolate side-effects and write clean, maintainable asynchronous code using Redux Saga. Create your own saga middleware and understand how it works.'
+thumbnailUrl: 'https://i.magecdn.com/ada680/eeb5ba_usecallback_vs_usememo?f=webp,q.20,p.f,l.f'
+isDraft: true
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+Redux Saga has a reputation for being hard to understand and is often seen as overkill.
+
+The Redux team even recommends to use their data fetching and caching library, RTK Query, instead of Redux Saga.
+
+However, when you master Redux Saga, it actually gives a reliable way to break down any problem - no matter how complex - and tame it into deterministic and side-effect-free code.
+
+I wanted to write this article about sagas for you because:
+
+1. Sagas are still used in many old projects and can help you land more jobs,
+2. the philosophy of isolating side-effects that sagas teach you will change how you think about your code and help you to write cleaner code, and
+3. I love sagas.
+
+This article is part 2 of a 5-part series on Redux that will elevate your understanding to the highest level, preparing you for any interview question involving Redux and enabling you to contribute to any Redux-based codebase. By the way, the third article in this series also covers how to use RTK Query.
+
+The first part of the series covers Redux on a senior level. In that article, you learn how Redux works by implementing it from scratch, and then how to write the cleanest Redux code possible using function composition. If you feel stuck at any point in this article, [read part one](https://janhesters.com/blog/what-is-redux-get-a-senior-understanding-of-how-redux-works) first.
+
+### Why Redux Saga?
+
+Let's start with the basic question:
+
+> “Why do you want to use Redux Saga?”
+
+1. **Isolate asynchronous effects** - Manage your side-effects separately from your main application logic. Your components don't need to know that side-effects exist.
+2. **Deterministic testing of I/O related logic** - When you test code with side-effects, you're frequently forced to mock, especially when you’re unsure of what you’re doing. But Redux Saga makes it trivial to write tests for your API calls, database operations and other I/O tasks.
+
+If you want to, you can code along with this tutorial. If not, then skip to ["What Is Redux Saga?"](#what-is-redux-saga) below.
+
+This article will show the basic setup of your Redux store very quickly because it's covered in detail in the [first article](https://janhesters.com/blog/what-is-redux-get-a-senior-understanding-of-how-redux-works) of this series.
+
+Create a new Next.js project and choose "yes" for everything except TypeScript.
+
+```sh
+$ npx create-next-app@latest
+✔ **What is your project named?** … 2024-08-20-redux-saga
+✔ **Would you like to use** **TypeScript****?** … No / Yes
+No
+✔ **Would you like to use** **ESLint****?** … No / Yes
+Yes
+✔ **Would you like to use** **Tailwind CSS****?** … No / Yes
+Yes
+✔ **Would you like to use** **`src/` directory****?** … No / Yes
+Yes
+✔ **Would you like to use** **App Router****? (recommended)** … No / Yes
+Yes
+✔ **Would you like to customize the default** **import alias** **(@/*)?** … No / Yes
+No
+```
+
+The third article in this series explains Redux with TypeScript.
+
+Now install Redux, React Redux, and Ramda.
+
+```sh
+npm i redux react-redux ramda
+```
+
+Create a file in `src/features/example/example-reducer.js` to hold your example slice.
+
+```js title="src/features/example/example-reducer.js"
+import { pipe, prop } from 'ramda';
+
+// slice (the name of the example-substate)
+export const slice = 'example';
+
+// action creators
+export const increment = () => ({ type: `${slice}/increment` });
+export const incrementBy = payload => ({
+  type: `${slice}/incrementBy`,
+  payload,
+});
+
+const initialState = {
+  count: 0,
+};
+
+// example reducer using the action creators, taking in state and actions
+export const reducer = (state = initialState, { type, payload } = {}) => {
+  switch (type) {
+    case increment().type: {
+      return { ...state, count: state.count + 1 }; // "action handler"
+    }
+    case incrementBy().type: {
+      return { ...state, count: state.count + payload };
+    }
+    default: {
+      return state;
+    }
+  }
+};
+
+// composed selector(s)
+const selectExampleState = prop(slice);
+
+export const selectCount = pipe(selectExampleState, prop('count'));
+```
+
+Import `pipe` and `prop` from Ramda, which you'll use for your selectors.
+
+Then export the slice name and create an `increment` , an `incrementBy` and an `init` action creator.
+
+Your initial state should have a `count` key which is `0`. Then you define your example reducer, which can handle the `increment` and the `incrementBy` action.
+
+Then create a selector that returns the example slice and export a selector that returns the count.
+
+Create your `rootReducer` in `src/redux/root-reducer.js`.
+
+```js title="src/redux/root-reducer.js"
+import { combineReducers } from 'redux';
+
+import {
+  reducer as exampleReducer,
+  slice as exampleSlice,
+} from '../../features/example/example-reducer';
+
+export const rootReducer = combineReducers({
+  [exampleSlice]: exampleReducer,
+});
+```
+
+You only have the `example` slice, so you'll only need to configure that one slice.
+
+Then create your `makeStore` function in `src/redux/store.js` to wrap the creation of your Redux store.
+
+```js title="src/redux/store.js"
+import { legacy_createStore as createStore } from 'redux';
+
+import { rootReducer } from './root-reducer';
+
+export const makeStore = () => {
+  return createStore(rootReducer, rootReducer());
+};
+```
+
+You can call your root reducer without arguments to get the initial state.
+
+Now create your store provider in `src/redux/store-provider.js`.
+
+```jsx title="src/redux/store-provider.js"
+'use client'; // The Redux provider is only available client side because
+// it uses the context API under the hood.
+
+import { useRef } from 'react';
+import { Provider } from 'react-redux';
+
+import { makeStore } from '../redux/store';
+
+export function StoreProvider({ children }) {
+  const storeRef = useRef();
+
+  if (!storeRef.current) {
+    storeRef.current = makeStore();
+  }
+
+  return <Provider store={storeRef.current}>{children}</Provider>;
+}
+```
+
+Import the `makeStore` function and use `useRef` so your store only gets created once. Then pass your store to the provider from React Redux.
+
+```js title="src/app/hooks.js"
+import { useDispatch, useSelector, useStore } from 'react-redux';
+
+export const useAppDispatch = useDispatch.withTypes();
+export const useAppSelector = useSelector.withTypes();
+export const useAppStore = useStore.withTypes();
+```
+
+Also set up the hooks for dispatching actions and grabbing data from the store.
+
+Then import your `StoreProvider` in your root layout in `src/app/layout.js` and wrap the `StoreProvider` around your `RootLayout`.
+
+```jsx title="src/app/layout.js"
+import './globals.css';
+
+import { Inter } from 'next/font/google';
+
+import { StoreProvider } from './store-provider';
+
+const inter = Inter({ subsets: ['latin'] });
+
+export const metadata = {
+  title: 'Jan Hesters Sagas Tutorial',
+  description: 'Part two of five to master Redux.',
+};
+
+export default function RootLayout({ children }) {
+  return (
+    <StoreProvider>
+      <html lang="en">
+        <body className={inter.className}>{children}</body>
+      </html>
+    </StoreProvider>
+  );
+}
+```
+
+You can now access store values via selectors and manipulate them using dispatch from any child component of the `StoreProvider`.
+
+### What Is Redux Saga?
+
+Redux Saga is a middleware that uses generators to:
+
+- manage side-effects and manipulate actions, 
+- decouple your code, and
+- define complex logic flows, sequences and data processes.
+
+Sagas typically transform impure functions - like database calls or API requests - into pure, deterministic ones by **isolating side-effects** through delaying their computation.
+
+"Decoupling code" means to slice your app into small, independent blocks, so that your app's components depend less on each other. When components are decoupled, you can work on them without the risk of breaking anything else. If components are coupled, changing one might unintentionally break something else.
+
+With Redux Saga you can decouple your code because you can define complex sequences of asynchronous operations in a way that keeps them separate from your UI and state management logic. For example, sagas can replace complex sequences in `useEffect` with easy to implement and decoupled logic.
+
+Have a look at the following saga.
+
+```js title="src/features/example/example-saga.js"
+import { call, put, select, take } from 'redux-saga/effects';
+
+import { increment, incrementBy, selectCount, slice } from './example-reducer';
+
+export const init = () => ({ type: `${slice}/init` });
+
+const fetchUser = async id => {
+  const response = await fetch(
+    `https://jsonplaceholder.typicode.com/users/${id}`,
+  );
+  return await response.json();
+};
+
+export function* exampleSaga() {
+  yield take(init().type);
+  yield put(increment());
+  const currentCount = yield select(selectCount);
+  const user = yield call(fetchUser, currentCount);
+  yield put(incrementBy(user.name.length));
+}
+```
+
+Relax if you don't understand this, yet. This article will break everything down for you.
+
+All dispatched actions anywhere in your app run though all sagas, and if the action corresponds to the condition of a saga, the saga triggers. When the `init` action is dispatched, this saga starts running. 
+
+Then this saga dispatches the put action, grabs the latest count from the store, and fetches a user whose ID is equal to the current count. Finally, it increments the count by the user's name's length.
+
+The logic that handles all of these effects will be shown to you and explained later in the saga middleware chapter.
+
+If you log out what this saga does, you get this output.
+
+```js title="console output"
+dispatching { "type": "example/init" }
+next state { "example": { "count": 0 } }
+dispatching { "type": "example/increment" }
+next state { "example": { "count": 1 } }
+dispatching { "type": "example/incrementBy", "payload": 13 }
+next state { "example": { "count": 14 } }
+```
+
+First, the init action is dispatched somewhere in your app triggering your saga. And then you see the incrementation of the count by 1 and then the incrementation by 13 because the user with ID 1 is named "Leanne Graham".
+
+If you tried to write this flow without sagas as a React component, you might write something that uses `useEffects` and various other hooks. Just to give you an idea, here is what it could look like:
+
+```jsx title="some-component.js"
+import { useEffect, useRef } from 'react';
+
+import { increment, incrementBy, init, selectCount } from './example-reducer';
+import { useAppDispatch, useAppSelector } from './hooks';
+
+async function fetchUser(id) {
+  const response = await fetch(
+    `https://jsonplaceholder.typicode.com/users/${id}`,
+  );
+  return await response.json();
+}
+
+export function MyComponent() {
+  const dispatch = useAppDispatch();
+  const currentCount = useAppSelector(selectCount);
+  const hasFetched = useRef(false);
+
+  useEffect(() => {
+    dispatch(init());
+    dispatch(increment());
+  }, [dispatch]);
+
+  useEffect(() => {
+    const fetchAndIncrement = async () => {
+      try {
+        const user = await fetchUser(currentCount);
+        dispatch(incrementBy(user.name.length));
+        hasFetched.current = true;
+      } catch (error) {
+        console.error('Failed to fetch user:', error);
+      }
+    };
+
+    if (currentCount > 0 && !hasFetched.current) {
+      fetchAndIncrement();
+    }
+  }, [currentCount, dispatch]);
+
+  return <p>Current Count: {currentCount}</p>;
+}
+```
+
+I'll spare you the details, but as you can see, writing this logic as a React component is already more complex and is _**not**_ providing all of the logic we want and get from sagas.
+
+<details>
+  <summary>"I actually want to know the details."</summary>
+
+  Sure, here you go:
+  
+  In the first article of this series, you learned how to use hooks to access `dispatch` and the store's state.
+
+  Now, when the component runs, it dispatches `init` and `increment`. After incrementing the count, it fetches the user and increments the count by the length of the user's name. You use `useRef` to prevent infinite loops since incrementing the count would cause the second `useEffect` to run again.
+
+  The logic of this React component is actually different from the saga you saw earlier. The saga starts when `init` is dispatched. But to replicate that behavior with hooks, you'd need to create a condition in the store's state, which is set to "true" when `init` is dispatched, and then react to it inside `useEffect`. So you can already see, how implementing complex sequences is easier with sagas than with React components and hooks.
+  
+</details>
+
+I know this was a lot, but now you have a big-picture overview, so you can learn all the details easier.
+
+### What Are Redux Saga's Components?
+
+Redux Saga consists of three components:
+
+1. **Effects** - Effects are action creators that describe future actions.
+2. **Sagas** - Sagas are generator functions that manage side-effects.
+3. **Middleware** - The middleware, which contains effect handlers, manages the execution of the sagas and the corresponding effects.
+
+### Effects
+
+Redux Saga uses special kinds of action creators called "effects". **Effects** are instructions for the handlers in the saga middleware. These effect handlers execute the actual mechanism of the effect.
+
+This article will cover the most important effects. Once you finished reading this article, you'll find it easy to look up and understand the less common effects in the [Redux Saga documentation](https://redux-saga.js.org/docs/api/).
+
+You're going to start with the `take` effect.
+
+Here is what happens when you import the `take` effect, call it, and log it out.
+
+```js title="take-example.js"
+import { take } from 'redux-saga/effects';
+
+console.log(take('increment'));
+```
+
+It logs out an object to the console.
+
+```sh title="console output"
+{
+  '@@redux-saga/IO': true,
+  combinator: false,
+  type: 'TAKE',
+  payload: { pattern: 'increment' }
+}
+```
+
+As you can see, since all effects are action creators, they include a `type` and `payload` property.
+
+But there are also two additional properties.
+
+- **`@@redux-saga/IO`**: This property shows that the object is a Redux-Saga effect. Redux-Saga middleware recognizes and processes only actions with this property, but ignores any other action. This way the middleware only processes actions it is meant to process.
+- **`combinator`**: This property indicates whether the effect is a combinatorial effect, which is used to run multiple effects in parallel or sequentially. Since `take` is a simple effect to pause a saga, this property is `false`.
+
+### `take`
+
+What is special about the `take` effect? Or in other words, what is `take` used for?
+
+The `take` effect is used to **pause a saga until a specific action is dispatched** to the Redux store. When the specified action type arrives, the saga continues execution.
+
+As you explore the different effects, create them in a file at `src/redux/effects.js`.
+
+```js title="src/redux/effects.js"
+export const take = pattern => ({
+  '@@redux-saga/IO': true,
+  type: 'TAKE',
+  payload: { pattern },
+});
+```
+
+`pattern` is an action type. It's the type of the action that needs to be dispatched to cause the saga to continue. (If a take effect was yielded in your saga, the pattern on its payload tells the effect handlers in the saga middleware what type of action should resume the saga.)
+
+You can leave out the `combinator` property in your own actions since implementing that behavior is complex and unnecessary for a deep understanding of sagas. If you're curious, you can explore the Redux Saga source code later.
+
+### `put`
+
+Take a look at another effect called `put`.
+
+```js title="put-example.js"
+import { put } from 'redux-saga/effects';
+
+console.log(put({ type: 'increment' }));
+```
+
+Like any effect, when you call it and log it out, it also returns an action.
+
+```sh title="console output"
+{
+  '@@redux-saga/IO': true,
+  combinator: false,
+  type: 'PUT',
+  payload: { channel: undefined, action: { type: 'increment' } }
+}
+```
+
+The `put` effect describes an action to be dispatched by the effect handlers once the saga iteration triggers the invocation of this effect. (TODO: record this)
+
+The action has a similar shape as the returned object from the `take` effect, but the payload contains a `channel` and an `action`.
+
+Channels in Redux-Saga can be used for more complex communication patterns, but for standard `put` effects dispatching actions to the store, this remains `undefined`.
+
+The `action` property contains the action object that will be dispatched. In your example, it is `{ type: 'increment' }`.
+
+Add `put` to your custom effects.
+
+```js title="src/redux/effects.js" {7-11}
+export const take = pattern => ({
+  '@@redux-saga/IO': true,
+  type: 'TAKE',
+  payload: { pattern },
+});
+
+export const put = action => ({
+  '@@redux-saga/IO': true,
+  type: 'PUT',
+  payload: { action },
+});
+```
+
+As mentioned earlier, you can omit the `channel` property because it's `undefined` anyway for simple `put` effects.
+
+### Sagas
+
+The term "saga" in Redux Saga comes from a [1987 paper by Hector Garcia-Molina and Kenneth Salem](https://www.cs.cornell.edu/andru/cs711/2002fa/reading/sagas.pdf). Their work describes a way to handle long-lived database transactions by breaking them into smaller parts with backup plans if something goes wrong.
+
+Redux Saga adapts this idea to manage complex asynchronous tasks and side-effects in app state management using generator functions. The name "saga" reflects the long-running, intricate processes this middleware handles, much like the complex stories found in historical sagas.
+
+If you're unfamiliar with generators, read ["JavaScript Generators Explained, But On A Senior-Level"](https://janhesters.com/blog/javascript-generators-explained-senior-level). That article will give you all the foundational knowledge you need to understand sagas.
+
+It's time to use your custom effects in a saga generator in `src/features/example/example-sagas.js`.
+
+```js title="src/features/example/example-sagas.js"
+import { put, take } from '../../redux/effects';
+import { increment, slice } from './example-reducer';
+
+export const init = () => ({ type: `${slice}/init` });
+
+export function* exampleSaga() {
+  yield take(init().type);
+  yield put(increment());
+}
+```
+
+Import the `increment` action creator and your custom effects.
+
+Then, create an `init` action creator that you will use to trigger your saga. This action only needs a type property to start the saga once it is dispatched for the first time anywhere in your app.
+
+In your saga, use the `take` effect to wait for the `init` action to be dispatched, then use the `put` effect to dispatch the `increment` action.
+
+```js title="src/features/example/example-sagas.js"
+import { put, take } from '../../redux/effects';
+import { increment, slice } from './example-reducer';
+
+export const init = () => ({ type: `${slice}/init` });
+
+export function* exampleSaga() {
+  const action = yield take(init().type);
+  console.log('action', action);
+  yield put(increment());
+}
+
+// In reality, this call 👇 happens inside of the middleware (covered later).
+const iterator = exampleSaga(); 
+
+ // Start the saga and log the first yield.
+console.log('First next(): ', iterator.next());
+ // Simulate receiving the init action and log the second yield.
+console.log('Second next(): ', iterator.next(init()));
+ // Complete the saga.
+console.log('Third next(): ', iterator.next());
+```
+
+Now, create a generator object using your saga. Then call `.next()` three times. When you call `.next()` for the second time, pass the `init` action creator to the `.next()` method, which simulates what the saga middleware would do behind the scenes.
+
+```sh
+$ npx tsx src/features/example/example-sagas.js
+First next():  { value: { '@@redux-saga/IO': true, type: 'TAKE', payload: { pattern: 'example/init' } }, done: false }
+action { type: 'example/init' }
+Second next():  { value: { '@@redux-saga/IO': true, type: 'PUT', payload: { action: { type: 'example/increment' } } }, done: false }
+Third next():  { value: undefined, done: true }
+```
+
+If you run this code, you see the `take` effect with the "init" pattern. Next, you see the `put` effect with the increment action. And finally, the generator is done.
+
+As you can see, there is no magic here. The saga is just a generator.
+
+### Saga Middleware
+
+The saga "magic" really happens in the middleware. The middleware is responsible for correctly handling the effects and passing them to all your sagas.
+
+Create `createSagaMiddleware` function in `src/redux/saga-middleware.js`.
+
+```js title="src/redux/saga-middleware.js"
+import { put, take } from './effects';
+
+export function createSagaMiddleware() {
+  let sagas = [];
+
+  const middleware = store => next => action => {
+    const result = next(action);
+
+    sagas.forEach(saga => {
+      const sagaIterator = saga();
+
+      let effectHandled = false;
+
+      const handleEffect = async effect => {
+        if (!effect || !effect['@@redux-saga/IO']) {
+          effectHandled = true;
+          return;
+        }
+
+        switch (effect.type) {
+          case take().type: {
+            if (effect.payload.pattern === action.type) {
+              return action;
+            } else {
+              effectHandled = true;
+              return;
+            }
+          }
+          case put().type: {
+            store.dispatch(effect.payload.action);
+            return;
+          }
+          default: {
+            effectHandled = true;
+            return;
+          }
+        }
+      };
+
+      const processSaga = async () => {
+        let lastValue;
+
+        try {
+          while (!effectHandled) {
+            // lastValue is the return value of the previously handled effect.
+            const { value, done } = sagaIterator.next(lastValue);
+
+            if (done) {
+              break;
+            }
+
+            lastValue = await handleEffect(value);
+          }
+        } catch (error) {
+          sagaIterator.throw(error);
+        }
+      };
+
+      processSaga();
+    });
+
+    return result;
+  };
+
+  middleware.run = saga => {
+    sagas.push(saga);
+  };
+
+  return middleware;
+}
+```
+
+Import your two custom effects.
+
+Next, define and export a new function called `createSagaMiddleware`.
+
+It defines an array of sagas in its closure.
+
+Then it defines the middleware with the typical three parameters: `store`, `next` and `action`. Call the `next` middleware with the `action` to create a `result`. It is later returned as the final output after all effects have been processed to keep the middleware chain going.
+
+Now, it iterates through all the sagas.
+
+For each saga, it generates a new iterator. Then, it sets up `effectHandled`, which it initializes to `false`.
+
+Now it defines the `handleEffect` function. The `effect` argument is the value of the generator objects that your sagas `yield`.
+
+If the effect is `undefined` or lacks the `@@redux-saga/IO` key, it sets `effectHandled` to `true` and returns early, so the saga ignores the effect.
+
+Next, it creates a `switch` statement to handle specific effects.
+
+It starts with a handler for the `take` effect. If a `take` effect was `yield`ed in your saga, that means it has a `pattern` on its payload which tells you the type of action that should resume the saga. If the current action matches this type, the handler returns it. If not, it marks the effect as handled and return.
+
+For the `put` effect, the handler simply dispatches the action from the effect's payload using `store.dispatch`.
+
+For any unhandled effect type, the middleware marks the effect as handled, too.
+
+Next, it defines a `processSaga` function. While the effect is NOT handled, it calls the `.next()` method on the current saga iterator, passing it the last value. The first `.next()` is always called without an argument because last value starts as `undefined`. If the saga is `done`, it stops the `while` loop using the `break` keyword. Then it computes the latest value by using the `handleEffect` function. This `lastValue` gets inserted as the argument into the next `.next()` call. Later, you will see that `handleEffect` can work with promises, so `processSaga` needs to `await` it. If an error happens, it catches it and passes it into the saga using the `.throw()` method.
+
+Finally, the middleware returns the result as you would with any middleware.
+
+Define a `.run()` method on your saga middleware. This is the mechanism you use to push new sagas into the array. Finally, `createSagaMiddleware` returns the created middleware.
+  
+This implementation of the saga middleware is simplified for learning purposes. For example, `take` effects can only be used as the first effect in a saga because each dispatch because calls all saga iterators from scratch through the `forEach` loop. With the real implementation from the Redux Saga package, you can use `take` anywhere in the saga. However, this version gives you a solid foundational understanding.
+
+Now modify your `makeStore` function to use your `createSagaMiddleware` function.
+
+```js title="src/redux/store.js" {3, 5, 15, 19, 21}
+import { applyMiddleware, legacy_createStore as createStore } from 'redux';
+
+import { exampleSaga } from '../features/example/example-sagas';
+import { rootReducer } from './root-reducer';
+import { createSagaMiddleware } from './saga-middleware';
+
+const logger = store => next => action => {
+  console.log('dispatching', action);
+  let result = next(action);
+  console.log('next state', store.getState());
+  return result;
+};
+
+export const makeStore = () => {
+  const sagaMiddleware = createSagaMiddleware();
+  const store = createStore(
+    rootReducer,
+    rootReducer(),
+    applyMiddleware(logger, sagaMiddleware),
+  );
+  sagaMiddleware.run(exampleSaga);
+  return store;
+};
+```
+
+Import your `exampleSaga` and your `createSagaMiddleware` function.
+
+Then create a `logger` middleware. You're going to use it to show the behavior of the saga.
+
+Use your `createSagaMiddleware` function inside of your `makeStore` function to create your middleware. Then, pass both middleware to Redux's `createStore` function. Call the `.run()` method and pass in your `exampleSaga`.
+
+Now you need to dispatch the `init` action in your store provider.
+
+```jsx title="src/redux/store-provider.js" {5, 13}
+'use client';
+import { useRef } from 'react';
+import { Provider } from 'react-redux';
+
+import { init } from '../features/example/example-sagas';
+import { makeStore } from '../redux/store';
+
+export function StoreProvider({ children }) {
+  const storeRef = useRef();
+
+  if (!storeRef.current) {
+    storeRef.current = makeStore();
+    storeRef.current.dispatch(init());
+  }
+
+  return <Provider store={storeRef.current}>{children}</Provider>;
+}
+```
+
+You only dispatch `init` from inside your `StoreProvider` in this tutorial to start your saga. In the real world, you probably wouldn't do this.
+
+If you now run your app and visit `http://localhost:3000/`, you'll see `increment` action dispatched after your `init` action.
+
+```sh title="console output"
+dispatching { "type": "example/init" }
+next state { "example": { "count": 0 } }
+dispatching { "type": "example/increment" }
+next state { "example": { "count": 1 } }
+```
+
+This means your `exampleSaga` works. Your `take` catches the `init` action, and then your saga keeps running and dispatches the `increment` action using the `put` effect.
+
+### `select`
+
+You've learned how to "catch" actions with `take` and how you can dispatch actions with `put` in your saga.
+
+What if you want to grab some state using a selector to use it in your saga?
+
+That's where the `select` effect comes in.
+
+```js title="select-example.js"
+import { select } from 'redux-saga/effects';
+
+console.log(select(selectCount, 42, 'foo', true));
+```
+
+If you log it out, it also returns an action.
+
+```sh title="console output"
+{
+  '@@redux-saga/IO': true,
+  combinator: false,
+  type: 'SELECT',
+  payload: { selector: [Function (anonymous)], args: [42, 'foo', true] }
+}
+```
+
+The `select` effect is used for retrieving data from the Redux store. Its payload contains a `selector` function and optional `args`.
+
+The `args` are additional arguments passed to the selector, if needed. This can be useful if you have a selector that selects a specific user by id.
+
+```js title="src/redux/effects.js" {13-17}
+export const take = pattern => ({
+  '@@redux-saga/IO': true,
+  type: 'TAKE',
+  payload: { pattern },
+});
+
+export const put = action => ({
+  '@@redux-saga/IO': true,
+  type: 'PUT',
+  payload: { action },
+});
+
+export const select = (selector, ...arguments_) => ({
+  '@@redux-saga/IO': true,
+  type: 'SELECT',
+  payload: { selector, args: arguments_ },
+});
+```
+
+Add `select` to your collection of custom `select` effects.
+
+```js title="src/features/example/example-sagas.js" {1, 9-10}
+import { put, select, take } from '../../redux/effects';
+import { increment, selectCount, slice } from './example-reducer';
+
+export const init = () => ({ type: `${slice}/init` });
+
+export function* exampleSaga() {
+  yield take(init().type);
+  yield put(increment());
+  const currentCount = yield select(selectCount);
+  console.log('currentCount', currentCount);
+}
+```
+
+Next, import your `selectCount` selector and the `select` effect into your example saga. Use them to grab the current count from your store within the saga.
+
+If you’re coding along, try implementing the handling of the `select` effect in your `saga-middleware` on your own.
+
+...
+
+Are you done? Here is the solution.
+
+```js title="src/redux/saga-middleware.js" {1, 33-38}
+import { put, select, take } from './effects';
+
+export function createSagaMiddleware() {
+  let sagas = [];
+
+  const middleware = store => next => action => {
+    const result = next(action);
+
+    sagas.forEach(saga => {
+      const sagaIterator = saga();
+
+      let effectHandled = false;
+
+      const handleEffect = async effect => {
+        if (!effect || !effect['@@redux-saga/IO']) {
+          effectHandled = true;
+          return;
+        }
+
+        switch (effect.type) {
+          case take().type: {
+            if (effect.payload.pattern === action.type) {
+              return action;
+            } else {
+              effectHandled = true;
+              return;
+            }
+          }
+          case put().type: {
+            store.dispatch(effect.payload.action);
+            return;
+          }
+          case select().type: {
+            return effect.payload.selector(
+              store.getState(),
+              ...effect.payload.args,
+            );
+          }
+          default: {
+            effectHandled = true;
+            return;
+          }
+        }
+      };
+
+      const processSaga = async () => {
+        let lastValue;
+
+        try {
+          while (!effectHandled) {
+            const { value, done } = sagaIterator.next(lastValue);
+
+            if (done) {
+              break;
+            }
+
+            lastValue = await handleEffect(value);
+          }
+        } catch (error) {
+          sagaIterator.throw(error);
+        }
+      };
+
+      processSaga();
+    });
+
+    return result;
+  };
+
+  middleware.run = saga => {
+    sagas.push(saga);
+  };
+
+  return middleware;
+}
+```
+
+To support the `select` effect, switch on its type and then call `store.getState()` to pass it the current state and spread in the arguments attached to the `select` effect as the second argument.
+
+```sh title="console output"
+dispatching { "type": "example/init" }
+next state { "example": { "count": 0 } }
+dispatching { "type": "example/increment" }
+next state { "example": { "count": 1 } }
+currentCount 1
+```
+
+When you now run your code, you should see the current count logged out in your browser console.
+
+### `call`
+
+How do you isolate side-effects with Redux Saga? You do that using the `call` effect.
+
+When using Redux saga, similar to how you do it with actions and selectors, you use objects that represent future computations rather than directly triggering computation with I/O. `call` never actually calls a function. Instead, it returns an object with a reference to a function and its arguments, and the saga middleware calls it for you.
+
+Log out `call` again to inspect it.
+
+```js title="call-example.js"
+import { call } from 'redux-saga/effects';
+
+console.log(call(() => {}));
+```
+
+At this point, the output should look familiar to you.
+
+```sh title="console output"
+{
+  '@@redux-saga/IO': true,
+  combinator: false,
+  type: 'CALL',
+  payload: { context: null, fn: [Function (anonymous)], args: [] }
+}
+```
+
+The `fn` property contains the function that is the first argument of the `call` effect, and args is the arguments passed to the function. `context` contains the `this` context in which the function will be executed, which is `null` when the function does NOT depend on it.
+
+```js title="src/redux/effects.js" {19-39}
+export const take = pattern => ({
+  '@@redux-saga/IO': true,
+  type: 'TAKE',
+  payload: { pattern },
+});
+
+export const put = action => ({
+  '@@redux-saga/IO': true,
+  type: 'PUT',
+  payload: { action },
+});
+
+export const select = (selector, ...arguments_) => ({
+  '@@redux-saga/IO': true,
+  type: 'SELECT',
+  payload: { selector, args: arguments_ },
+});
+
+export function call(functionOrContextAndFunction, ...arguments_) {
+  if (Array.isArray(functionOrContextAndFunction)) {
+    const [context, function_] = functionOrContextAndFunction;
+    
+    return {
+      '@@redux-saga/IO': true,
+      type: 'CALL',
+      payload: { fn: function_, args: arguments_, context },
+    };
+  }
+  
+  return {
+    '@@redux-saga/IO': true,
+    type: 'CALL',
+    payload: {
+      fn: functionOrContextAndFunction,
+      args: arguments_,
+      context: null,
+    },
+  };
+}
+```
+
+You can use `call` in two ways. If the first argument is an array, the first element is the context, and the second is the function. If the first argument is a function, the context is `null`.
+
+Now, use `call` in your example saga located in `src/features/example/example-sagas.js`.
+
+```js title="src/features/example/example-sagas.js" {1-2, 6-11, 21, 24}
+import { call, put, select, take } from '../../redux/effects';
+import { increment, incrementBy, selectCount, slice } from './example-reducer';
+
+export const init = () => ({ type: `${slice}/init` });
+
+const fetchUser = async id => {
+  const response = await fetch(
+    `https://jsonplaceholder.typicode.com/users/${id}`,
+  );
+  return await response.json();
+};
+
+export function* exampleSaga() {
+  // sagaIterator.next(undefined); 1st
+  yield take(init().type);
+  // sagaIterator.next(init()); 2nd
+  yield put(increment());
+  // sagaIterator.next(undefined); 3rd
+  const currentCount = yield select(selectCount);
+  // sagaIterator.next(1); 4th
+  const user = yield call(fetchUser, currentCount);
+  // { type: 'call', payload: { context: null, fn: fetchUser, args: [currentCount] }}
+  // sagaIterator.next({ name: 'Leane Graham' }); // 5th
+  yield put(incrementBy(user.name.length));
+  // sagaIterator.next(undefined);
+}
+```
+
+To have something to isolate, create a `fetchUser` function that retrieves a user from a placeholder API using their `id`.
+
+Then, use `call` to fetch the user whose ID is equal to the current count. Lastly, dispatch an `incrementBy` action to increase the count by the length of the user's name.
+
+`call` is a pure function that takes in a function to call and the arguments to call the function with. It then delays the calling of the function. The invocation of the function is done by the saga middleware at some later point in time. This is how call transforms an impure function, like an API call, or a database call into a pure function by isolating the side-effect.
+
+By the way, this saga is nonsense. You're going see real use-cases in article 3, 4, and 5 of this series. The purpose of this example saga is to help you understand how Redux Saga and its effects work.
+
+Next, modify your `createSagaMiddleware` function to handle the `call` effect in `src/redux/saga-middleware.js`. If you'd like, you can try doing it again as an exercise, but be warned - this one is a bit tougher.
+
+```js title="src/redux/saga-middleware.js" {1, 39-51}
+import { call, put, select, take } from './effects';
+
+export function createSagaMiddleware() {
+  let sagas = [];
+
+  const middleware = store => next => action => {
+    const result = next(action);
+
+    sagas.forEach(saga => {
+      const sagaIterator = saga();
+
+      let effectHandled = false;
+
+      const handleEffect = async effect => {
+        if (!effect || !effect['@@redux-saga/IO']) {
+          effectHandled = true;
+          return;
+        }
+
+        switch (effect.type) {
+          case take().type: {
+            if (effect.payload.pattern === action.type) {
+              return action;
+            } else {
+              effectHandled = true;
+              return;
+            }
+          }
+          case put().type: {
+            store.dispatch(effect.payload.action);
+            return;
+          }
+          case select().type: {
+            return effect.payload.selector(
+              store.getState(),
+              ...effect.payload.args,
+            );
+          }
+          case call().type: {
+            try {
+              const { fn, args, context } = effect.payload;
+              const functionResult = fn.apply(context, args);
+              if (functionResult instanceof Promise) {
+                return await functionResult;
+              }
+              return functionResult;
+            } catch (error) {
+              effectHandled = true;
+              return sagaIterator.throw(error);
+            }
+          }
+          default: {
+            effectHandled = true;
+            return;
+          }
+        }
+      };
+
+      const processSaga = async () => {
+        let lastValue;
+
+        try {
+          while (!effectHandled) {
+            const { value, done } = sagaIterator.next(lastValue);
+
+            if (done) {
+              break;
+            }
+
+            lastValue = await handleEffect(value);
+          }
+        } catch (error) {
+          sagaIterator.throw(error);
+        }
+      };
+
+      processSaga();
+    });
+
+    return result;
+  };
+
+  middleware.run = saga => {
+    sagas.push(saga);
+  };
+
+  return middleware;
+}
+```
+
+In the effect handler for `call`, destructure the function, it's arguments and the context from effect's payload.
+
+Then call the function using the `apply` method. This allows the function to be invoked with the specified `context` and `arguments`. Remember, if the function does NOT rely on a specific context, `context` will be `null`.
+
+If the executed function returns a promise (i.e., it's an asynchronous operation), await this promise and then return the resolved value. Otherwise return the result directly.
+
+If an error occurs during the execution of the function (either synchronously or within the promise), catch the error. Then use `sagaIterator.throw(error)` to pass the error back to the saga, allowing the saga to handle it appropriately (e.g., in a try/catch block).
+
+As mentioned above, when you defined `processSaga` you await `handleEffect` because through `call` it can handle promises.
+
+Now run your app again.
+
+```sh title="console output"
+dispatching { "type": "example/init" }
+next state { "example": { "count": 0 } }
+dispatching { "type": "example/increment" }
+next state { "example": { "count": 1 } }
+dispatching { "type": "example/incrementBy", "payload": 13 }
+next state { "example": { "count": 14 } }
+```
+
+Your browser console should now show the `incrementBy` action being dispatched with a payload of 13, because the user with ID one is named "Leanne Graham."
+
+Redux Saga offers many more effects. You can explore them in the documentation, and be sure to read the next article in this series, where you're going to use more effects and dive into real-world examples.
+
+### Redux Saga Package
+
+It's time to replace your custom code with the actual functions from Redux Saga.
+
+Install Redux Saga.
+
+```sh
+$ npm i redux-saga
+```
+
+Next, replace your custom `createSagaMiddleware` function in your `store` with the one provided by Redux Saga.
+
+```js title="src/redux/store.js" {2}
+import { applyMiddleware, legacy_createStore as createStore } from 'redux';
+import createSagaMiddleware from 'redux-saga';
+
+import { exampleSaga } from '../features/example/example-sagas';  
+import { rootReducer } from './root-reducer';
+
+const logger = store => next => action => {
+  console.log('dispatching', action);
+  let result = next(action);
+  console.log('next state', store.getState());
+  return result;
+};
+
+export const makeStore = () => {
+  const sagaMiddleware = createSagaMiddleware();
+  const store = createStore(
+    rootReducer,
+    rootReducer(),
+    applyMiddleware(sagaMiddleware, logger),
+  );
+  sagaMiddleware.run(exampleSaga);
+  return store;
+};
+```
+
+Now you can replace the custom effects in your example saga with the actual effects from Redux Saga.
+
+```js title="src/features/example/example-sagas.js" {1}
+import { call, put, select, take } from 'redux-saga/effects';
+
+import { increment, incrementBy, selectCount, slice } from './example-reducer';
+
+export const init = () => ({ type: `${slice}/init` });
+
+const fetchUser = async id => {
+  const response = await fetch(
+    `https://jsonplaceholder.typicode.com/users/${id}`,
+  );
+  return await response.json();
+};
+
+export function* exampleSaga() {
+  yield take(init().type);
+  yield put(increment());
+  const currentCount = yield select(selectCount);
+  const user = yield call(fetchUser, currentCount);
+  yield put(incrementBy(user.name.length));
+}
+```
+
+And when you run your app again, you still get the same output in the console of your browser.
+
+```sh title="console output"
+dispatching { "type": "example/init" }
+next state { "example": { "count": 0 } }
+dispatching { "type": "example/increment" }
+next state { "example": { "count": 1 } }
+dispatching { "type": "example/incrementBy", "payload": 13 }
+next state { "example": { "count": 14 } }
+```
+
+In the beginning of this article, you learned that Redux Saga is great for:
+
+- isolating asynchronous effects, and
+- deterministic testing of I/O related logic.
+
+So far, you've only seen the first point in this article. You're going to learn how to use sagas for deterministic testing in the fourth article of this series, where you build a real-world app with Redux.
+
+But before that, you need to learn how to set up Redux for production, which is what the third article covers. So, go read that one next.

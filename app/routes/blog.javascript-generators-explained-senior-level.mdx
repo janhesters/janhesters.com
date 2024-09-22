@@ -109,7 +109,7 @@ Promises in JavaScript exhibit eager evaluation for several reasons.
 1. **Immediate Execution**: The function passed to a new Promise (known as the executor function) is executed immediately when the Promise is constructed.
 2. **Irreversible Operations**: Once the executor function begins executing, it cannot be stopped or paused by the consuming code. The results of the operation it performs (either resolution or rejection) will be queued in the JavaScript event loop to be handled as soon as possible.
 3. **No Lazy Option**: A promise lacks any built-in mechanism to defer or cancel the execution of its executor until a value is needed.
-4. **Side Effects**: The eager nature of promises means that any side effects included in the executor (like API calls, timeouts, or I/O operations) will happen immediately as part of the promise creation.
+4. **side-effects**: The eager nature of promises means that any side-effects included in the executor (like API calls, timeouts, or I/O operations) will happen immediately as part of the promise creation.
 
 The following example demonstrates how demonstrates how promises are executed immediately.
 

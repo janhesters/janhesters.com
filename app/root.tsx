@@ -169,8 +169,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <a
                 className="hover:text-foreground"
                 href="https://github.com/janhesters/janhesters.com"
-                rel="noopener noreferrer"
-                target="_blank"
               >
                 <span className="sr-only">Github</span>
 

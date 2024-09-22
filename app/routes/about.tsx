@@ -68,8 +68,6 @@ export default function About() {
             <a
               className="underline hover:text-primary"
               href="https://www.reactsquad.io/jan"
-              rel="noopener noreferrer"
-              target="_blank"
             >
               ReactSquad
             </a>

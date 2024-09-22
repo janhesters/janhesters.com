@@ -673,10 +673,6 @@ If you switch the order of HOCs in the real-world example above, it will break, 
 
 HOCs with implicit dependencies on each other may be a code smell. In some cases, it may be better to make those dependencies explicit, by importing the shared functionality into the components that need them, or taking the dependency as a configuration parameter of the HOC. It's probably ok to implicitly depend on something that's pretty universal to all your pages, such as your store provider.
 
-I love you very much. Thank you for reading this article. If you've liked it, please follow me on [X*](https://x.com/janhesters) and let me know what you've learned.
-
-(* = formerly known as Twitter)
-
 import { ReadNext } from '../features/blog/read-next';
 import { frontmatter as whatIsReduxGetASeniorUnderstandingOfHowReduxWorks } from './blog.what-is-redux-get-a-senior-understanding-of-how-redux-works.mdx';
 import { frontmatter as unleashJavaScriptsPotentialWithFunctionalProgramming } from './blog.unleash-javascripts-potential-with-functional-programming.mdx';
