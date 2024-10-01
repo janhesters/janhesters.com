@@ -1,0 +1,1368 @@
+---
+title: "Unleash JavaScript's Potential with Functional Programming"
+datePublished: '2024-10-01'
+description: "Discover how functional programming can clean up your JavaScript code. Learn key concepts like immutability, currying and function composition to write cleaner, more maintainable, and efficient code."
+thumbnailUrl: '/images/thumbnails/unleash-javascripts-potential-with-functional-programming.jpg'
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+Too many JavaScript developers have no idea what JavaScript is capable of.
+
+This article will transform the way you write code and unleash your potential as a programmer.
+
+By the end of this article, you will be able to read, understand and write code like this:
+
+```js
+const curry =
+  (f, array = []) =>
+  (...args) =>
+    (a => (a.length >= f.length ? f(...a) : curry(f, a)))([
+      ...array,
+      ...args,
+    ]);
+
+const add = curry((a, b) => a + b);
+const inc = add(1);
+
+const pipe = (...fns) => x => fns.reduce((y, f) => f(y), x);
+const doubleInc = pipe(x => x * 2, inc);
+```
+
+JavaScript is a two paradigm programming language because it supports OOP and FP.
+
+This article is your "step-by-step with no steps skipped" guide to functional programming, so you can use the language to its full capabilities and write more modular, deterministic and testable code.
+
+It literally goes from primitives all the way to advanced function composition.
+
+<iframe
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  allowFullScreen
+  className="aspect-video w-full"
+  frameBorder="0"
+  referrerPolicy="strict-origin-when-cross-origin"
+  src="https://www.youtube.com/embed/xw5SJZnTWp4?si=MISP-QWofgqyL8LO"
+  title="Unleash JavaScript's Potential with Functional Programming"
+></iframe>
+
+### Definition
+
+If you look up functional programming you might get lost in academic lingo. 
+
+If you're lucky you will find some kind of simple definition like this:
+
+> “**Functional programming** is the process of building software by composing functions. Functional programming is **declarative** rather than **imperative**. **Side-effects** are isolated. And application state usually flows through **pure functions**.”
+
+You can relax because this article will explain all of these terms and more. Starting at Primitives.
+
+### Primitives
+
+**Primitives** are all datatypes that can hold only one value at a time. JavaScript has 7 primitive data types.
+
+- `string`: Represents text. (ReactSquad plug)
+- `number`: Represents numerical values.
+- `boolean`: Represents true or false.
+- `undefined`: Indicates a variable has not been assigned a value.
+- `null`: Represents an intentional absence of any object value.
+- `Symbol`: Creates unique identifiers.
+- `BigInt`: Handles numbers larger than the standard `number` type can.
+
+```js
+// primitives.js
+const string = "ReactSquad.io";
+const number = 9001;
+const boolean = true;
+const notThere = undefined;
+const weirdUndefined = null;
+const noOneUsesThis = Symbol('🤯');
+const bigInt = 1n;
+```
+
+### Composite Data Types
+
+**Composite data types** can store collections or combinations of values.
+
+- **Object**: A structure that can hold multiple values as named properties.
+- **Array**: A list-like structure that holds values in a specific order.
+- **Map**: A collection of keyed data items, similar to an object but with keys of any type and maintains the order of insertions.
+- **Set**: A collection of unique values. Like an array, but each value can only occur once.
+
+```js
+// composite.js
+const obj = { key: "value" };
+const array = [1, 2, 3, 4, 5];
+```
+
+A `Map` in JavaScript is a collection of keyed data items that maintains the order of insertions and allows keys of any type.
+
+```js
+// map.js
+// Creating a new Map
+const map = new Map();
+
+// Setting key-value pairs in the Map
+map.set('name', 'John');
+map.set('age', 30);
+map.set(1, 'one');
+
+console.log(map);
+// Output: Map(3) {'name' => 'John', 'age' => 30, 1 => 'one'}
+
+// Retrieving a value by key.
+console.log(map.get('name')); // Output: John
+
+// Checking if a key exists.
+console.log(map.has('age')); // Output: true
+
+// Size of the Map.
+console.log(map.size); // Output: 3
+
+// Removing a key-value pair.
+map.delete(1);
+
+// Clearing all entries.
+map.clear();
+```
+
+A `Set` in JavaScript is a collection of unique values, ensuring that each value appears only once.
+
+```js
+// set.js
+// Creating a new Set.
+const set = new Set();
+
+// Adding values to the Set.
+set.add('apple');
+set.add('banana');
+set.add('apple'); // This will not be added again.
+
+console.log(set);
+// Output: Set(2) {'apple', 'banana'}
+// Reminder: Sets delete duplicates.
+
+// Checking if a value exists.
+console.log(set.has('banana')); // Output: true
+
+// Size of the Set.
+console.log(set.size); // Output: 2
+
+// Deleting a value.
+set.delete('apple');
+
+// Iterating over Set values.
+set.forEach(value => {
+  console.log(value);
+});
+
+// Clearing all values.
+set.clear();
+```
+
+### Functions
+
+```js
+function sumDeclaration(a, b) {
+  return a + b;
+}
+
+const sumArrow = (a, b) => a + b;
+```
+
+A function is a process that can take inputs, called **parameters**, and can produce some output called **return value**.
+
+#### Parameters vs. Arguments
+
+- **Parameters** are variables defined in the function declaration. They act as placeholders for the values that a function will operate on. 
+- **Arguments** are the actual values or data passed to the function when it is called. These values replace the parameters during the function's execution.
+- An **application** happens when the arguments are used to replace the function's parameters. This allows the function to perform its task using the provided arguments.
+
+```js
+function myFunction(parameter) {
+  return parameter;
+}
+
+const myArgument = "Some value";
+myFunction(myArgument); // Output: "Some value";
+```
+
+A function can be a mapping, a procedure or handle I/O operations.
+
+- **Mapping:** Produce some output based on given inputs. A function **maps** input values to output values. (So the examples you saw earlier are mappings.)
+
+```js
+const square = x => x * x;
+
+square(7); // 49
+```
+
+- **Procedure:** A function executes some steps in a sequence. The sequence is known as a procedure, and programming in this style is known as **procedural programming**.
+
+```js
+function prepareTea(teaType) {
+  let steps = [];
+  steps.push("Boil water");
+  steps.push("Add " + teaType);
+  steps.push("Steep for 5 minutes");
+  steps.push("Serve hot");
+  return steps.join("\n");
+}
+
+console.log(prepareTea("green tea"));
+// Output: Boil water
+//         Add green tea
+//         Steep for 5 minutes
+//         Serve hot
+
+function calculateCircleArea(radius) {
+  if (radius <= 0) {
+    return "Error: Radius must be greater than zero.";
+  }
+  const pi = Math.PI; // Use Math.PI for more accuracy
+  const squaredRadius = radius * radius;
+  const area = pi * squaredRadius;
+  const roundedArea = Math.round(area * 100) / 100; // Round to 2 decimal places
+  return "Calculated area: " + roundedArea;
+}
+
+console.log(calculateCircleArea(5));
+// Output: Calculated area: 78.54
+
+console.log(calculateCircleArea(-1));
+// Output: Error: Radius must be greater than zero.
+```
+
+- **I/O operations:** I/O is short for input and output. Functions may handle interactions with system components like the screen, storage, logs, or network.
+
+```js
+async function fetchData(url) {
+  const response = await fetch(url);
+  const data = await response.json();
+  return data;
+}
+
+fetchData('https://jsonplaceholder.typicode.com/todos/1')
+  .then(data => console.log(data));
+// {
+//   "userId": 1,
+//   "id": 1,
+//   "title": "delectus aut autem",
+//   "completed": false
+// }
+```
+
+### Methods
+
+**Methods** are functions attached to objects. They allow you to perform operations on the object's data. In JavaScript, methods are commonly used with objects, arrays, and other built-in types.
+
+```js
+const person = {
+  name: 'John',
+  greet: function() {
+    console.log('Hello, ' + this.name);
+  }
+};
+
+// Calling the greet method.
+person.greet(); // Output: Hello, John
+```
+
+Earlier in this article, you saw how to use methods of the `Map` and `Set` objects.
+
+Primitives also have methods because under the hood everything in JavaScript is an object.
+
+```js
+const greeting = 'Hello, world';
+
+// Changing case.
+console.log(greeting.toUpperCase()); // Output: HELLO, WORLD
+
+// Replacing part of the string.
+console.log(greeting.replace('Hello', 'Goodbye')); // Output: Goodbye, world
+
+// Checking if it includes a substring.
+console.log(greeting.includes('world')); // Output: true
+```
+### Noop
+
+A "noop" stands for "no operation." It describes a function, operation, or command that does nothing. This can be useful for placeholders in code or to intentionally have no effect.
+
+In JavaScript, a `noop` function looks like this:
+
+```js
+function noop() {}
+
+const noop = () => {};
+```
+
+### Pure Functions
+
+A function is a **pure function**, if:
+
+1. given the same inputs, it always returns the same output, and
+2. it has no side-effects.
+
+You've seen pure functions already. For example, both `sum` functions and the `square` function are pure.
+
+Pure functions are **deterministic**. This is captured by the first property. A pure function will always produce the same output for the same set of inputs, no matter **when** or **how many times** it is called. This predictability is a key property of pure functions and is essential for reliable and testable code.
+
+Here is an example for a function that violates the first rule.
+
+```js
+/**
+ * Generates a random integer between the start and end values, both inclusive.
+ *
+ * @param {number} start - The starting value.
+ * @param {number} end - The ending value.
+ * @returns {number} - A random integer between the start and end.
+ */
+export const generateRandomInt = (start, end) =>
+  Math.round(Math.random() * (end - start) + start);
+```
+
+`generateRandomInt` can be called with the same `start` and `end` values, but it produces different results because it uses `Math.random()`.
+
+And here is a example, which violates the second rule.
+
+```js
+let externalArray = [];
+
+function sideEffectingFunction(x) {
+  externalArray.push(x); // Modifies external array
+  return x;
+}
+
+console.log(sideEffectingFunction(5)); // 5, modifies externalArray
+console.log(sideEffectingFunction(10)); // 10, modifies externalArray, too
+console.log(externalArray); // Output: [5, 10]
+```
+
+Even though `sideEffectingFunction`  returns something, it pushes code as a side-effect to an array and you can meaningfully call it without using it's return value.
+
+> “A **dead giveaway** that a function is impure is if it makes sense to call it without using its return value. For pure functions, that's a noop.” - [Eric Elliott](https://twitter.com/_ericelliott/status/770260480141254657)
+
+### Idempotence
+
+Another concept you need to know is **idempotence**.
+
+**Idempotence** is a property of certain operations in which no matter how many times you perform the operation, the result remains the same after the first application. For example, setting a value to 5 is idempotent because no matter how often you do it, the value remains 5.
+
+```js
+let number = 5;
+number = 5; // still 5
+number = 5; // no change, still 5
+```
+
+All pure functions are idempotent, but not all idempotent functions are pure functions.
+
+An idempotent function can cause idempotent side-effects.
+
+A pure function cannot.
+
+Deleting a record in a database by ID is idempotent, because the row of the table stays deleted after subsequent calls. Additional calls do nothing.
+
+Here is a synchronous example.
+
+```js
+const uniqueItems = new Set();
+
+// This custom addItem function is idempotent because ...
+function addItem(item) {
+  uniqueItems.add(item);
+  console.log(`Added item: ${item}`);
+  return uniqueItems.size;
+}
+
+addItem("apple");  // Outputs "Added item: apple", returns 1
+// ... calling addItem with the same item twice leaves the set unchanged.
+addItem("apple");  // Outputs "Added item: apple", returns 1
+addItem("banana"); // Outputs "Added item: banana", returns 2
+```
+
+### Referential Transparency
+
+Idempotent functions without side-effects have a feature known as **referential transparency**.
+
+That means that if you have a function call:
+
+```js
+const result = square(7);
+```
+
+You could replace that function call with the result of `square(7)` without changing the meaning of the program. So, for example if the result of `square(7)` is `49`. Therefore, you could change the code above to:
+
+```js
+const result = 49;
+```
+
+and your program would still work the same.
+
+### Why Do You Need Functions?
+
+After reading the former part, a mentee asked me:
+
+> “Why do you need functions? I'm trying to understand why and when to use functions versus objects in programming. I'm curious if theoretically everything could be done without functions, just by manipulating data in variables. I realize it might be more cumbersome to handle everything with variable declarations, but I'm interested in understanding the core value or use case of functions.”
+
+You use functions because they flexibly describe data points.
+
+Suppose you want to know the orbit of a planet in the past.
+
+You could either memorize all human archives.
+
+Or you learn just the formula, which is the function in the context of programming. The formula is easier to remember. But sometimes, executing the formula is more difficult than looking up archived data.
+
+The real advantage is that you can use the formula for infinitely different applications. For example, to predict future orbits or to correct errors in the archives.
+
+### Functional Programming Prerequisites
+
+A language needs three features to support functional programming, and JavaScript has all three:
+
+1. First-class functions (and therefore higher-order functions),
+2. closures, and
+3. anonymous functions and concise lambda syntax.
+
+### First-Class Functions
+
+In JavaScript, functions are treated as first-class citizens. This means that functions can be stored in variables. Therefore, you can use functions as:
+
+- arguments to other functions,
+- return values from functions,
+- values to an object’s keys.
+
+```js
+// Storing a function in a variable.
+const greet = function() {
+  return "Hello, World!";
+}
+
+// Passing a function as an argument (callback).
+function shout(fn) {
+  const message = fn();
+  console.log(message.toUpperCase());
+}
+
+shout(greet); // Output: "HELLO, WORLD!"
+
+// Returning a function from another function.
+function multiply(multiplicand) {
+  return function (multiplier) {
+    return multiplicand * multiplier;
+  }
+}
+
+const double = multiply(2);
+console.log(double(5)); // Output: 10
+```
+
+If you want to learn what first-class functions enable in React check out this article about higher-order components, link is in the description below.
+### Higher-Order Functions
+
+The last example `multiply` that you saw is called a "higher-order function" because when you call it for the first time with a number, it returns a function.
+
+Any function that takes in or returns a function is called a higher order function.
+
+```js
+function greet() {
+  return "Hello World!"
+}
+
+const identity = x => x; // Same as myFunction from earlier ❗️
+
+identity(greet)(); // "Hello World!"
+```
+
+### Closure
+
+The `multiply` function from earlier hid another key concept: Closure.
+
+A closure happens when a function is bundled together with it's lexical scope. In other words, a closure gives you access to an outer function’s scope from an inner function. Closures in JavaScript are created whenever a function is created, at function creation time.
+
+To use a closure, define a function inside another function and expose it by returning the inner function or passing it to another function.
+
+The inner function can access variables in the outer function's scope, even after the outer function has returned.
+
+```js
+function multiply(multiplicand) {
+  return function(multiplier) {
+    return multiplicand * multiplier;
+  }
+}
+
+// Multiplicand of 2 gets captured in the closure because the inner
+// returned function has access to it, even though the outer `multiply`
+// function already ran to completion.
+const double = multiply(2);
+console.log(double(5)); // Output: 10
+```
+
+Closures serve three purposes:
+
+1. They provide data privacy for objects.
+2. In functional programming, they enable partial application and currying.
+3. They act as parameters for callback or higher-order functions like `map`, `reduce`, and `filter`.
+
+You're going to see 2.) and 3.) later in this article, so let's take a look at the concept of data privacy.
+
+```js
+const createCounter = () => {
+  let count = 0;
+
+  return function increment() {
+    count = count + 1;
+    return count;
+  }
+}
+
+const counter1 = createCounter();
+const counter2 = createCounter();
+
+counter1(); // 1
+counter1(); // 2
+counter2(); // 1
+let capturedCount = counter1(); // 3
+capturedCount = capturedCount + 39; // 42
+counter1(); // 4
+```
+
+No external influence can manipulate the `count` value of `counter1`. You need to call `counter1` to increment it.
+
+This matters because some applications require private state. A common pattern is to prefix the private key with `__`.
+
+```js
+const user = {
+  __secretKey: 'abcj'
+}
+```
+
+However, junior developers might *not* know that `__` signals: "Do **NOT** change this key.", so they mutate it. And senior developers sometimes think it's okay to change it because they believe they know better.
+
+Closures give you a reliable way to enforce data privacy for everyone.
+### Imperative vs. Declarative
+
+As you learned at the start of this article, functional programming is declarative. But what does that mean?
+
+**Imperative** code describes **"how"** to do things. The code contains the specific steps needed to achieve your desired result.
+
+**Declarative** code describes **"what"** to do. The "how" gets abstracted away.
+
+In other words, imperative programming is about defining the process to reach an outcome. This is known as **flow control**, where you dictate each step of the computation.
+
+Declarative programming, on the other hand, is about defining the outcome, known as **data flow**. Here, you describe what you want, and the system determines how to achieve it.
+
+Here is an example for imperative code.
+
+```js
+let numbers = [1, 2, 3, 4, 5];
+let doubled = [];
+
+for (let i = 0; i < numbers.length; i++) {
+  doubled.push(numbers[i] * 2);
+}
+console.log(doubled); // Output: [2, 4, 6, 8, 10]
+```
+
+And here is another example of imperative code, but this time with a custom function.
+
+```js
+function filterEvens(numbers) {
+  let index = 0;
+
+  while (index < numbers.length) {
+    if (numbers[index] % 2 !== 0) {
+      // Removes the item at the current index if it's odd.
+      numbers.splice(index, 1);
+    } else {
+      // Only move to the next index if the current item was not removed
+      // because the current index gets taken by the value after the
+      // deleted one.
+      index++;
+    }
+  }
+}
+
+let numbers = [1, 2, 3, 4, 5];
+filterEvens(numbers);
+console.log(numbers); // Output: [2, 4]
+```
+
+Before you look at declarative code, you need to understand immutability and abstraction.
+### Immutability
+
+**Immutability** in programming means that an object or value ***cannot*** be modified after it is created; instead, any changes result in a new object or value.
+
+```js
+const originalArray = [1, 2, 3];
+// Creates a new array by spreading the original and adding a new element.
+const newArray = [...originalArray, 4];
+
+console.log(originalArray); // Output: [1, 2, 3]
+console.log(newArray); // Output: [1, 2, 3, 4]
+```
+
+Similarly, **mutable** state is state that ***can*** be modified after you created it.
+
+```js
+const array = [1, 2, 3];
+array.push(4); // Modifies the original array by adding a new element.
+
+console.log(array); // Output: [1, 2, 3, 4]
+```
+
+Immutability is a central concept of functional programming because with it, the data flow in your program is preserved. State history is maintained, and it helps prevent strange bugs from creeping into your software.
+
+> “non-determinism = parallel processing + mutable state” - Martin Odersky
+
+You want determinism to make your programs easy to reason about, and parallel processing to keep your apps performant, so you have to get rid of mutable state.
+
+Generally speaking, when you write your code using functional programming it becomes more deterministic, easier to reason about, easier to maintain, more modular and more testable.
+
+### Abstraction
+
+**Abstraction** is a fundamental concept in programming that involves hiding the complex reality while exposing only the necessary parts of an object or a system.
+
+There are two types of abstraction: generalization and specialization.
+
+**Generalization** is when you create a more universal form of something for use in multiple contexts. This process identifies common features among different components and develops a single model to represent all variations.
+
+This is what most people think of when they hear "abstraction" and what Eric Elliott refers to when he says:
+
+> “**Junior developers** think they have to write a lot of code to produce a lot of value.
+> 
+> **Senior developers** understand the value of the code that nobody needed to write.” - Eric Elliott
+
+**Specialization** is when you apply the abstraction to a specific use-case and add what makes the current situation different.
+
+The hard part is knowing ***when*** to generalize and when to specialize. Unfortunately, there is no good rule of thumb for this - you develop a feel for both with experience.
+
+And what you're going to find is:
+
+Abstraction is the key to simplicity.
+
+> “Simplicity is about
+>
+> subtracting the obvious
+>
+> and adding the meaningful.” - John Maeda
+
+Using the functional programming paradigm you can create the most beautiful abstractions.
+
+At this point you're probably starving for examples and you're going to see some soon.
+
+Now, it's time to look at declarative code, which will also show you more immutability and some abstraction.
+
+### Array methods
+
+Remember, declarative programming is about "what" to do.
+
+The perfect example of declarative code in JavaScript are the native array methods. You're going to see the three most common ones: `map`, `filter` and `reduce`.
+
+#### `map`
+
+Take a look at the `map` function first. It does exactly what we did earlier with the `for` loop, but the code is a lot more concise.
+
+```js
+const numbers = [1, 2, 3, 4, 5];
+
+const doubled = numbers.map(n => n * 2); // Output: [2, 4, 6, 8, 10]
+```
+
+The `map` method is a perfect example of abstraction.
+
+`map` removes the obvious: iterating over the array and changing each value. Since it takes in a function, the `map` method is a higher-order function.
+
+You only supply the meaningful: the function that doubles a number, which `map` applies to every number in the array. This `double` function is an anonymous function using the concise lamda syntax.
+
+In general, a **concise lambda** is a simplified way to write a function with minimal syntax. In JavaScript it refers to the arrow function syntax.
+
+`map` is also immutable because it returns a new array. `numbers` and `doubled` are two distinct arrays and the `numbers` array still contains the numbers 1 through 5. You can verify this by mapping using the `identity` function that returns its input.
+
+```js
+const numbers = [1, 2, 3, 4, 5];
+const clone = numbers.map(x => x);
+console.log(numbers === clone); // false
+```
+
+Even though `numbers` and `clone` are both an array with the numbers 1 through 5, they are different array instances.
+
+You might be asking yourself: "Isn't that generating tons of data that no one uses?"
+
+Well kinda, but compared to what modern laptops are capable of the data amount is tiny, and JavaScript has garbage collection which clears up the stale memory.
+
+#### `filter`
+
+```js
+const fruits = ['apple', 'banana', 'citrus'];
+
+const containsA = fruits.filter(fruit => fruit.includes('a'));
+// Output: ['apple', 'banana'];
+```
+
+The `filter` method takes in a special function called the "predicate". A predicate is a function that always returns only a boolean. It tests each element in the array. If it returns `true`, the element is included in the resulting array.
+
+`filter` also returns a new array aka. it's immutable.
+
+#### `reduce`
+
+The `reduce` method in JavaScript processes an array to produce a single output value. It takes a reducer function and an optional initial value. The reducer function itself accepts two parameters: an `accumulator` (which holds the accumulated result) and the `currentValue` from the array. The `reduce` method is also immutable.
+
+Here is an example where you can use `reduce` on an array of numbers from 1 to 4, summing them together.
+
+```javascript
+const numbers = [1, 2, 3, 4];
+
+const sumReducer = (accumulator, currentValue) => accumulator + currentValue;
+
+const total = numbers.reduce(sumReducer, 0); console.log(total); // Output: 10
+```
+
+In this example, `reduce` is called on the `numbers` array. The `sumReducer` function is used to add each number to a running total, starting from 0. Here's what happens at each step:
+
+| Step | Accumulator | Current Value | Operation | New Accumulator Value |
+|------|-------------|---------------|-----------|-----------------------|
+| 1    | 0           | 1             | 0 + 1     | 1                     |
+| 2    | 1           | 2             | 1 + 2     | 3                     |
+| 3    | 3           | 3             | 3 + 3     | 6                     |
+| 4    | 6           | 4             | 6 + 4     | 10                    |
+
+##### Details of the Process:
+
+- **Step 1:** The accumulator starts at 0 (the initial value). The current value is the first element of the array, which is 1. They are added together to make the new accumulator value 1.
+- **Step 2:** The accumulator is now 1. The current value is the next element in the array, 2. Adding these gives 3.
+- **Step 3:** The accumulator is now 3, and the current value is 3. Adding these gives 6.
+- **Step 4:** The accumulator is now 6, and the current value is the last element, 4. Adding these gives the final result of 10.
+
+At the end of the process, the `reduce` method returns 10, which is the sum of all elements in the array. This demonstrates how `reduce` can be used to transform an array into a single value through repeated application of a function.
+
+`reduce` is the most powerful method because you can implement `map` and `filter` with `reduce`, but neither `filter` nor `reduce` with `map` and neither `map` or `reduce` with `filter`.
+
+You can implement `map` with `reduce` like this:
+
+```js
+const mapUsingReduce = (array, mapFunction) =>
+  array.reduce(
+    (accumulator, current) => [...accumulator, mapFunction(current)],
+    [],
+  );
+
+const numbers = [1, 2, 3, 4];
+const doubled = mapUsingReduce(numbers, x => x * 2);
+console.log(doubled);  // Output: [2, 4, 6, 8]
+```
+
+You can implement `filter` with `reduce` like this:
+
+```js
+const filterUsingReduce = (array, filterFunction) =>
+  array.reduce(
+    (accumulator, current) =>
+      filterFunction(current) ? [...accumulator, current] : accumulator,
+    [],
+  );
+
+const numbers = [1, 2, 3, 4];
+const evens = filterUsingReduce(numbers, x => x % 2 === 0);
+console.log(evens);  // Output [2, 4]
+```
+
+### Expressions Over Statements
+
+In functional programming, you'll see many expressions and few statements. Expressions avoid intermediate variables, while statements often bring side-effects and mutable state.
+
+#### Statements
+
+Imperative code frequently utilizes **statements**. A statement is a piece of code that performs an action. 
+
+- **Loops** - `for`, `while`, etc. 
+
+```js
+// Loops:
+// A for loop that logs numbers 0 to 4.
+for (let i = 0; i < 5; i++) { 
+  console.log(i); 
+}
+
+// A while loop that decrements x and logs it until x is no longer greater than 0.
+while (x > 0) { 
+  x--; 
+  console.log(x); 
+}
+```
+
+- **Control flow** - `if`, `switch`, etc.
+
+```js
+// An if...else statement that logs if x is positive or not.
+if (x > 0) { 
+  console.log("x is positive"); 
+} else { 
+  console.log("x is zero or negative"); 
+}
+
+ // A switch statement that handles different color cases.
+switch (color) {
+  case "red":
+    console.log("Color is red");
+    break;
+  case "blue":
+    console.log("Color is blue");
+    break;
+  default:
+    console.log("Color is not red or blue");
+}
+
+```
+
+- **Error handling** - `try...catch`, `throw`, etc.
+
+```js
+// A try...catch block that handles errors from riskyFunction.
+try { 
+  let result = riskyFunction(); 
+} catch (error) { 
+  console.error(error); 
+}
+
+throw new Error("Something went wrong"); // Throws a new error with a message.
+```
+
+Except for functions, if it's a keyword with curly braces, you're likely dealing with a statement. (❗️)
+
+#### Expressions
+
+Declarative code favours **expressions**. An expression evaluates to a value.
+
+- **Literal expressions**
+
+```js
+42; // The number 42 is a literal expression.
+"Hello"; // The string "Hello" is a literal expression.
+```
+
+- **Arithmetic expressions**
+
+```js
+5 + 3; // Evaluates to 8.
+x * y; // Evaluates to the product of x and y.
+```
+
+- **Logical expressions**
+
+```js
+true && false; // Evaluates to false.
+x || y; // Evaluates to x if x is true, otherwise y.
+```
+
+- **Function expressions**
+
+```js
+const funcExpr = function() { return 42; }; // Defines a function expression.
+const arrowFunc = () => 42; // Defines an arrow function expression.
+```
+
+- **Object and array initializers**
+
+```js
+{ name: "John", age: 30 }; // Object initializer expression.
+[1, 2, 3]; // Array initializer expression.
+```
+
+- **Property access expressions**
+
+```js
+obj.name; // Accesses the "name" property of obj.
+array[0]; // Accesses the first element of array.
+```
+
+- **Function calls**
+
+```js
+square(7); // Evaluates to 49.
+Math.max(4, 3, 2); // Evaluates to 4.
+```
+### Function composition
+
+You're about to unlock a new understanding of code and gain superpowers, so "lock-in".
+
+> “All software development is composition: The act of breaking a complex problem down to smaller parts, and then composing those smaller solutions together to form your application.” - Eric Elliot
+
+Whenever you use functions together, you're "composing" them.
+
+```js
+const increment = n => n + 1;
+const double = n => n * 2;
+
+function doubleInc(n) {
+  const doubled = double(n);
+  const incremented = increment(doubled);
+  return incremented;
+}
+
+doubleInc(5); // 11
+```
+
+But with anything in life, you can do it better if you do it consciously. The code above is actually NOT the ideal way to write it because:
+
+The more code you write, the higher the surface area for bugs to hide in.
+
+> less code = less surface area for bugs = less bugs
+
+The obvious exception is clear naming and documentation. It's fine if you give a function a longer name and supply doc strings to make it easier for your readers to understand your code.
+
+You can reduce the surface area for bugs by avoiding the capturing of the intermediary results in variables.
+
+```js
+const increment = n => n + 1;
+const double = n => n * 2;
+
+const doubleInc = n => inc(double(n));
+doubleInc(5); // 11
+```
+
+In mathematics, function composition is taking two functions `f` and `g` and applying one function to the result of another function:  `h(x) = (f ∘ g)(x) = f(g(x))`. **Note:** The hollow dot `∘` is called the composition operator.
+
+In mathematical notation, if you have two functions `f` and `g`, and their composition is written as `(f ∘ g)(x)`, this means you first apply `g`  to `x` and then apply `f` to the result of `g(x)`. For your example, `f(n) = n + 1` and `g(n) = 2n`, the composition `h(n) = f(g(n))` calculates `2n + 1`.
+
+**Note:** Generally mathematicians use `x` (or `y` or `z` etc.) to represent any variable, but in the code example above `n` is used to subtly hint at the parameter to be a number. The different name has no impact on the result.
+
+You can abstract away the composition operator `∘` into a function called `compose2` which takes two functions and composes them in mathematical order.
+
+```js
+const compose2 = (f, g) => x => f(g(x)); // ∘ operator
+
+const increment = n => n + 1; // f(n)
+const double = n => n * 2; // g(n)
+
+const doubleInc = compose2(increment, double); // h(n)
+doubleInc(5); // 11
+```
+
+`compose2` only works for two functions at a time.
+
+But get ready, because this is where it gets powerful.
+
+If you want to compose an arbitrary amount of functions, you can write a generalized `compose`.
+
+```js
+const compose = (...fns) => x => fns.reduceRight((y, f) => f(y), x);
+// reduceRight works like reduce, but iterates the array from
+// the last item to the first item.
+
+const increment = n => n + 1;
+const double = n => n * 2;
+const square = n => n * n;
+
+const incDoubleSquare = compose(square, double, increment);
+incDoubleSquare(3); // 64
+```
+
+The compose function here is written using the mathematical variable names. If you want to take the names that you might be used to from `reduce`, then you'd write it like this:
+
+```js
+const compose =
+  (...functions) =>
+  initialValue =>
+    functions.reduceRight(
+      (accumulator, currentFunction) => currentFunction(accumulator),
+      initialValue,
+    );
+
+const increment = n => n + 1;
+const double = n => n * 2;
+const square = n => n * n;
+
+const incDoubleSquare = compose(square, double, increment);
+incDoubleSquare(3); // 64
+```
+
+`compose` takes multiple functions as its arguments, and collects them into an array `fns` via the rest syntax. 
+
+It then returns a child function that takes in the initialValue `x` and returns the array `fns` with the `reduceRight` method applied to it. The `reduceRight` method then takes in a callback function and the initialValue `x`. 
+
+That callback function is the heart of `compose`. It takes in the accumulator `y` (starting from `x`) and the currentValue `f`, which is a function from the array `fns`. It then returns that function `f` - called with the accumulator `y`. 
+
+The result of that function call, then becomes the accumulator `y` for the next iteration. Here the next function `f` from `fns` get called with that new accumulator value. This repeats until the initialValue `x` has been passed and transformed through all functions from the array `fns`.
+
+| Function Call | Accumulator `y` | currentValue `f` | Operation            | New Accumulator |
+| ------------- | --------------- | ---------------- | -------------------- | --------------- |
+| Initial Value | 3               | -                | -                    | 3               |
+| increment     | 3               | `increment`      | increment(3) = 3 + 1 | 4               |
+| double        | 4               | `double`         | double(4) = 4 * 2    | 8               |
+| square        | 8               | `square`         | square(8) = 8 * 8    | 64              |
+
+Many people who are used to reading texts from left to right find it unintuitive to compose functions in mathematical order. Many functional programming packages provide another function called commonly `pipe`, which composes function from left to right in reverse mathematical order.
+
+```js
+const pipe = (...fns) => x => fns.reduce((y, f) => f(y), x);
+
+const increment = n => n + 1;
+const double = n => n * 2;
+const square = n => n * n;
+
+const incDoubleSquare = pipe(increment, double, square);
+incDoubleSquare(3); // 64
+```
+### `trace`
+
+You might be asking right now. "But way, what if you want to debug your code? Then you need to capture the intermediate results in variables, right?"
+
+You actually do ***not***. You only need a helper higher-order function called `trace`.
+
+```js
+const trace = msg => x => {
+  console.log(msg, x);
+  return x;
+}
+```
+
+And here is how you can use it.
+
+```js
+const pipe = (...fns) => x => fns.reduce((y, f) => f(y), x);
+
+const trace = msg => x => {
+  console.log(msg, x);
+  return x;
+}
+
+const increment = n => n + 1;
+const double = n => n * 2;
+const square = n => n * n;
+
+const incDoubleSquare = pipe(
+  increment,
+  trace('before double'),
+  double,
+  trace('after double'),
+  square
+);
+incDoubleSquare(3); // 64
+// Also logs out:
+// before double 4
+// after double 8
+```
+### Currying
+
+You saw another technique being used called currying.
+
+**Currying** is a transformation of functions that translates a function from callable as `f(a, b, c)` into callable as `f(a)(b)(c)`. In other words, a function is curried if it can take in each of it's parameters one at a time.
+
+```js
+function addUncurried(a, b) {
+  return a + b;
+}
+
+function addCurried(a) {
+  return function(b) {
+    return a + b;
+  }
+}
+
+addUncurried(41, 1); // 42
+addCurried(41)(1); // 42
+```
+
+With arrow functions, these definitions can become one-liners by leveraging their implicit returns.
+
+```js
+const addUncurried = (a, b) => a + b;
+
+const addCurried = a => b => a + b;
+
+addUncurried(41, 1); // 42
+addCurried(41)(1); // 42
+```
+
+Here a `addCurried` is a function that takes in a number `a` and returns a function `b => a + b`. You can read it like this:
+
+```js
+const addCurried = (a => (b => a + b));
+```
+
+You can curry any function. For example, you can create custom `map` and `reduce` functions.
+
+```js
+const map = fn => arr => arr.map(fn);
+
+const reduce = fn => x => arr => arr.reduce(fn, x);
+```
+
+Map takes in two parameters and reduce takes in three. The number of parameters a function expects in its definition is called **arity**.
+
+There are shorthand terms for functions that take in 1, 2 and 3 parameters.
+
+- **Unary function**: Takes one argument, e.g. `square`.
+- **Binary function**: Takes two arguments, e.g. `map`.
+- **Ternary function**: Takes three arguments, e.g. `reduce`.
+
+In the context of currying, understanding arity is important because each step in a curried function reduces the arity by one until all expected arguments have been received and the final operation can be performed.
+
+Additionally, the first function of a composition can have any arity, but ever following function needs to be unary.
+
+```js
+const add3 = (a, b, c) => a + b + ; // Ternary
+const double = n => n * 2; // Unary
+
+const addThenDouble = pipe(add3, double);
+addThenDouble(6, 7, 8); // 42
+```
+
+**Exercise:** create your own custom `filter` function that is curried and takes in a predicate `pred` and then an array `arr` and then filters the array based on the predicate.
+
+Wouldn't it be nice if you had a function that can curry any function?
+
+```js
+const addUncurried = (a, b) => a + b;
+
+const curry = /* ... magic? ... */
+
+const addCurried = curry(addUncurried);
+```
+
+Well there it is.
+
+```js
+const addUncurried = (a, b) => a + b;
+
+const curry = (f, array = []) =>
+  (...args) =>
+    (a => (a.length >= f.length ? f(...a) : curry(f, a)))([
+      ...array,
+      ...args,
+    ]);
+// NOTE: because of f.length, this implementation of `curry` fails with
+// functions that use default parameters.
+
+const addCurried = curry(addUncurried);
+
+const increment = addCurried(1);
+increment(4); // 5
+addCurried(1, 4); // 5
+addCurried(1)(4); // 5
+```
+
+The previous example used the mathematical names for the variables .If you want to name the variables more descriptively to understand `curry` now, you can write the function like this:
+
+```js
+const curry =
+  (targetFunction, collectedArguments = []) =>
+  (...currentArguments) =>
+    (allArguments =>
+      allArguments.length >= targetFunction.length
+        ? targetFunction(...allArguments)
+        : curry(targetFunction, allArguments))([
+      ...collectedArguments,
+      ...currentArguments,
+    ]);
+```
+
+`curry` uses **recursion**, which is when a function calls itself for the purpose of iteration. Let's break it down:
+
+- `f` or `targetFunction`: The original function you want to curry.
+- `array` or `collectedArguments`: An array to collect the arguments of all currying calls. Each cycle (except for the last) new arguments get added.
+- `args` or `currentArguments`: An array of the arguments taken in with the current invocation of the curried function (in this case: `addCurried`).
+- `a` or `allArguments`: An array of arguments concatenated from the `currentArguments` and the `collectedArguments` from the previous calls.
+
+When we call `addCurried` with one or more arguments, these current arguments get taken in as `args` in the child function of `curry`. This child function returns another function (grand-child function of `curry`).
+
+The grand-child function immediately invokes itself with an array concatenated from the collected arguments `array` and the current arguments `args`, receiving these values from its grand-parent and parent closure. It takes this new array as the all arguments `a` and checks if the all arguments `a` contains the same or higher amount of arguments as the target function `f` is declared with.
+
+If yes, this means all necessary currying calls have been performed: It returns a final call of the target function `f` invoked with the all arguments `a`. If not, it **recursively** invokes `curry` once again with the target function `f` and the new all arguments `a`, which then get taken in as the new collected arguments `array`. This repeats until the `a.length` condition is met.
+
+**Side notes:**
+
+- During the first call, the all arguments `a` and the current arguments `args` are the same value, as the collected arguments `array` has nothing added to it yet.
+- The grand-child function's immediate invocation happens before its parent function completes.
+### Partial Application
+
+As you learned earlier, an application happens when the arguments are used to replace the function's parameters. This allows the function to perform its task using the provided arguments.
+
+```js
+const add = (a, b) => a + b;
+
+const inc = n => add(1, n);
+```
+
+A **partial application** is the process of applying a function to **some**, but not all, of its arguments. This creates a new function, which you can store in a variable for later use. The new function needs fewer arguments to execute because it only takes the remaining parameters as arguments. 
+
+Partial applications are useful for specialization when you want to reuse a function with common parameters.
+
+```js
+const add = a => b => a + b;
+
+const inc = add(1); // point-free
+
+const incPointed = n => add(1)(n); // pointed
+```
+
+#### Point-Free Style
+
+`inc` is defined in **point-free** style, which is when you write a function without mentioning the parameters. `inc` uses closure because the argument `1` is captured in the closure of `add` as `a`.
+
+There are two requirements for your code to be composable: "data last" and the data needs to line up.
+### Data First vs. Data Last
+
+"data last" means the data your functions operate on should be their last parameter.
+
+For the `add` and `multiply` functions you saw earlier the order of arguments is irrelevant because they are commutative.
+
+```js
+const add = a => b => a + b;
+const otherAdd = b => a => a + b;
+
+const a = 41;
+const b = 1;
+console.log(add(41, 1) === otherAdd(41, 1)); // true
+```
+
+But division is NOT, so you're going to learn the importance of the "data last" principle using a `divide` function.
+
+```js
+const divideDataLast = (y) => (x) => x / y;
+
+const divideDataFirst = (x) => (y) => x / y;
+```
+
+Let's say you want to specialize and create a `halve` function that takes in a number and divides it by two.
+
+Using the "data first" function, it's impossible for you to define a `halve` function in point-free style.
+
+```js
+const divideDataLast = (y) => (x) => x / y;
+
+const divideDataFirst = (x) => (y) => x / y;
+
+const halve = divideDataLast(2);
+// const halveFail = divideDataFirst(2); 🚫 fails
+const halvePointed = (n) => divideDataFirst(n)(2);
+```
+
+ `halfFail` captures 2 in the closure of `divideDataFirst`. It is a function that takes in a number and when called divides 2 by that supplied number.
+
+In general, you need to write your functions using the "data last" principle to enable partial application.
+
+BTW, the best library for functional programming in the "data last" paradigm is [Ramda](https://ramdajs.com/). Here is an outlook what you can do with Ramda. You can understand this in-depth some time in the future.
+
+```js
+import { assoc, curry, keys, length, pipe, reduce, values } from 'ramda';
+
+const size = pipe(values, length);
+
+size({ name: 'Bob', age: 42 }); // 2
+size(['a', 'b', 'c', 'd']); // 4
+
+const renameKeys = curry((keyReplacements, object) =>
+  reduce(
+    (accumulator, key) =>
+      assoc(keyReplacements[key] || key, object[key], accumulator),
+    {},
+    keys(object),
+  ),
+);
+
+const input = { firstName: 'Elisia', age: 22, type: 'human' };
+const keyReplacements = { firstName: 'name', type: 'kind', foo: 'bar' };
+
+renameKeys(keyReplacements)(input);
+// Output: { name: 'Elisia', age: 22, kind: 'human' }
+```
+
+`size` is a function that can take in objects or arrays and returns how many properties or elements it has.
+
+Remember, functional programming is meant to improve your code by making it more bug-free, modular, testable, refactorable, understandable and deterministic. So, if you mix imperative and declaritive code, like in the definition for `renameKeys` that is totally fine. Relax if you need some time to understand implementations like this. As you play around with this new paradigm, go with what's easiest for you to write. There is no need to force functional programming.
+
+You can call `renameKeys` with `keyReplacements` and an `input` to return a new object with it's keys renamed according to the `keyReplacements`.
+### Data Needs To Line Up
+
+Similarly, only with "data last" can you compose functions effectively because the types of the arguments and return values of functions have to line up to compose them. For example, you can't compose a function that accepts an object and returns a string with a function that receives an array and returns a number. 
+
+```js
+// (number, number) => number[]
+const echo = (value, times) => Array(times).fill(value);
+// number[] => number[]
+const doubleMap = array => array.map(x => x * 2);
+
+// Correct composition. ✅
+const echoAndDoubleMap = compose(doubleMap, echo);
+
+// Reminder, the first function in a composition does NOT need to
+// be unary, and echo is binary.
+// echoAndDoubleMap starts binary and ends unary.
+console.log(echoAndDoubleMap(3, 4)); // [6, 6, 6, 6]
+
+// Incorrect composition that will throw an error. ❌
+const wrongOrder = compose(echo, doubleMap);
+
+try {
+  // This will fail because doubleMap expects an array, 
+  // instead of two numbers.
+  console.log(wrongOrder(3, 4));
+} catch (error) {
+  console.error("Error:", error.message); // Error: array.map is not a function
+}
+```
+
+### Mozart
+
+Now it's your turn. Try the following exercise to practice what you've learned from this article. If you get stuck, you can always scroll up and read it again. If you prefer *not* to do the exercise, just read the solution and follow along.
+
+Create a function that takes in an array of numbers and filters all the even numbers (so it rejects the odd numbers), then doubles all the even numbers and lastly, sums up the result. Break down your functions to their most basic abstractions then compose them point-free. (Hint: You'll need to look up the modulo operator `%` to check if a number is even.)
+
+```js
+const curry =
+  (f, array = []) =>
+  (...args) =>
+    (a => (a.length >= f.length ? f(...a) : curry(f, a)))([
+      ...array,
+      ...args,
+    ]);
+
+const add = curry((a, b) => a + b);
+const multiply = a => b => a * b;
+
+const inc = add(1);
+const double = multiply(2);
+const isEven = n => n % 2 === 0;
+
+const map = fn => arr => arr.map(fn);
+const filter = pred => arr => arr.filter(pred);
+const reduce = curry((fn, acc, arr) => arr.reduce(fn, acc));
+
+const doubleMap = map(double);
+const filterEvens = filter(isEven);
+const sum = reduce(add, 0);
+
+const pipe = (...fns) => x => fns.reduce((y, f) => f(y), x);
+
+const mozart = pipe(filterEvens, doubleMap, sum);
+
+mozart([1, 2, 3, 4, 5]); // 12
+```
+
+Lastly, is this more complicated than simply writing the following?
+
+```js
+const mozart = numbers =>
+  numbers
+    .filter(n => n % 2 === 0)
+    .map(n => n * 2)
+    .reduce((a, b) => a + b, 0);
+
+mozart([1, 2, 3, 4, 5]); // 12
+```
+
+Yes, absolutely! You should always use the simplest implementation for your requirements, also known as KISS (Keep It Simple, Stupid), or YAGNI (You Ain't Going To Need It).
+
+Functional programming shines as your app grows and you need to generalize and specialize your code so it scales well and stays maintainable. This way your code is more modular, and way easier to test, to reuse and to refactor. Future articles will show you real-world examples how to use these techniques.
+
+You now know the 20% of functional programming that gives you 80% of the result.

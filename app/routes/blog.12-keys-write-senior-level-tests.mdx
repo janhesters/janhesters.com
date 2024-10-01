@@ -1,0 +1,531 @@
+---
+title: '12 Keys to Write Senior-Level Tests (Test Desiderata in JavaScript)'
+datePublished: '2024-09-03'
+description: "In this tutorial, you'll learn 12 testing best practices that every senior developer should know. You will see real-world JavaScript examples for Kent Beck's article \"Test Desiderata\"."
+thumbnailUrl: '/images/thumbnails/12-keys-write-senior-level-tests.jpg'
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+"Desiderata" derives from latin for "things desired." [Kent Beck](https://twitter.com/KentBeck) wrote [an article called "Test Desiderata"](https://medium.com/@kentbeck_7670/test-desiderata-94150638a4b3). Together with [Kelly Sutton](https://twitter.com/KellySutton), they created a [YouTube playlist](https://www.youtube.com/watch?v=5LOdKDqdWYU&list=PLlmVY7qtgT_lkbrk9iZNizp978mVzpBKl) about that article and explain the desirable properties of automated tests. Some of these properties are trade-offs and not every test needs to have them.
+
+The examples Kent and Kelly give are _in Ruby_. Consider this article a TL;DW with additions from me and a **translation into JavaScript**.
+
+<iframe
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  allowFullScreen
+  className="aspect-video w-full"
+  frameBorder="0"
+  referrerPolicy="strict-origin-when-cross-origin"
+  src="https://www.youtube.com/embed/htraT8Qn4Rw?si=3Vwdz20T1GSOzqiV"
+  title="12 Keys to Write Senior-Level Tests (Test Desiderata in JavaScript)"
+></iframe>
+
+The examples in this tutorial use [RITEway](https://github.com/ericelliott/riteway) because of its genius API that forces you to write good tests and once [Jest](https://jestjs.io/), where RITEway prohibits you from writing bad tests. I highly encourage you to watch Ken's and Kelly's playlist in addition to reading this article - even if you, like me, don't know Ruby. Their explanations are fun and enlightening.
+
+Obviously you still want to learn Jest and Vitest because they are the most popular testing frameworks in JavaScript, but that's a topic for another article.
+
+Let's dive into the principles.
+
+### Behavioral-Sensitive
+
+Tests should be sensitive to the behavior of your code.
+
+```js
+const calculateSF = (hours, rate) => hours * Math.max(rate, 15);
+
+const calculate = (hours, rate, zipCode = null) => {
+  if (zipCode === '94103') {
+    return calculateSF(hours, rate);
+  } else {
+    return hours * rate;
+  }
+};
+
+describe('calculate', async assert => {
+  const hours = 40;
+
+  {
+    const rate = 8;
+
+    assert({
+      given: 'your hours and your rate',
+      should: 'return the total hourly wage',
+      actual: calculate(hours, rate),
+      expected: 320,
+    });
+  }
+
+  {
+    const rate = 14;
+    const zipCode = '94103';
+
+    assert({
+      given:
+        'your hours, your rate below $15 and your zip code is in San Francisco',
+      should:
+        'return the total hourly wage calculated with the minimum wage of $15',
+      actual: calculate(hours, rate, zipCode),
+      expected: 600,
+    });
+  }
+
+  {
+    const rate = 16;
+    const zipCode = '94103';
+
+    assert({
+      given:
+        'your hours, your rate above $15 and your zip code is in San Francisco',
+      should:
+        'return the total hourly wage calculated with your actual rate',
+      actual: calculate(hours, rate, zipCode),
+      expected: 640,
+    });
+  }
+});
+```
+
+If you change the behavior of the code, the results of the tests should change, too. If you change the minimum wage in `calculateSF` to 150 dollars, the tests for the San Francisco zip code fail.
+
+### Structure-Insensitive
+
+Tests should be insensitive to the internals of your code's structure.
+
+RITEway makes it nearly impossible to write structure sensitive tests because there is no mocking API like mock functions, spies or module mocks. 
+
+So the next example uses Jest to write structure-sensitive code by using `spyOn`. You need to create an `hourlyWageCalculator` object to be able to use `spyOn`.
+
+```js
+const hourlyWageCalculator = {
+  calculateSF(hours, rate) {
+    return hours * Math.max(rate, 15);
+  },
+  calculate(hours, rate, zipCode = null) {
+    if (zipCode === '94103') {
+      return this.calculateSF(hours, rate);
+    } else {
+      return hours * rate;
+    }
+  },
+};
+
+describe('calculate', () => {
+  const hours = 40;
+
+  describe('given your hours, your rate below $15 and your zip code in San Francisco', () => {
+    it('should return the total hourly wage calculated with the minimum wage of $15', () => {
+      const rate = 14;
+      const zipCode = '94103';
+      const spy = jest.spyOn(hourlyWageCalculator, 'calculateSF');
+
+      hourlyWageCalculator.calculate(rate, hours, zipCode);
+
+      expect(spy).toHaveBeenCalledWith(rate, hours);
+
+      spy.mockRestore();
+    });
+  });
+
+  describe('given your hours, your rate above $15 and your zip code in San Francisco', () => {
+    it('should return the total hourly wage calculated with your actual rate', () => {
+      const rate = 16;
+      const zipCode = '94103';
+      const spy = jest.spyOn(hourlyWageCalculator, 'calculateSF');
+
+      hourlyWageCalculator.calculate(rate, hours, zipCode);
+
+      expect(spy).toHaveBeenCalledWith(rate, hours);
+
+      spy.mockRestore();
+    });
+  });
+});
+```
+
+Here we made the assumption that `calculateSF` exists and that we are using it. If we refactor the code to inline the San Francisco calculation, the tests fail because they are structure sensitive.
+
+```js
+const hourlyWageCalculator = {
+  calculate(hours, rate, zipCode = null) {
+    if (zipCode === '94103') {
+      return hours * Math.max(rate, 15);
+    } else {
+      return hours * rate;
+    }
+  },
+};
+```
+
+If you refactor code without changing its behavior, the test results should stay the same. The RITEway tests from the behavior section above are invariant to the structure of the code. You might now this property as ["avoid testing implementation details"](https://kentcdodds.com/blog/testing-implementation-details/).
+
+### Readable
+
+> "Tests, like code, are read more than written." - [Kent Beck](https://medium.com/@kentbeck_7670/programmer-test-principles-d01c064d7934)
+
+Some things that make code more readable actually reduce the readability of tests.
+
+```js
+const defaultHours = 40;
+
+describe('calculate', async assert => {
+  const hours = defaultHours;
+```
+
+You might see how most people work 40 hours per week and therefore create a `defaultHours` constant and re-use it in your test setups. But, [drying](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself) up your tests often makes them less readable.
+
+Avoid writing a test that is a few lines, but incomprehensible and impossible to understand without reading a lot of other lines of shared setup code.
+
+> "You're not supposed to repeat yourself, unless you're supposed to repeat yourself." - [Kent Beck](https://youtu.be/bDaFPACTjj8?t=236)
+
+Tests should be self-contained and therefore tests can be verbose. The reader must be able to extract the motivation for the test and what happens in the test.
+
+(Obviously, there are trade-offs and there are occasions where you want to generalize your tests setup.)
+
+### Writable
+
+Tests should be easy to write. If the tests for your code are hard to write, it indicates your code has a bad API, is too tightly coupled or you lack good setup functions.
+
+```js
+const calculate = employee => employee.weeklyHours * employee.hourlyRate;
+
+const createEmployee = ({
+  firstName = '',
+  lastName = '',
+  address = '',
+  weeklyHours = 0,
+  hourlyRate = 0,
+}) => ({
+  firstName,
+  lastName,
+  address,
+  weeklyHours,
+  hourlyRate,
+});
+
+describe('calculate', async assert => {
+  {
+    const employee = createEmployee({
+      firstName: 'Kent',
+      lastName: 'Beck',
+      address: '1 Main St., Berkeley, CA, 94701',
+      weeklyHours: 40,
+      hourlyRate: 8,
+    });
+
+    assert({
+      given: 'an employee',
+      should: 'calculate the total hourly wages',
+      actual: calculate(employee),
+      expected: 320,
+    });
+  }
+
+  {
+    const employee = createEmployee({
+      firstName: 'Kelly',
+      lastName: 'Sutton',
+      address: '1 Main St., San Francisco, CA, 94103',
+      weeklyHours: 40,
+      hourlyRate: 7,
+    });
+
+    assert({
+      given: 'an employee',
+      should: 'calculate the total hourly wages',
+      actual: calculate(employee),
+      expected: 280,
+    });
+  }
+});
+```
+
+In these tests, `firstName`, `lastName` and `address` could be deleted and are irrelevant for `calculate`. Its the fault of the system that the tests are expensive relative to the code under test.
+
+If you need dozens or hundreds of lines of test setup to test a few lines of code, that's a design problem, not a test problem. For example, your tests might use a lot of [mocks because your code is too tightly coupled](https://medium.com/javascript-scene/mocking-is-a-code-smell-944a70c90a6a) and has many side-effects.
+
+> "If you're unable to test it, you designed it wrong." - [Kent Beck](https://youtu.be/CAttTEUE9HM)
+
+### Fast
+
+Tests should run quickly.
+
+On average it takes your brain [23 minutes to re-focus](https://news.gallup.com/businessjournal/23146/too-many-interruptions-work.aspx) on a task after it gets distracted. And those distractions can happen within seconds. Good tests help you stay in flow because they run fast.
+
+```js
+const delay = seconds =>
+  new Promise(resolve => {
+    setTimeout(() => {
+      resolve();
+    }, seconds * 1000);
+  });
+```
+
+Add this `delay` function before each `assert` in the tests.
+
+```js
+await delay(5);
+
+assert({
+  given: // ...
+```
+
+Now run your tests and see how you feel. Watch how your mind drifts off while you wait for those tests to finish ...
+
+You can run your **unit tests** in **under a second** by isolating side-effects and composing your code from pure functions. Your **CI / CD pipeline** (including your integration and functional tests) should run in **under 10 minutes**.
+
+Avoid interrupting flow to keep your engineering team productive.
+
+### Automated
+
+Machines should do the testing, not humans.
+
+Avoid Q&A teams having to manually test your release candidates for regressions. This is what automated tests are for.
+
+The benefits of automated tests compound. Initially, it might be faster and cheaper to click through your app and writing the test takes longer.
+
+However as your app grows, not investing into automated tests causes compounding debt.
+
+* It gets harder to add tests.
+* Manually going through your program's flow takes longer than a machine clicking through it.
+* Machines have better memory than humans. Once a test is written, the machine doesn't forget the test case and prevents regressions.
+* You pay a computer less per hour than an engineer.
+* While the automation (CI / CD pipeline) runs, you can work on new features.
+
+Automated tests guarantee program correctness (- when your tests are good).
+
+### Isolated
+
+Isolated tests can run in any order and in parallel. Whether one test passes or not should have no effect on whether another test passes. To achieve this, the state needs to be the same before and after each test.
+
+```js
+let numberOfCalculations = 0;
+const calculate = (hours, rate) => ++numberOfCalculations * hours * rate;
+
+describe('calculate', async assert => {
+  const hours = 40;
+
+  {
+    const rate = 8;
+
+    assert({
+      given: 'your hours and your rate',
+      should: 'return the total hourly wage',
+      actual: calculate(hours, rate),
+      expected: 320,
+    });
+  }
+
+  {
+    const rate = 10;
+
+    assert({
+      given: 'your hours and your rate',
+      should: 'return the total hourly wage',
+      actual: calculate(hours, rate),
+      expected: 560,
+    });
+  }
+});
+```
+
+If you change the order of the tests, they both fail, even though the code is the same. If the code was right before, the tests should still pass and if it was wrong before, the tests should still fail.
+
+In these tests the order matters because they both share mutable state. Tests should have no shared state and they should be isolated from their environment (e.g. DOM, database, scope etc.).
+
+The tests depending on the order they run in points to a flaw in the code's design. Prefer to write code where you initialize the state locally (in the scope of the test). If your code is correct and must change the state, you should **restore the initial state _after each_ test**.
+
+### Composable
+
+> "The confidence provided by one test should combine with the confidence provided by other tests." - [Kent Beck](https://youtu.be/Wf3WXYaMt8E)
+
+```js
+const inc = n => n + 1;
+const double = n => n * 2;
+const incDouble = n => double(inc(n));
+
+describe('inc', async assert => {
+  assert({
+    given: 'a number',
+    should: 'increment it by 1',
+    actual: inc(41),
+    expected: 42,
+  });
+});
+
+describe('double', async assert => {
+  assert({
+    given: 'a number',
+    should: 'return the number doubled',
+    actual: double(21),
+    expected: 42,
+  });
+});
+
+describe('incDouble', async assert => {
+  assert({
+    given: 'a number',
+    should: 'increment it by 1 and double the result',
+    actual: incDouble(20),
+    expected: 42,
+  });
+});
+```
+
+We ensure the correctness of `inc` and `double` and then ensure the correctness of the composed function `incDouble`. The calculation of `inc` is isolated from `double` and vice versa and both are isolated from `incDouble`.
+
+To make your tests composable, your code needs to be composable, too.
+
+### Specific
+
+A failing test should point you to the cause of failure.
+
+If you break `incDouble` by changing the order in the function composition, your test points you to the failure.
+
+```js
+const incDouble = n => inc(double(n)); // 🚫
+```
+
+```
+incDouble
+  ✖  Given a number: should increment it by 1 and double the result
+  ------------------------------------------------------------------
+      operator: deepEqual
+      diff: "42" => "41"
+      source: ...
+```
+
+The stack trace (given by RITEway in the `source` key) tells us exactly which test failed and therefore which component broke.
+
+If you restore `incDouble` and break `inc` by having it add 2 to your number, two tests break.
+
+```js
+const inc = n => n + 2; // 🚫
+```
+
+```
+inc
+  ✖  Given a number: should increment it by 1
+  --------------------------------------------
+      operator: deepEqual
+      diff: "42" => "43"
+      source: ...
+
+double
+  ✔  Given a number: should return the number doubled
+
+incDouble
+  ✖  Given a number: should increment it by 1 and double the result
+  ------------------------------------------------------------------
+      operator: deepEqual
+      diff: "42" => "44"
+      source: ...
+```
+
+Using the stack trace you can find the test that points you to the cause of both errors. When you encounter multiple errors in your stack, the leafs are likely the source of the error.
+
+### Deterministic
+
+Given the same code, tests should produce the same results.
+
+A few years ago, I helped with a project that had a flaky test.
+
+```js
+const slice = 'userAuthentication';
+
+const getExpirationDate = ({ [slice]: { expirationDate } }) => expirationDate;
+const THIRTY_MINUTES = 30 * 60 * 1000;
+
+const getShouldUpdateToken = state => {
+  const now = new Date().getTime();
+  const expirationDate = getExpirationDate(state);
+  return now > expirationDate - THIRTY_MINUTES;
+};
+
+describe('user authentication reducer', async assert => {
+  // ... more tests
+
+  {
+    const now = new Date().getTime();
+    const state = { auth: { expirationDate: now + THIRTY_MINUTES } };
+
+    assert({
+      given:
+        'an expiration date 30 minutes into the future and a get should update token selector',
+      should: 'return false',
+      actual: getShouldUpdateToken(state),
+      expected: false,
+    });
+  }
+
+  // ... more tests
+});
+```
+
+What made this test flaky, was the side effect in `getShouldUpdateToken`. The selector creates a new `Date` object. Occasionally, this would happen a millisecond after the test setup and the test would fail.
+
+You can make this test deterministic by making the unit under test a pure function and explicitly passing the arguments to the function in the test.
+
+```js
+const getShouldUpdateToken = (state, now) => {
+  const expirationDate = getExpirationDate(state);
+  return now > expirationDate - THIRTY_MINUTES;
+};
+
+describe('user authentication reducer', async assert => {
+  // ... more tests
+
+  {
+    const now = new Date().getTime();
+    const state = { auth: { expirationDate: now + THIRTY_MINUTES } };
+
+    assert({
+      given:
+        'an expiration date 30 minutes into the future and a get should update token selector',
+      should: 'return false',
+      actual: getShouldUpdateToken(state, now),
+      expected: false,
+    });
+  }
+
+  // ... more tests
+});
+```
+
+Tests shouldn't be flaky (even though some [test frameworks accommodated for unreliable tests](https://www.cypress.io/blog/2020/08/19/introducing-test-retries-in-cypress-5-0/)). They should be independent of random number generations, times, dates, locations, language settings, operating systems etc.
+
+BTW, the example that Kent and Kelly give in their video in Ruby excellently visualizes the problem for E2E tests.
+
+### Predictive
+
+Passing tests should give you confidence to deploy to production.
+
+Some environments and conditions are only created in production environments. Sometimes you can't know a condition is going to exist and even if you know about it, it's hard or impossible to replicate it.
+
+If you find an error in production, you can write a test for it when you fix it and prevent the bug from resurfacing.
+
+100% predictability can rarely be achieved in the real world.
+
+To maximize predictability, aim for 100% case coverage instead of 100% code coverage by using unit tests and integration tests. You can have 100% of your code covered by unit tests, but your application is still broken.
+
+### Inspiring
+
+Tests should give you that feeling of confidence.
+
+Tests should make a difference to team productivity. Your team should be faster and merge more often. Good tests serve as documentation, help with onboarding and aid in understanding code that someone else wrote. (That someone else might be your past you.) They should allow you to increase your deploy frequency while decreasing your deploy risk. Tests make you relax. Tests allow you to rewrite or delete code.
+
+> "And finally, tests are a way to liberate energy, to move from worry to hope, creativity, and empathy, to demonstrate trustworthiness.
+>
+> **Passing tests should feel good.**" - Kent Beck

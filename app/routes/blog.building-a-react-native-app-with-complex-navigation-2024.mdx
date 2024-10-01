@@ -1,0 +1,740 @@
+---
+title: 'Building a React Native App with Complex Navigation in 2024'
+datePublished: '2024-07-19'
+description: 'Learn how to create a React Native app with nested navigators, handle authentication, and implement platform-specific navigation. This tutorial covers advanced concepts for building a professional production-ready app using Expo.'
+thumbnailUrl: '/images/thumbnails/building-a-react-native-app-with-complex-navigation-2024.jpg'
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+Do you want to build a React Native app with multiple screens and a complicated navigation journey?
+
+In this tutorial you will create a React Native app with layered screens, nest drawers with other navigators, and handle platform-specific navigation. You will learn the advanced concepts you might need to use when creating a professional app for production.
+
+The [React Native docs recommend](https://reactnative.dev/docs/environment-setup) you to use React Native with a Framework. This tutorial will use Expo.
+
+<iframe
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  allowFullScreen
+  className="aspect-video w-full"
+  frameBorder="0"
+  referrerPolicy="strict-origin-when-cross-origin"
+  src="https://www.youtube.com/embed/FbURAv7bt5A?si=DwYW9FQFgn0hodLL"
+  title="Building a React Native App with Complex Navigation in 2024"
+></iframe>
+
+### 1. Plan the app
+
+Here is a diagram showing you what you're going to build.
+
+![React Native Complex Navigation Path](/images/blog/react-native-complex-navigation-path.png)
+
+In this diagram, **solid lines represent navigators** (tabs, drawer, and stack) and **dotted lines represent the different screens**.
+
+Your root navigator will be a stack navigator. It manages the splash screen during app loading. It includes the main and authentication screens. It also contains a web-only "Not Found" screen.
+
+The authentication screens will include a screen to log in, a screen to reset the password, and a screen to register.
+
+After logging in, you will have access to the main screens, which are the home screen, the options screen, the details screen, and the settings screen.
+
+On Android, you usually access the settings through a burger menu, while on iOS, it is more common to have a tabs layout. You will use the respective platform’s specific design dynamically.  Additionally, within the home stack you will display the options screen using a modal transition.
+
+The app will feature 8 screens, including the splash screen. It uses a standard layout with a list of items on the home screen. You can filter these items using the options screen. You can view specific items on the details screen. **Note:** This tutorial will ***not*** include adding the list interface.
+
+### 2. Create the basic project
+
+If you want to code along, this section will guide you step by step through setting up the project. (The bottom of this article contains a trouble shooting section handling common errors you might encounter when running Expo for the first time.)
+
+Create a new project.
+
+```bash
+npx create-expo-app@latest
+```
+
+Give it a proper name.
+
+```bash
+✔ **What is your app named?** … complex-navigation-expo
+```
+
+Install the dependencies for the drawer.
+
+```bash
+npx expo install @react-navigation/drawer react-native-gesture-handler react-native-reanimated
+```
+
+Start the simulator.
+
+```bash
+npm run ios
+```
+
+If you want to add the Expo Router to an existing app, [check out the docs](https://docs.expo.dev/router/installation/#manual-installation).
+
+### Loading Screen
+
+Delete all files in `app/` except for `app/(tabs)/`, `app/_layout.tsx`, `app/+html.tsx` and `app/+not-found.tsx` and rename the `app/(tabs)/` folder to `app/(main)/`.
+
+Change the content of your root layout in `app/_layout.tsx` to the following.
+
+```tsx
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from "@react-navigation/native";
+import { useFonts } from "expo-font";
+import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect } from "react";
+import "react-native-reanimated";
+
+import { useColorScheme } from "@/hooks/useColorScheme";
+
+// Prevent the splash screen from auto-hiding before asset loading is complete.
+SplashScreen.preventAutoHideAsync();
+
+export default function RootLayout() {
+  const colorScheme = useColorScheme();
+  const [loaded] = useFonts({
+    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+  });
+
+  useEffect(() => {
+    if (loaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded]);
+
+  if (!loaded) {
+    return null;
+  }
+
+  return (
+    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultIndie">
+      <Stack>
+        <Stack.Screen name="(main)" options={{ headerShown: false }} />
+        <Stack.Screen name="+not-found" />
+      </Stack>
+    </ThemeProvider>
+  );
+}
+```
+
+#### React Native Elements
+
+To make the screens look decent, you can use React Native Elements. Install the React Native Elements package.
+
+```bash
+npm install @rneui/themed @rneui/base
+```
+
+Add the `ThemeProvider` from React Native Elements to your root layout.
+
+```tsx
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from "@react-navigation/native";
+// 👇
+import { Platform } from "react-native";
+import {
+  lightColors,
+  createTheme,
+  ThemeProvider as RNEThemeProvider,
+} from "@rneui/themed";
+// ☝️
+import { useFonts } from "expo-font";
+import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect } from "react";
+import "react-native-reanimated";
+
+import { useColorScheme } from "@/hooks/useColorScheme";
+
+// Prevent the splash screen from auto-hiding before asset loading is complete.
+SplashScreen.preventAutoHideAsync();
+
+// 👇
+const theme = createTheme({
+  lightColors: {
+    ...Platform.select({
+      default: lightColors.platform.android,
+      ios: lightColors.platform.ios,
+    }),
+  },
+});
+// ☝️
+
+export default function RootLayout() {
+  const colorScheme = useColorScheme();
+  const [loaded] = useFonts({
+    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+  });
+
+  useEffect(() => {
+    if (loaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded]);
+
+  if (!loaded) {
+    return null;
+  }
+
+  return (
+    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+      <RNEThemeProvider theme={theme}>
+        <Stack>
+          <Stack.Screen name="(main)" options={{ headerShown: false }} />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+      </RNEThemeProvider>
+    </ThemeProvider>
+  );
+}
+```
+
+### Authentication Screens
+
+Add a stack above the `"(main)"` stack in the root layout.
+
+```tsx
+<Stack.Screen name="(login)" options={{ headerShown: false }} />
+```
+
+Create a layout for the authentication screens at `app/(login)/_layout.tsx`.
+
+```tsx
+import { Stack } from "expo-router";
+import "react-native-reanimated";
+
+export default function LoginLayout() {
+  return (
+    <Stack>
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
+    </Stack>
+  );
+}
+```
+
+And adjacent to that file another screen for the `app/(login)/forgot-password.tsx` flow.
+
+```tsx
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { StyleSheet } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { Link } from "expo-router";
+
+export default function ForgotPasswordView() {
+  return (
+    <SafeAreaProvider>
+      <ThemedView style={styles.container}>
+        <SafeAreaView style={styles.innerContainer}>
+          <ThemedText type="title">Forgot password view</ThemedText>
+
+          <Link style={styles.link} href="/(login)/(auth)">
+            Back to Login
+          </Link>
+        </SafeAreaView>
+      </ThemedView>
+    </SafeAreaProvider>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  innerContainer: {
+    flex: 1,
+    justifyContent: "space-around",
+    alignItems: "center",
+  },
+  link: {
+    lineHeight: 30,
+    fontSize: 16,
+  },
+});
+```
+
+Next, create the layout for the authentication tabs in `app/(login)/(auth)/_layout.tsx`.
+
+```tsx
+import { Tabs } from "expo-router";
+import React from "react";
+
+import { TabBarIcon } from "@/components/navigation/TabBarIcon";
+import { Colors } from "@/constants/Colors";
+import { useColorScheme } from "@/hooks/useColorScheme";
+
+export default function AuthLayout() {
+  const colorScheme = useColorScheme();
+
+  return (
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+        headerShown: false,
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "Login",
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon
+              name={focused ? "log-in" : "log-in-outline"}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="register"
+        options={{
+          title: "Register",
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon
+              name={focused ? "person-add" : "person-add-outline"}
+              color={color}
+            />
+          ),
+        }}
+      />
+    </Tabs>
+  );
+}
+```
+
+Create the login screen in `app/(login)/(auth)/index.tsx`.
+
+```tsx
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { StyleSheet } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { Button } from "@rneui/themed";
+import { Link } from "expo-router";
+import { router } from "expo-router";
+
+export default function LoginView() {
+  return (
+    <SafeAreaProvider>
+      <ThemedView style={styles.container}>
+        <SafeAreaView style={styles.innerContainer}>
+          <ThemedText type="title">Hello from the Login view</ThemedText>
+
+          <Link style={styles.link} href="/(login)/forgot-password">
+            Forgot password
+          </Link>
+
+          <Button
+            onPress={() => {
+              router.replace("/(main)");
+            }}
+          >
+            Login
+          </Button>
+        </SafeAreaView>
+      </ThemedView>
+    </SafeAreaProvider>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  innerContainer: {
+    flex: 1,
+    justifyContent: "space-around",
+    alignItems: "center",
+  },
+  link: {
+    lineHeight: 30,
+    fontSize: 16,
+  },
+});
+```
+
+Create the register screen in `app/(login)/(auth)/register.tsx`:
+
+```tsx
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { StyleSheet } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+
+export default function RegisterView() {
+  return (
+    <SafeAreaProvider>
+      <ThemedView style={styles.container}>
+        <SafeAreaView style={styles.innerContainer}>
+          <ThemedText type="title">Register view</ThemedText>
+        </SafeAreaView>
+      </ThemedView>
+    </SafeAreaProvider>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  innerContainer: {
+    flex: 1,
+    justifyContent: "space-around",
+    alignItems: "center",
+  },
+});
+```
+
+### Main Screens
+
+Now, you're going to create the main screens.
+
+Delete all files in your `app/(main)/` folder because you're going to start from scratch.
+
+The main layout will handle the switching between different navigators based on the platform. You can use React Native's `Platform` module to detect where your app is running.
+
+Create the main layout in `app/(main)/_layout.tsx`.
+
+```tsx
+import { router, Tabs, usePathname } from "expo-router";
+import { Drawer } from "expo-router/drawer";
+import React from "react";
+import { Pressable, Platform, StyleSheet } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+
+import { TabBarIcon } from "@/components/navigation/TabBarIcon";
+import { Colors } from "@/constants/Colors";
+import { useColorScheme } from "@/hooks/useColorScheme";
+
+export default function MainLayout() {
+  const colorScheme = useColorScheme();
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+
+  if (Platform.OS === "android") {
+    return (
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <Drawer>
+          <Drawer.Screen
+            name="(home)"
+            options={{
+              drawerLabel: "Home",
+              title: "Home",
+              headerShown: isHome,
+            }}
+          />
+          <Drawer.Screen
+            name="settings"
+            options={{
+              drawerLabel: "Settings",
+              title: "Settings",
+              headerRight: () => (
+                <Pressable
+                  style={styles.headerButton}
+                  onPress={() => {
+                    // In the real world, you should use a logout function here
+                    // and then auto redirect using the root layout ❗️
+                    router.replace("(login)");
+                  }}
+                >
+                  <TabBarIcon name="log-out-outline" />
+                </Pressable>
+              ),
+            }}
+          />
+        </Drawer>
+      </GestureHandlerRootView>
+    );
+  }
+
+  return (
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+      }}
+    >
+      <Tabs.Screen
+        name="(home)"
+        options={{
+          title: "Home",
+          headerShown: false,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon
+              name={focused ? "home" : "home-outline"}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: "Settings",
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? "cog" : "cog-outline"} color={color} />
+          ),
+          headerLeft: () => (
+            <Pressable
+              style={styles.headerButton}
+              onPress={() => {
+                // In the real world, you should use a logout function here
+                // and then auto redirect using the root layout ❗️
+                router.replace("(login)");
+              }}
+            >
+              <TabBarIcon name="log-out-outline" />
+            </Pressable>
+          ),
+        }}
+      />
+    </Tabs>
+  );
+}
+
+const styles = StyleSheet.create({
+  headerButton: {
+    paddingHorizontal: 16,
+  },
+});
+```
+
+Notice how you hide the header of the drawer based on whether the user's current path. If they're on the home route, hide the header. Otherwise, both the header and the stack navigator of the home would render a header.
+
+Now create the settings screen at `app/(main)/settings.tsx`.
+
+```tsx
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { StyleSheet } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+
+export default function SettingsView() {
+  return (
+    <SafeAreaProvider>
+      <ThemedView style={styles.container}>
+        <SafeAreaView style={styles.innerContainer}>
+          <ThemedText type="title">Settings view</ThemedText>
+        </SafeAreaView>
+      </ThemedView>
+    </SafeAreaProvider>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  innerContainer: {
+    flex: 1,
+    justifyContent: "space-around",
+    alignItems: "center",
+  },
+});
+```
+
+Next create the layout for the home stack at `app/(main)/(home)/_layout.tsx`.
+
+```tsx
+import { Stack } from "expo-router";
+import "react-native-reanimated";
+
+export default function HomeLayout() {
+  return (
+    <Stack>
+      <Stack.Screen
+        name="index"
+        options={{ headerTitle: "Home", headerShown: false }}
+      />
+      <Stack.Screen
+        name="options"
+        options={{ headerTitle: "Options", presentation: "modal" }}
+      />
+      <Stack.Screen name="details" options={{ headerTitle: "Details" }} />
+    </Stack>
+  );
+}
+```
+
+You configure the options screen to show as a modal in that screen's `options` prop.
+
+Create the home screen at `app/(main)/(home)/index.tsx`.
+
+```tsx
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { Link } from "expo-router";
+import { StyleSheet } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+
+export default function HomeView() {
+  return (
+    <SafeAreaProvider>
+      <ThemedView style={styles.container}>
+        <SafeAreaView style={styles.innerContainer}>
+          <ThemedText type="title">Home view</ThemedText>
+
+          <Link style={styles.link} href="/(main)/(home)/options">
+            Options
+          </Link>
+
+          <Link style={styles.link} href="/(main)/(home)/details">
+            Details
+          </Link>
+        </SafeAreaView>
+      </ThemedView>
+    </SafeAreaProvider>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  innerContainer: {
+    flex: 1,
+    justifyContent: "space-around",
+    alignItems: "center",
+  },
+  link: {
+    lineHeight: 30,
+    fontSize: 16,
+  },
+});
+```
+
+Create the details screen at `app/(main)/(home)/details.tsx`.
+
+```tsx
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { StyleSheet } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+
+export default function DetailsView() {
+  return (
+    <SafeAreaProvider>
+      <ThemedView style={styles.container}>
+        <SafeAreaView style={styles.innerContainer}>
+          <ThemedText type="title">Details view</ThemedText>
+        </SafeAreaView>
+      </ThemedView>
+    </SafeAreaProvider>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  innerContainer: {
+    flex: 1,
+    justifyContent: "space-around",
+    alignItems: "center",
+  },
+});
+```
+
+Lastly, create the options screen at `app/(main)/(home)/options.tsx`.
+
+```tsx
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { StyleSheet } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+
+export default function OptionsView() {
+  return (
+    <SafeAreaProvider>
+      <ThemedView style={styles.container}>
+        <SafeAreaView style={styles.innerContainer}>
+          <ThemedText type="title">Options view</ThemedText>
+        </SafeAreaView>
+      </ThemedView>
+    </SafeAreaProvider>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  innerContainer: {
+    flex: 1,
+    justifyContent: "space-around",
+    alignItems: "center",
+  },
+});
+```
+
+Now you're done. This how your app should look like.
+
+![React Native Complex Navigation Path](/images/blog/react-native-app-complex-navigation-white-bg.gif)
+
+#### Redirecting Authenticated Users
+
+There is one more thing. This tutorial contained a short cut by redirecting your user manually when logging out. Usually, those buttons should invalidate your users session (e.g. remove the credentials from your storage solution).
+
+If you want to authenticate users and redirect them based on their authentication status, you should use Expo's `Redirect`  component in your root layout.
+
+```tsx
+import { Redirect } from 'expo-router';
+
+import { useAuth } from '~/features/authentication/hooks';
+
+// ...
+
+const { user } = useAuth();
+
+if (!user) {
+  return <Redirect href="(login)" />;
+}
+```
+
+### Bonus: Troubleshooting
+
+On Mac, you might get an error trying to start the iOS simulator.
+
+```
+Error: xcrun simctl boot FE32B4BF-3BE2-44AD-A839-5E8602C4853E exited with non-zero code: 2
+An error was encountered processing the command (domain=NSPOSIXErrorDomain, code=2):
+Unable to boot device because we cannot determine the runtime bundle.
+No such file or directory
+```
+
+Here is how you fix it. Open Xcode, go to Settings > Platforms and then install the iOS platform.
+
+Open the simulator and start it.
+
+```bash
+open -a Simulator && expo start
+```
+
+Useful Expo commands:
+
+```bash
+› Press **?** │ show commands
+› Press **j** │ open debugger
+› Press **r** │ reload app
+› Press **m** │ toggle menu
+› Press **o** │ open project code in your editor
+```
