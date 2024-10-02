@@ -76,6 +76,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const showImprintLink =
     location.pathname === '/about' || location.pathname === '/imprint';
+  const showBlogLinkInFooter = location.pathname.includes('/blog');
 
   const url = new URL(location.pathname, 'https://www.janhesters.com');
 
@@ -161,7 +162,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-6 text-sm font-medium text-muted-foreground">
               <a
                 className="hover:text-foreground"
-                href="https://github.com/janhesters"
+                href="https://github.com/janhesters/janhesters.com"
                 rel="noopener noreferrer"
                 target="_blank"
               >
@@ -178,6 +179,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   to="/imprint"
                 >
                   Imprint
+                </NavLink>
+              )}
+
+              {showBlogLinkInFooter && (
+                <NavLink
+                  className={({ isActive }) =>
+                    cn('hover:text-foreground', isActive && 'text-primary')
+                  }
+                  to="/blog"
+                >
+                  Blog
                 </NavLink>
               )}
             </div>

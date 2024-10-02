@@ -34,7 +34,7 @@ export function getSlugFromUrl(url: string) {
 export const getSocialsMeta = ({
   title,
   description,
-  imageUrl = 'https://www.janhesters.com/images/og.png',
+  imageUrl = 'https://i.magecdn.com/ada680/f47d21_og?f=webp,q.100,p.f,l.t',
   url,
   type = 'website',
   siteName = 'Jan Hesters',
