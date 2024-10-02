@@ -56,7 +56,7 @@ export default function About() {
           <img
             alt="Jan Hesters"
             className="mb-4 block size-60 rounded-3xl object-cover md:hidden"
-            src="/images/jan-square.jpg"
+            src="https://i.magecdn.com/ada680/79c207_jan_square?f=webp,q.25,p.f,l.f"
           />
 
           <h2 className="text-center text-2xl font-semibold text-foreground md:text-start md:text-3xl">
@@ -66,7 +66,7 @@ export default function About() {
           <p className="mt-3 text-muted-foreground md:text-lg">
             By day, I&apos;m the CTO at{' '}
             <a
-              className="text-primary hover:underline"
+              className="underline hover:text-primary"
               href="https://www.reactsquad.io/jan"
               rel="noopener noreferrer"
               target="_blank"
@@ -119,14 +119,14 @@ export default function About() {
             alt="Jan Hesters"
             className="hidden rounded-lg object-cover md:block dark:hidden"
             sizes="(max-width: 1023px) 80vw, (min-width: 1024px) and (max-width: 1620px) 40vw, 650px"
-            src="/images/jan-vertical-3-cropped.jpg"
+            src="https://i.magecdn.com/ada680/07c22c_jan_vertical_3_cropped?f=webp,q.25,p.f,l.f"
           />
 
           <img
             alt="Jan Hesters"
             className="hidden rounded-lg object-cover dark:md:block"
             sizes="(max-width: 1023px) 80vw, (min-width: 1024px) and (max-width: 1620px) 40vw, 650px"
-            src="/images/jan-vertical-2-cropped.jpg"
+            src="https://i.magecdn.com/ada680/15da52_jan_vertical_2_cropped?f=webp,q.25,p.f,l.f"
           />
 
           <PlatformsComponent />
