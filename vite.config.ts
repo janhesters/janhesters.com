@@ -2,10 +2,12 @@ import mdx from '@mdx-js/rollup';
 // import { transformerCopyButton } from '@rehype-pretty/transformers';
 import { vitePlugin as remix } from '@remix-run/dev';
 import { vercelPreset } from '@vercel/remix/vite';
+import rehypeKatex from 'rehype-katex';
 import type { Options, Theme } from 'rehype-pretty-code';
 import { rehypePrettyCode } from 'rehype-pretty-code';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
 import remarkMdxFrontmatter from 'remark-mdx-frontmatter';
 import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
@@ -23,8 +25,13 @@ const options: Options = {
 export default defineConfig({
   plugins: [
     mdx({
-      remarkPlugins: [remarkFrontmatter, remarkGfm, remarkMdxFrontmatter],
-      rehypePlugins: [[rehypePrettyCode, options]],
+      remarkPlugins: [
+        remarkFrontmatter,
+        remarkGfm,
+        remarkMdxFrontmatter,
+        remarkMath,
+      ],
+      rehypePlugins: [[rehypePrettyCode, options], rehypeKatex],
     }),
     remix({
       future: {

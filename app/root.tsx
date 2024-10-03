@@ -13,7 +13,7 @@ import {
   useRouteError,
 } from '@remix-run/react';
 import type { LinksFunction, MetaFunction } from '@vercel/remix';
-import { Menu } from 'lucide-react';
+import { Menu, MoveLeft } from 'lucide-react';
 import { ComponentProps } from 'react';
 
 import { Button, buttonVariants } from '~/components/button';
@@ -88,6 +88,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <link rel="canonical" href={url.href} />
         <link rel="alternate" href={url.href} hrefLang="en" />
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+          integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+"
+          crossOrigin="anonymous"
+        ></link>
         <Links />
       </head>
 
@@ -168,7 +174,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
               >
                 <span className="sr-only">Github</span>
 
-                <GitHubIcon className="size-6 fill-muted-foreground transition hover:fill-foreground" />
+                <GitHubIcon
+                  aria-hidden="true"
+                  className="size-6 fill-muted-foreground transition hover:fill-foreground"
+                />
               </a>
 
               {showImprintLink && (
@@ -185,11 +194,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {showBlogLinkInFooter && (
                 <NavLink
                   className={({ isActive }) =>
-                    cn('hover:text-foreground', isActive && 'text-primary')
+                    cn(
+                      'flex items-center hover:text-foreground',
+                      isActive && 'text-primary',
+                    )
                   }
                   to="/blog"
                 >
-                  Blog
+                  <MoveLeft aria-hidden="true" className="mr-2 size-4" />
+
+                  <span>Back To Blog</span>
                 </NavLink>
               )}
             </div>

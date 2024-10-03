@@ -1367,3 +1367,18 @@ Yes, absolutely! You should always use the simplest implementation for your requ
 Functional programming shines as your app grows and you need to generalize and specialize your code so it scales well and stays maintainable. This way your code is more modular, and way easier to test, to reuse and to refactor. Future articles will show you real-world examples how to use these techniques.
 
 You now know the 20% of functional programming that gives you 80% of the result.
+
+I love you very much. Thank you for reading this article. If you've liked it, please follow me on [X*](https://x.com/janhesters) and let me know what you've learned.
+
+(* = formerly known as Twitter)
+
+import { ReadNext } from '../features/blog/read-next';
+import { frontmatter as whatIsHigherOrderComponentsAreMisunderstoodInReact } from './blog.what-is-redux-get-a-senior-understanding-of-how-redux-works.mdx';
+import { frontmatter as whatIsMemoization } from './blog.what-is-memoization-in-javascript-typescript.mdx';
+
+<ReadNext
+  posts={[
+    { ...whatIsHigherOrderComponentsAreMisunderstoodInReact, slug: 'what-is-redux-get-a-senior-understanding-of-how-redux-works' },
+    { ...whatIsMemoization, slug: 'what-is-memoization-in-javascript-typescript' },
+  ]}
+/>

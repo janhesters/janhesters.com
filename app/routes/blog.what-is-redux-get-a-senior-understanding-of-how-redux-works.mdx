@@ -1,0 +1,2096 @@
+---
+title: "What Is Redux? (Get A Senior Understanding Of How Redux Works)"
+datePublished: '2024-10-15'
+description: "Mastering Redux is essential for managing complex state in large-scale applications. This detailed guide introduces Redux, from its basic concepts and building blocks to advanced features like middleware and thunks, preparing you to implement Redux effectively in your projects."
+thumbnailUrl: 'https://i.magecdn.com/ada680/766252_unleash_javascripts_potential_with_functional_programming?f=webp,q.25,p.f,l.f'
+isDraft: true
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+Why do you want to master Redux in 2024 and beyond?
+
+1. Redux teaches you clean code patterns that refine how you will architect your future apps or servers.
+2. While you might not need it in a brand new Next.js or Remix app, Redux is still the most used state management library by a large margin. That makes it very valuable for your future job opportunities.
+
+![Redux Usage](https://i.magecdn.com/ada680/524152_redux_usage?f=webp,q.90,p.f,l.t)
+
+I've built Redux apps that scaled to hundreds of thousands of concurrent users. And in this article, I'm going to share with you the lessons I learned.
+
+If you're a beginner, this article will teach you Redux from the ground up.
+
+And even if you've been using Redux for years, this article will fill any gaps in your knowledge and reveal secret tricks for writing the cleanest code possible.
+
+This article is part of a 5-part series on Redux. The first three together will give you a deeper understanding than 98% of the market. And the last two are tutorials where you build production-ready Redux apps.
+
+Most developers often start with two key questions:
+
+- "Why Redux?", or "Why did it become so popular?", and then
+- "Why did it fall off?" 
+
+You're going to get the answer to these questions at the end of this article because to fully understand the answers, you need to understand Redux.
+
+Instead you're going to start with answering the question ...
+
+### What is Redux?
+
+... and what is Redux for?
+
+Redux is a JavaScript library for managing application state. Redux makes it easier to handle complex state in large applications by using a single, global store, which contains the applications state.
+
+The name "Redux" derives from the array method "reduce" mixed with the "Flux" architecture.
+
+The `reduce` part refers to the reducer functions in Redux that manage changes to your application’s state.
+
+Redux design is [influenced heavily by many technologies](https://redux.js.org/understanding/history-and-design/prior-art), but the main one is the Elm architecture:
+
+- **Model** -  the state of your application,
+- **View** - a way to turn your state into HTML,
+- **Update** - a way to update your state based on messages.
+
+This is what the "Flux" part in Redux hints at because the Flux architecture is basically the same.
+
+### Redux' Components
+
+Redux is made out of 6 building blocks:
+
+1. **Actions**: An action is a plain JavaScript object that describes what happened and carries data in your application.
+2. **Reducers**: A reducer is a pure function that determines how the application's state changes in response to actions.
+3. **Store**: The store holds the whole state tree of your application.
+4. **Dispatch**: Dispatch is a method used to send actions to the store to update state.
+5. **Selectors**: Selectors are pure functions that allow you to extract and compute derived data from the store.
+6. **Middleware**: Middleware lets you extend Redux with custom functionality, handling processes like asynchronous actions or logging.
+
+# Redux Data Flow
+
+In Redux, the Flux architecture translates to:
+
+- **Model** - your Redux `store`,
+- **View** - your React components turning props into JSX,
+- **Update** - your reducers reacting to your actions that your app dispatches.
+
+This diagram shows you the data flow in Redux and how these 6 components work together.
+
+![Redux Data Flow](redux-data-flow.png)
+
+Your React components have access to your store's `dispatch` method. You'll learn how this works later in the video.
+
+You then dispatch an action which get's passed to your middleware for processing and handling side-effects before reaching your reducers.
+
+Your reducers update the global application state.
+
+The updated state flows back into your React components through your selectors, triggering a re-render.
+
+### Project Setup
+
+This video will contain many code examples, and I highly recommend you code along because that way you will retain the most knowledge.
+
+So create a new Next.js 15 project.
+
+```sh
+npx create-next-app@latest
+```
+
+And then configure your project by hitting `yes` on everything except TypeScript. The third video in this series covers Redux with TypeScript.
+
+```sh
+✔ **What is your project named?** … redux-mastery-part-one
+✔ **Would you like to use** **TypeScript****?** … No / Yes
+No
+✔ **Would you like to use** **ESLint****?** … No / Yes
+Yes
+✔ **Would you like to use** **Tailwind CSS****?** … No / Yes
+Yes
+✔ **Would you like to use** **`src/` directory****?** … No / Yes
+Yes
+✔ **Would you like to use** **App Router****? (recommended)** … No / Yes
+Yes
+✔ **Would you like to customize the default** **import alias** **(@/*)?** … No / No
+```
+
+### `.reduce()`
+
+You should know the basics of JavaScript like what an object is, what functions are and what the `.reduce()` array method is.
+
+As a refresher, the `.reduce()` method in JavaScript processes each element in an array. It combines them into a single output value. The method takes a function as an argument. This function is called the `reducer` function and applied to each element in the array. 
+
+Here's a basic example using `.reduce()` to sum up an array of numbers:
+
+```js
+const numbers = [1, 2, 3, 4];
+const sum = numbers.reduce((total, current) => total + current, 0);
+console.log(sum); // Output: 10
+```
+
+Every reducer functions takes in two parameters: the accumulator in this case called `total` and the current value.
+
+If that was too fast or too much for you, read ["Unleash JavaScript's Potential with Functional Programming"](https://janhesters.com/blog/unleash-javascripts-potential-with-functional-programming) that explains all of these things in-depth. It also prepares you for some advanced selector composition, which you will learn later in this article.
+
+Now let's break down all of the building blocks of a Redux. Starting with ...
+
+### 1. Actions
+
+**Actions** are the only way your application communicates with the store in Redux.
+
+```js
+const actionWithoutPayload = { type: "some-string" };
+const actionWithPayload = {
+  type: 'some-string',
+  payload: { message: "I can be anything. In this case, I'm an object." },
+};
+```
+
+Actions are plain JavaScript objects and must have a `type` property. The `type` indicates the action's purpose. 
+
+You can also pass additional data using the `payload` property. A `payload` can be any serializable data type in JavaScript.
+
+```js
+const saveUserAction = {
+  type: "saveUser",
+  payload: { id: 1, name: "Jan Hesters", job: "mentor" },
+};
+```
+
+`saveUserAction` shows you a more real-world example. You might see an action like this when someone saves some entity, in this case a user. It contains the user to be saved as the payload.
+
+### 2. Reducers
+
+The second building block are reducers.
+
+**Reducers** are pure functions in Redux that take the current state and an action, and return a new state.
+
+Create a file in `src/app/example-reducer.js`.
+
+```js title="src/app/example-reducer.js"
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "INCREMENT": {
+      return state + 1;
+    }
+    case "INCREMENT_BY": {
+      return state + action.payload;
+    }
+    default:
+      return state;
+  }
+}
+```
+
+`state` is the accumulator, and action is the current value. When you write reducers, you usually use a `switch` statement which evaluates the action's `type`. In this example, the `reducer` function handles two action types:
+
+- `"INCREMENT"` increases the state by one.
+- `"INCREMENT_BY"` increases the state by the amount specified in the action's `payload`.
+
+The `default` case returns the current state unchanged, which is important for handling any unknown actions.
+
+Remember, **reducers must be pure functions** - that means:
+
+- they do ***NOT*** modify the inputs,
+- they do ***NOT*** perform side effects like API calls, and
+- they do ***NOT*** call non-pure functions like `Date.now()` or `Math.random()`.
+
+And make sure that each case uses the `return` statement to prevent any case from falling through.
+
+```js title="src/app/example-reducer.js"
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "INCREMENT": {
+      return state + 1;
+    }
+    case "INCREMENT_BY": {
+      return state + action.payload;
+    }
+    default:
+      return state;
+  }
+}
+
+const actions = [
+  { type: "INCREMENT" },
+  { type: "INCREMENT_BY", payload: 8958 },
+  { type: "INCREMENT_BY", payload: 41 },
+  { type: "INCREMENT" }
+];
+
+const state = actions.reduce(reducer, 0);
+console.log('state', state); // state 9001
+```
+
+To use your `reducer` you can create an array of actions, which lists the actions to process. Notice how only the `'INCREMENT_BY'` action has a payload.
+
+Now you can reduce over your actions, passing in your `reducer` as the reducer function and `0` as the initial value for the `state`. The result is 9001. This usage example visualizes where the `reducer` part of the name in Redux comes from.
+
+You can refactor this code to be more clean.
+
+```js title="src/app/example-reducer.js" {1, 3, 11-13, 22, 27}
+const initialState = 0;
+
+const reducer = (state = initialState, action) => {
+  switch (action.type) {
+    case "INCREMENT": {
+      return state + 1;
+    }
+    case "INCREMENT_BY": {
+      return state + action.payload;
+    }
+    case "RESET": {
+      return initialState;
+    }
+    default:
+	  return state;
+  }
+}
+
+const actions = [
+  { type: "INCREMENT" },
+  { type: "INCREMENT_BY", payload: 8958 },
+  { type: "RESET" },
+  { type: "INCREMENT_BY", payload: 41 },
+  { type: "INCREMENT" }
+];
+
+const state = actions.reduce(reducer, initialState);
+console.log('state', state); // state 42
+```
+
+Capture the initial state in its own variable to improve the code.
+
+This lets you easily use default parameters for the initial state and add a new action to reset the reducer to its initial state.
+
+Each case of the reducer must return data with the same type and shape as the initial state. If the initial state is a number, each case must return a number. If the initial state is an object with specific properties, each case must return an object of the same shape.
+
+You can test it, by adding it to your actions array. And instead of hardcoding 0, you can pass the initial state to the `reduce` method. This prevents errors if you ever change the initial state. Now the result is 42.
+
+But you can improve the code even more.
+
+```js title="src/app/example-reducer.js" {1-3, 23-29}
+const increment = () => ({ type: "INCREMENT" });
+const incrementBy = payload => ({ type: "INCREMENT_BY", payload });
+const reset = () => ({ type: "RESET" });
+
+const initialState = 0;
+
+const reducer = (state = initialState, action) => {
+  switch (action.type) {
+    case "INCREMENT": {
+      return state + 1;
+    }
+    case "INCREMENT_BY": {
+      return state + action.payload;
+    }
+    case "RESET": {
+      return initialState;
+    }
+    default:
+	  return state;
+  }
+}
+
+const actions = [
+  increment(),
+  incrementBy(8958),
+  reset(),
+  incrementBy(41),
+  increment()
+];
+
+const state = actions.reduce(reducer, initialState);
+console.log('state', state); // state 42
+```
+
+Create factory functions for your actions. In Redux, these are known as **action creators**. If an action needs a payload, pass it as a parameter to the action creator.
+
+Replace the hardcoded actions in your array with calls to these action creators. You pass the numbers as arguments to the `incrementBy` action creators that need a payload.
+
+After these refactors, the resulting `state` should remain the same.
+
+Action creators have several benefits:
+
+- Action creators **reduce boilerplate** by abstracting away the creation of the object and type, so you only focus on what action to call and it's payload.
+- As factory functions, action creators allow you to **do calculations on input**. For example, you can provide default values through default parameters, which also gives you type inference for free, or use action creators to map values to their correct shape.
+
+```js title="src/app/example-reducer.js"
+// Default parameters
+const addNeighbor = ({ fullName = "N/A", joinDate = new Date() } = {}) => ({
+  type: "addNeighbor",
+  payload: { fullName, joinDate }
+});
+const neighbor = addNeighbor().payload;
+
+// Mapping values
+const fetchedUser = ({ firstName, lastName }) => ({
+  type: 'fetchedUser',
+  payload: { name: `${firstName} ${lastName}` },
+});
+```
+
+- Action creators also **decrease bugs** by encapsulating the constants in your reducer file.
+
+Can you clean this code up even more? 
+
+Yes you can. Now you'll learn some _senior secrets_ on structuring your Redux code.
+
+```js title="src/app/example-reducer.js" {5, 7, 9-12, 14-15, 17, 34}
+export const increment = () => ({ type: 'INCREMENT' });
+export const incrementBy = payload => ({ type: 'INCREMENT_BY', payload });
+export const reset = () => ({ type: 'RESET' });
+
+export const slice = 'example';
+
+const initialState = { count: 0 };
+
+export const reducer = (state = initialState, { type, payload } = {}) => {
+  switch (type) {
+    case increment().type: {
+      return { ...state, count: state.count + 1 };
+    }
+    case incrementBy().type: {
+      return { ...state, count: state.count + payload };
+    }
+    case reset().type: {
+      return initialState;
+    }
+    default: {
+      return state;
+    }
+  }
+};
+
+const actions = [
+  increment(),
+  incrementBy(8958),
+  reset(),
+  incrementBy(41),
+  increment(),
+];
+
+const state = actions.reduce(reducer, reducer());
+console.log('state', state); // state { count: 42 }
+```
+
+First of all, create a new variable called `slice`. The `slice` variable is a misnomer. A better name would be `sliceName` or `substateName`.
+
+A **slice** usually refers to the substate of the root state, like slice of a pie. Each slice is responsible for a distinct feature or domain within your app. It includes its own reducer, action creators, and selectors. In this case, the slice is the example sub state. You're going to learn exactly how the `slice` variable will be used later in this article. This is nothing senior, yet, but a simple step that prepares your code for correct usage later in your app.
+
+Next, destructure the `type` and `payload` of your action in your reducer and default it to the empty object. Destructuring reduces the amount of code you need to write in your `switch` statement.
+
+Also tightly couple your action creators directly to your switch cases by using the action creators' `.type` property instead of hardcoding strings. This approach prevents typos in action types and makes refactors easier because changes in your action types automatically propagate to your reducer.
+
+To keep your `reducer` a pure function, you create new objects using the spread syntax instead of modifying the current state. Your reducers must ***always*** modify state immutably. Keeping your state immutable makes your state updates predictable and helps with efficient rendering updates.
+
+The second reason to use spread is to keep your state shape intact. In each case, you're only updating the `count` property. If you add more properties to your state, spreading ensures you avoid overwriting them and only change the key you intend to change.
+
+Your refactor has one final benefit: when you call your reducer without arguments, it now returns the initial state. This makes sure that wherever you import your reducer and need its initial state, you don't need to import the initial state separately, reducing the risk of bugs.
+
+### 3. Store
+
+Next, you're going to learn about the third building block: the store. The **store** is a central place where your application's state lives and reducers and middleware are wired together.
+
+Here is what an example implementation looks like. (Create a new file called `src/app/create-store.js`.)
+
+```js title="src/app/create-store.js"
+export function createStore(reducer, initialState) {
+  let state = initialState;
+
+  const getState = () => state;
+
+  return { getState };
+}
+```
+
+Your application's state will be encapsulated in the closure of the `createStore` function.
+
+In your `createStore` implementation, the `getState` function uses closure for encapsulation and data privacy. Since `getState` is defined inside `createStore`, it has exclusive access to the `state` variable, keeping it private and preventing manual mutations.
+
+Then create a new file called `src/app/store.js` and import your  `createStore` function.
+
+```js title="src/app/store.js"
+import { createStore } from './create-store';
+import { reducer } from './example-reducer';
+
+const store = createStore(reducer, reducer());
+
+console.log('state', store.getState()); // state { count: 0 }
+```
+
+Use your `createStore` function to create your store. Calling the `reducer` without arguments provides the initial state, which is `{ count: 0 }` in this case. You can use `getState()` to access your store's current state.
+
+The Redux package comes with it's own more sophisticated version of the `createStore` function, so install the `redux` package.
+
+```sh
+npm i redux
+```
+
+Then import the `createStore` function.
+
+```js title="src/app/store.js" {1}
+import { legacy_createStore as createStore } from 'redux';
+
+import { reducer } from './example-reducer';
+
+const store = createStore(reducer, reducer());
+
+console.log('state', store.getState()); // state { count: 0 }
+```
+
+You're going to use the `legacy_createStore` import because the regular `createStore` import is deprecated. It will keep working forever, but the maintainers of Redux deprecated it to nudge people to use Redux Toolkit, which you're going to learn in the article of this series.
+
+### 4. Dispatch
+
+Now that you got your store, how do you send actions to it to manipulate it's state? You use a function called `dispatch` for that.
+
+Go back to your own implementation of the `createStore` function and modify it to expose a `dispatch` method.
+
+```js title="src/app/create-store.js" {4-6, 10}
+export function createStore(reducer, initialState) {
+  let state = initialState;
+
+  const dispatch = action => {
+    state = reducer(state, action);
+  };
+
+  const getState = () => state;
+
+  return { dispatch, getState };
+}
+```
+
+`dispatch` takes in an action and uses the `reducer` from your `createStore` function to calculate the next state, and then mutates the state in the closure.
+
+The store created using the `createStore` function from Redux already has a `dispatch` method.
+
+```js title="src/app/store.js" {7-13, 15-17}
+import { legacy_createStore as createStore } from 'redux';
+
+import { increment, incrementBy, reducer, reset } from './example-reducer';
+
+const store = createStore(reducer, reducer());
+
+const actions = [
+  increment(),
+  incrementBy(5),
+  reset(),
+  incrementBy(41),
+  increment(),
+];
+
+for (const action of actions) {
+  store.dispatch(action);
+}
+
+console.log('state', store.getState()); // state { count: 42 }
+```
+
+Define an array of actions using your actions from your example reducer. Then, use a `for` loop to dispatch each action to the store. After that, calling `getState()` will give you the current state of your store.
+
+### Multiple Reducers
+
+You've learned how to set up your store with a single reducer. But as mentioned earlier, Redux apps usually have many slices, each corresponding to a different feature or domain of your app. So, how do you handle multiple reducers in the same store?
+
+To show this, create a user profile reducer in `src/app/user-profile-reducer.js`.
+
+```js title="src/app/user-profile-reducer.js"
+export const loginSucceeded = payload => ({ type: 'LOGIN_SUCCEEDED', payload });
+export const usersFetched = payload => ({ type: 'USERS_FETCHED', payload });
+
+export const slice = 'userProfile';
+const initialState = { currentUserId: null, users: {} };
+
+export const reducer = (state = initialState, { type, payload } = {}) => {
+  switch (type) {
+    case loginSucceeded().type: {
+      return {
+        ...state,
+        currentUserId: payload.id,
+        users: { ...state.users, [payload.id]: payload },
+      };
+    }
+    case usersFetched().type: {
+      const newUsers = { ...state.users };
+
+      payload.forEach(user => {
+        newUsers[user.id] = user;
+      });
+
+      return { ...state, users: newUsers };
+    }
+    default: {
+      return state;
+    }
+  }
+};
+```
+
+Create two actions: one for when the user logs in and another for when a list of users is fetched.
+
+You also want to normalize your state. This means that when a user is fetched, you're going to save them in an object, where the key is the user's `id`, and the value is the entire user object. 
+
+A populated state shape for this slice could look like this.
+
+```json
+{
+  "currentUsersId": "abc-123",
+  "users": {
+    "abc-123": {
+      "id": "abc-123",
+      "email": "johndoe@example.com",
+      "fullName": "John Doe"
+    },
+    "xyz-789": {
+      "id": "xyz-789",
+      "email": "janesmith@example.com",
+      "fullName": "Jane Smith"
+    }
+  }
+}
+```
+
+A normalized state shape has several advantages over storing users in an array:
+
+1. **Efficient Lookups**: Retrieving a user's information is direct and fast as you access them by their ID, avoiding the need to iterate over an array.
+2. **No Duplicates**: Each user ID maps to exactly one user object, preventing duplicate entries for the same user.
+3. **Easier Updates**: To update a user's information, you simply modify the entry at that user's ID, rather than searching for a user in an array and replacing it.
+
+Always create a new object when updating the users' object to maintain state immutability.
+
+The payload for the `loginSucceeded` action includes the full user profile for the user that just logged in, such as their ID, name, and email. The payload for the `usersFetched` action is an array of users.
+
+Notice that the action creators and the types of the actions that they create are named in the past tense - this is a good practice and has two advantages.
+
+First, this naming convention indicates what event just happened, making your app easier to debug. Some developers name their actions like a process, which makes debugging harder because you lack the knowledge of where in your app the action was dispatched.
+
+```js title="src/app/temp-example-reducer.js"
+const setCurrentUser = payload => ({ type: 'SET_CURRENT_USER', payload }); // 🚫 Bad!
+const loginSucceeded = payload => ({ type: 'LOGIN_SUCCEEDED', payload }); // ✅ Good!
+const changedUser = payload => ({ type: 'CHANGED_USER', payload }); // ✅ Good!
+```
+
+Second, if two actions trigger the same state update but come from different interactions, unique names help you identify what happened, so you know where in your code your need to look for the bug.
+
+```js title="src/app/temp-example-reducer.js"
+ // 🚫 Bad! Avoid this 👇 It's only included in this example, so you see the anti-pattern.
+const setCurrentUser = payload => ({ type: 'SET_CURRENT_USER', payload });
+const loginSucceeded = payload => ({ type: 'LOGIN_SUCCEEDED', payload });
+const changedUser = payload => ({ type: 'CHANGED_USER', payload });
+
+const changeCurrentUser = (state, currentUser) => ({
+  ...state,
+  currentUserId: currentUser.id,
+  users: { ...state.users, [currentUser.id]: currentUser },
+});
+
+export const reducer = (state = initialState, { type, payload } = {}) => {
+  switch (type) {
+    case setCurrentUser().type: { // 🚫 Bad! Only shown as an example.
+      return changeCurrentUser(state, payload);
+    }
+    case changedUser().type: {
+      return changeCurrentUser(state, payload);
+    }
+    case loginSucceeded().type: {
+      return changeCurrentUser(state, payload);
+    }
+    // ... rest
+  }
+};
+```
+
+All three actions trigger the same state change because you need to update the current user after they log in, and there might also be an interface that lets the user switch users. Both cases could be handled by the `setCurrentUser` action. However, when you see that the `setCurrentUser` action has been dispatched, you have no idea what just happened. But, because you gave them their own names, for `loginSucceeded` and `changeUser` it's immediately obvious what happened.
+
+If multiple actions require the same state update, abstract that away in a helper function and use it in your reducer for multiple cases. In this case, the function is called `changeCurrentUser`.
+
+Some developers use fall-through in switch cases to batch updates to handle the same state update. But you want to avoid fall-through switch cases to prevent unwanted bugs.
+
+```js title="src/app/temp-example-reducer.js"
+export const reducer = (state = initialState, { type, payload } = {}) => {
+  switch (type) {
+    // fall-through: bad 🚫
+    case setCurrentUser().type:
+    case changedUser().type:
+    // Imagine adding a case here with a new return statement. It would suddenly
+    // break the intended behavior of `setCurrentUser` and `changedUser`.
+    case loginSucceeded().type: {
+      return {
+        ...state,
+        currentUserId: currentUser.id,
+        users: { ...state.users, [currentUser.id]: currentUser },
+      }
+    }
+    // ... rest
+  }
+};
+```
+
+The patterns for handling switch statements and action handlers are just one example of how learning Redux promotes clean code patterns that can be applied to many coding scenarios beyond Redux.
+
+Now in your store, import each reducer's slice alongside the respective reducer.
+
+```js title="src/app/store.js" {3-7, 9-16, 18-21, 23}
+import { legacy_createStore as createStore } from 'redux';
+
+import { reducer as exampleReducer, slice as exampleSlice } from './example-reducer';
+import {
+  reducer as userProfileReducer,
+  slice as userProfileSlice,
+} from './user-profile-reducer';
+
+function combineReducers(reducers) {
+  return function rootReducer(state = {}, action = {}) {
+    return Object.keys(reducers).reduce((nextState, slice) => {
+      nextState[slice] = reducers[slice](state[slice], action);
+      return nextState;
+    }, {});
+  };
+}
+
+const rootReducer = combineReducers({
+  [exampleSlice]: exampleReducer,
+  [userProfileSlice]: userProfileReducer,
+});
+
+const store = createStore(rootReducer, rootReducer());
+
+console.log('state', store.getState());
+// state {
+//   example: { count: 0 },
+//   userProfile: { currentUserId: null, users: {} }
+// }
+```
+
+Then create a `combineReducer`s function. The function merges several smaller reducers into a single reducer that manages the overall application state, usually called the "root reducer". Each reducer passed to `combineReducers` handles its own part of the state, which is defined by their respective slice key. 
+
+When an action is dispatched, `combineReducers` calls each reducer with its current slice of the state and the action, then merges the results into a new state object.
+
+Use your `combineReducers` function to create a root reducer and modify your store to use that root reducer.
+
+When you call `getState()`, you can see each slice and its respective state in the store's current state.
+
+Instead of creating your own `combineReducers` function, use the `combineReducers` function from the Redux package.
+
+```js title="src/app/store.js" {1}
+import { combineReducers, legacy_createStore as createStore } from 'redux';
+
+import { reducer as exampleReducer, slice as exampleSlice } from './example-reducer';
+import {
+  reducer as userProfileReducer,
+  slice as userProfileSlice,
+} from './user-profile-reducer';
+
+const rootReducer = combineReducers({
+  [exampleSlice]: exampleReducer,
+  [userProfileSlice]: userProfileReducer,
+});
+
+const store = createStore(rootReducer, rootReducer());
+
+console.log('state', store.getState());
+// state {
+//   example: { count: 0 },
+//   userProfile: { currentUserId: null, users: {} }
+// }
+```
+
+### React Redux
+
+Instead of interacting directly with your store from your UI code, Redux is commonly used with "UI binding" libraries.
+
+For React there is React Redux, which is the official library maintained by the Redux team. React Redux has built-in performance optimizations to ensure your component only re-renders when necessary. Install it in your project.
+
+```sh
+npm i react-redux
+```
+
+In your `src/app/store.js`, create a `makeStore` function and get rid of your `store` object.
+
+```js title="src/app/store.js" {14-16}
+import { combineReducers, legacy_createStore as createStore } from 'redux';
+
+import { reducer as exampleReducer, slice as exampleSlice } from './example-reducer';
+import {
+  reducer as userProfileReducer,
+  slice as userProfileSlice,
+} from './user-profile-reducer';
+
+const rootReducer = combineReducers({
+  [exampleSlice]: exampleReducer,
+  [userProfileSlice]: userProfileReducer,
+});
+
+export const makeStore = () => {
+  return createStore(rootReducer, rootReducer());
+};
+```
+
+A Next.js server can handle multiple requests at once, so you need to create a new Redux store for each request and avoid sharing the store across requests from different clients. That is why you create the `makeStore` function instead of defining your `store` as a global variable. If you're NOT using Next.js with the `app/` directory, but are working on a regular Single Page Application (SPA), you can safely use a global `store` variable. But in Next.js this would cause problems because every user would get the ***same*** store reference.
+
+Create a provider for your store in `src/app/store-provider.js` and use the `makeStore()` function within it.
+
+```jsx title="src/app/store-provider.js"
+'use client';
+import { useRef } from 'react';
+import { Provider } from 'react-redux';
+
+import { makeStore } from './store';
+
+export function StoreProvider({ children }) {
+  const storeRef = useRef();
+
+  if (!storeRef.current) {
+    storeRef.current = makeStore();
+  }
+
+  return <Provider store={storeRef.current}>{children}</Provider>;
+}
+```
+
+Import the `Provider` from React Redux and your `makeStore` function.
+
+Use a `ref` to ensure that the store is only created once. Although the component renders only once per server request, it might re-render multiple times on the client if stateful components are higher in the tree or if the component has mutable state that triggers re-renders. When it re-renders, you prevent a new store from being created through the `if` statement.
+
+Pass the `ref` of your store to the `Provider` from React Redux.
+
+You want to use your `StoreProvider` anywhere in the component tree **above** where the store is used. In this tutorial, you're going put your provider on the root layout to make Redux available on every page. This make the Redux store available to your whole app via the [React context API](https://react.dev/learn/passing-data-deeply-with-context).
+
+Modify your root layout file in `src/app/layout.js`.
+
+```jsx title="src/app/layout.js"
+import './globals.css';
+
+import { Inter } from 'next/font/google';
+
+import { StoreProvider } from './store-provider';
+
+const inter = Inter({ subsets: ['latin'] });
+
+export const metadata = {
+  title: 'Jan Hesters Redux Tutorial',
+  description: 'Part one of five to master Redux.',
+};
+
+export default function RootLayout({ children }) {
+  return (
+    <StoreProvider>
+      <html lang="en">
+        <body className={inter.className}>{children}</body>
+      </html>
+    </StoreProvider>
+  );
+}
+```
+
+This makes the Redux context available to your whole app. If you only want to use Redux on certain routes, you can use the `StoreProvider` on the respective page or route layout.
+
+### 5. Selectors
+
+How do you get data from the store to your app? That's where selectors come in.
+
+**Selectors** are pure functions that take in your Redux state and return a specific part of it or an aggregated value.
+
+There is no need to code along for the following examples. I'll let you know, when it's time to code along again.
+
+```js title="src/app/store.js"
+import { combineReducers, legacy_createStore as createStore } from 'redux';
+
+import {
+  incrementBy,
+  reducer as exampleReducer,
+  slice as exampleSlice,
+} from './example-reducer';
+import {
+  fetchedUsers,
+  loginSuccess,
+  reducer as userProfileReducer,
+  slice as userProfileSlice,
+} from './user-profile-reducer';
+
+const rootReducer = combineReducers({
+  [exampleSlice]: exampleReducer,
+  [userProfileSlice]: userProfileReducer,
+});
+
+export const makeStore = () => {
+  return createStore(rootReducer, rootReducer());
+};
+
+const store = makeStore();
+
+store.dispatch(incrementBy(10));
+store.dispatch(
+  loginSuccess({
+    id: 'user123',
+    email: 'johndoe@example.com',
+    firstName: 'John',
+    lastName: 'Doe',
+  }),
+);
+store.dispatch(
+  fetchedUsers([
+    {
+      id: 'user123',
+      email: 'johndoe@example.com',
+      firstName: 'John',
+      lastName: 'Doe',
+    },
+    {
+      id: 'user456',
+      email: 'janesmith@example.com',
+      firstName: 'Jane',
+      lastName: 'Smith',
+    },
+  ]),
+);
+
+console.log('state', store.getState());
+// state {
+//   "example": {
+//     "count": 10
+//   },
+//   "userProfile": {
+//     "currentUserId": "user123",
+//     "users": {
+//       "user123": {
+//         "id": "user123",
+//         "email": "johndoe@example.com",
+//         "firstName": "John",
+//         "lastName": "Doe",
+//       },
+//       "user456": {
+//         "id": "user456",
+//         "email": "janesmith@example.com",
+//         "firstName": "Jane",
+//         "lastName": "Smith",
+//       }
+//     }
+//   }
+// }
+
+const selectCurrentCount = state => state.example.count;
+
+const currentCount = selectCurrentCount(store.getState());
+console.log('currentCount', currentCount); // 10
+```
+
+Remember, after merging your reducers into one using `combineReducers`, you can dispatch actions to change your state.
+
+The code example above shows how to dispatch actions to create a state with a count of 
+10 and two users in the user profile slice. One user is the current user, who in a real-world app would be logged in through the browser.
+
+You can write a `selectCurrentCount` selector that takes in the state and returns the current count.
+
+And if you wanted to grab the current user's email you can create a selector for that, too.
+
+```js title="src/app/store.js"
+// ... existing code
+
+const selectCurrentUsersEmail = state =>
+  state.userProfile.users[state.userProfile.currentUserId]?.email ?? '';
+
+const currentUserEmail = selectCurrentUsersEmail(store.getState());
+console.log('currentUserEmail', currentUserEmail); // johndoe@example.com
+```
+
+You can use the normalized state to easily access the current user object and retrieve the email using optional property access. It's best practice to ensure your selector always returns the same data type with meaningful default values. If the user is `undefined`, the optional property access returns `undefined`, and the nullish coalescing operator (`??`) will return an empty string. This ensures your selector always returns a string.
+
+Selectors can also take arguments and aggregate values, allowing them to compute new data from the state, filter it, or transform it.
+
+Here's an example of a selector that both accepts a user ID as a parameter and derives the user's full name by combining their first and last names.
+
+```js title="src/app/store.js"
+// ... existing code
+const selectFullNameById = (state, userId) => {
+  const user = state.userProfile.users[userId];
+  return user ? `${user.firstName} ${user.lastName}` : 'User not found';
+};
+
+const user456FullName = selectFullNameById(store.getState(), 'user456');
+console.log('user456FullName', user456FullName); // Jane Smith
+
+const notFound = selectFullNameById(store.getState(), 'user789');
+console.log('notFound', notFound); // User not found
+```
+
+If no user is found, it returns `'User not found'`, providing a meaningful default value. If you try to render a non-existent user’s email, it will display "User not found" instead, which offers a better user experience than showing nothing or causing your app to crash.
+
+There is more to learn about selectors, but the best way to understand them is in context. To do that, you need to see how React components connect to Redux.
+
+React Redux gives you two APIs to link your components to Redux. You can either use hooks or a HOC.
+
+### React Redux Hooks
+
+You're first going to see the hooks API.
+
+Now you can code along again.
+
+Create a file `src/app/hooks.js` which contains the Redux hooks.
+
+```js title="src/app/hooks.js"
+import { useDispatch, useSelector, useStore } from 'react-redux';
+
+export const useAppDispatch = useDispatch.withTypes();
+export const useAppSelector = useSelector.withTypes();
+export const useAppStore = useStore.withTypes();
+```
+
+If you want to use Redux' hooks, use these throughout your app instead of plain the `useDispatch` and `useSelector` hooks because these hooks have better type-safety.
+
+Modify your main `page.js` component to get the count from your state.
+
+```jsx title="src/app/page.js"
+'use client';
+
+import { useAppSelector } from './hooks';
+
+export default function Home() {
+  const count = useAppSelector(state => state.example.count);
+
+  return (
+    <main className="flex min-h-screen flex-col items-center p-24">
+      <h1 className="text-4xl font-bold">Count from the Example Slice</h1>
+
+      <div className="flex items-center justify-center space-x-4">
+        <p className="text-2xl">Count: {count}</p>
+      </div>
+    </main>
+  );
+}
+```
+
+You'll have to use the `'use client'`  directive here, too, because only client components have access to the Redux context. 
+
+Import the `useAppSelector` hook and inline the selector function to get the current count.
+
+Remember, you wrapped your root layout with the Redux provider earlier. This gives all components in the component tree access to the Redux context, which holds the store, `dispatch`, and state. The `useAppSelector` hook has access to this context and `useAppSelector` takes in a selector as a callback. It then passes the state to the selector  as its first argument. Keep in mind, since React Server Components cannot use hooks or context, you can't read or write from the Redux store within RSCs.
+
+Now whenever the returned value from `useAppSelector` changes, the `Home` component will re-render.
+
+However, it's important to understand that `useAppSelector` automatically memoizes its value. That means it only triggers a re-render if the selector's result is different than the last result based on a strict equality comparison (`===`) . You can check out ["useCallback vs. useMemo"](https://janhesters.com/blog/usecallback-vs-usememo) for an in-depth breakdown of how memoization works in React. `useAppSelector` uses `useCallback` behind the scenes to "talk to React" to trigger the re-render.
+ 
+`useAppSelector` takes in a selector as its callback function.
+
+Remember, a selector is a pure function that takes in the global state and returns an aggregated or derived value.
+
+Define a `selectCurrentCount` selector in your `src/app/example-reducer.js` below your `reducer`.
+
+```js title="src/app/example-reducer.js"
+// ... existing code
+
+export const selectCurrentCount = state => state[slice].count;
+```
+
+Saving selectors in variables is better than inlining them. This way, if you use the same selector in multiple components, and you need to change it, you only need to update it once, instead of updating each inline callback in the components.
+
+Now use it your `Home` component and replace your inlined function with the selector.
+
+```jsx title="src/app/page.js" {3, 7}
+'use client';
+
+import { selectCurrentCount } from './example-reducer';
+import { useAppDispatch } from './hooks';
+
+export default function Home() {
+  const count = useAppSelector(selectCurrentCount);
+
+  return (
+    <main className="flex min-h-screen flex-col items-center p-24">
+      <h1 className="text-4xl font-bold">Redux Basics</h1>
+
+      <div className="flex items-center justify-center space-x-4">
+        <p className="text-2xl">Count: {count}</p>
+      </div>
+    </main>
+  );
+}
+```
+
+You will learn more about the benefits of defining selectors as functions instead of inlining them soon.
+
+Before that, you also need to modify your state. For that you need the `dispatch` function that you learned about earlier. You can get access to it inside of your React component by using the `useAppDispatch` function.
+
+```jsx title="src/app/page.js" {3-4, 8, 17-24}
+'use client';
+
+import { increment, selectCurrentCount } from './example-reducer';
+import { useAppDispatch, useAppSelector } from './hooks';
+
+export default function Home() {
+  const count = useAppSelector(selectCurrentCount);
+  const dispatch = useAppDispatch(); // This is store.dispatch.
+
+  return (
+    <main className="flex min-h-screen flex-col items-center p-24">
+      <h1 className="text-4xl font-bold">Redux Basics</h1>
+
+      <div className="flex items-center justify-center space-x-4">
+        <p className="text-2xl">Count: {count}</p>
+
+        <button
+          className="bg-white text-black hover:bg-white/90 inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium shadow transition-colors"
+          onClick={() => {
+            dispatch(increment());
+          }}
+        >
+          Increment
+        </button>
+      </div>
+    </main>
+  );
+}
+```
+
+The `useAppDispatch` hook returns the `store.dispatch` method, accessing it through the Redux context provided by your `StoreProvider`. Then you can dispatch your action creator. In this example, you're going to dispatch the increment action when a user clicks a button. Clicking the button will update the state and then automatically change the `count` value that your component receives, which triggers a re-render and updates your UI in the browser.
+
+### `connect` HOC
+
+The other way to connect your Redux store to your component is with a higher-order component (HOC). A higher-order component is a function that takes in a component and returns a component. If you're unfamiliar with them, read ["Higher-Order Components Are Misunderstood In React"](https://janhesters.com/blog/higher-order-components-are-misunderstood-in-react).
+
+The HOC that React Redux exposes is called `connect`. Refactor your page component to remove the selectors and use `connect`.
+
+```jsx title="src/app/page.js" {3, 11, 24, 34, 36, 38}
+'use client';
+
+import { connect } from 'react-redux';
+
+import { increment, selectCount } from './example-reducer';
+
+// Shadowing: The `increment` function taken in as props is NOT the pure
+// action  creator imported from './example-reducer'.
+// Instead it is a function that automatically dispatches the increment
+// action for you.
+function Home({ count, increment }) {
+  return (
+    <main className="flex min-h-screen flex-col items-center p-24">
+      <h1 className="text-4xl font-bold">Redux Basics</h1>
+
+      <div className="flex items-center justify-center space-x-4">
+        <p className="text-2xl">Count: {count}</p>
+
+        <button
+          className="bg-white text-black hover:bg-white/90 inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium shadow transition-colors"
+          onClick={() => {
+            // No need to wrap increment in dispatch like this:
+            // dispatch(increment());
+            increment();
+          }}
+        >
+          Increment
+        </button>
+      </div>
+    </main>
+  );
+}
+
+const mapStateToProps = state => ({ count: selectCount(state) });
+
+const mapDispatchToProps = { increment };
+
+export default connect(mapStateToProps, mapDispatchToProps)(Home);
+```
+
+First, modify your page component to accept the `count` and `increment` function as props.
+
+The `connect` HOC from React Redux links the Redux store to the React component. It takes in two parameters:
+
+1. `mapStateToProps` is a function that defines how to transform the current Redux store state into component props. In this case, it maps the state to the props of the `Home` page component.
+2. `mapDispatchToProps` is an object that defines which action creators to pass to the component as props. Notice that you do NOT have to wrap `increment` with `dispatch` because `mapDispatchToProps` does that automatically for you. The `increment` function that your component gets passed in through its props is different from the `increment` action creator that you import. When two variables have the same name it is called "shadowing". In Redux, with the `connect` HOC, shadowing can happen. But don't let this confuse you. The `increment` in the props is wrapped with dispatch, so when you call it, the "increment" action is sent to your store.
+
+```js title="temp-example.js"
+const mergeProps = (stateProps, dispatchProps, ownProps) => ({
+  ...stateProps, // from mapStateToProps
+  ...dispatchProps, // from mapDispatchToProps
+  ...ownProps, // passed in to the component wrapped by connect from its parent
+});
+
+connect(mapStateToProps, mapDispatchToProps, mergeProps);
+```
+
+There is also a third parameter for the `connect` higher-order component called `mergeProps`. It allows you to mix the props from Redux with the props passed to it from parent components. It is rarely used, so it's enough for you to know it exists and if you ever encounter it, you can look it up in the documentation.
+
+### The Two Benefits Of Selectors
+
+Earlier you set up two slices: the example slice and the user profile slice. The first reason to show two slices in this video is to show you `combineReducers`. The second is that because the user profile slice is more complex, you can see the benefits of selectors.
+
+Add some new selectors to your `src/app/user-profile-reducer.js`.
+
+```js title="src/app/user-profile-reducer.js" {35, 37, 39, 41-42, 44-45, 47-48, 50}
+export const loginSucceeded = payload => ({ type: 'LOGIN_SUCCEEDED', payload });
+export const usersFetched = payload => ({ type: 'USERS_FETCHED', payload });
+
+export const slice = 'userProfile';
+const initialState = { currentUserId: null, users: {} };
+
+export const reducer = (state = initialState, { type, payload } = {}) => {
+  switch (type) {
+    case loginSucceeded().type: {
+      return {
+        ...state,
+        currentUserId: payload.id,
+        users: { ...state.users, [payload.id]: payload },
+      };
+    }
+    case usersFetched().type: {
+      const newUsers = { ...state.users };
+
+      payload.forEach(user => {
+        newUsers[user.id] = user;
+      });
+
+      return { ...state, users: newUsers };
+    }
+    default: {
+      return state;
+    }
+  }
+};
+
+/**
+ * Add your selectors below your reducer.
+ */
+
+const selectUserProfileSlice = state => state[slice];
+
+export const selectCurrentUsersId = state => state[slice].currentUserId;
+
+export const selectUsers = state => state[slice].users;
+
+export const selectCurrentUser = state =>
+  state[slice].users[state[slice].currentUserId];
+
+export const selectCurrentUsersEmail = state =>
+  state[slice].users[state[slice].currentUserId]?.email ?? '';
+
+export const selectCurrentUsersFullName = state =>
+  `${state[slice].users[state[slice].currentUserId]?.firstName ?? ''} ${state[slice].users[state[slice].currentUserId]?.lastName ?? ''}`;
+
+export const selectIsLoggedIn = state => Boolean(state[slice].currentUserId);
+```
+
+- **`selectUserProfileSlice`**: Retrieves the `userProfile` slice of the state.
+- **`selectCurrentUsersId`**: Gets the current user's ID from the `userProfile` slice.
+- **`selectUsers`**: Returns the `users` object from the `userProfile` slice.
+- **`selectCurrentUser`**: Retrieves the complete data of the current user. It takes advantage of the normalized users.
+- **`selectCurrentUsersEmail`**: Returns the email address of the current user.
+- **`selectCurrentUsersFullName`**: Returns the aggregated full name of the current user.
+- **`selectIsLoggedIn`**: Checks if a user is logged in.
+
+Now that you've seen a couple of selectors, you can understand their benefits.
+
+1. Selectors are **facades** that let you **avoid state-shape dependencies**.
+2. Selectors are **memoizeable**.
+
+#### Selectors Avoid State-Shape Dependencies
+
+A facade is a design pattern where you **provide a simplified interface to a complex subsystem**.
+
+You have state shape dependencies when your code relies on a specific shape of state. A change in the state's shape can break the dependent code. The shape of your state is defined by it's data type and by its content. For objects, the shape refers to their nesting structure.
+
+Currently, your state looks like this.
+
+```json
+{
+  "userProfile": {
+    "currentUsersId": "abc-123",
+    "users": {
+      "abc-123": {
+        "id": "abc-123",
+        "email": "johndoe@example.com",
+        "firstName": "John",
+        "lastName": "Doe"
+      },
+      "xyz-789": {
+        "id": "xyz-789",
+        "email": "janesmith@example.com",
+        "firstName": "Jane",
+        "lastName": "Smith"
+      }
+    }
+  },
+  "counter": {
+    "count": 0
+  }
+}
+```
+
+Your users are normalized and each user is saved in an object where the key is their ID and the value is the user.
+
+Now imagine that for some reason you would need to refactor your state shape, so that instead of your users being normalized, they're now an array.
+
+```json {4-17}
+{
+  "userProfile": {
+    "currentUsersId": "abc-123",
+    "users": [
+      {
+        "id": "abc-123",
+        "email": "johndoe@example.com",
+        "firstName": "John",
+        "lastName": "Doe"
+      },
+      {
+        "id": "xyz-789",
+        "email": "janesmith@example.com",
+        "firstName": "Jane",
+        "lastName": "Smith"
+      }
+    ]
+  },
+  "counter": {
+    "count": 0
+  }
+}
+```
+
+If you would have inlined your user profile selectors ...
+
+```js
+function SomeComponent() {
+  // selectCurrentUsersEmail selector inlined for normalized state
+  const email = useAppSelector(state =>
+    state.userProfile.users[state.userProfile.currentUserId]?.email || ''
+  );
+}
+```
+
+... you'd need to update them in every component to support the array by using the `.find` array method.
+
+```js
+function SomeComponent() {
+  // Update the selectCurrentUsersEmail selector to work with
+  // the new array structure.
+  const email = useAppSelector(state => {
+    const users = state.userProfile.users;
+    const currentUserId = state.userProfile.currentUsersId;
+    const currentUser = users.find(user => user.id === currentUserId);
+    return currentUser?.email ?? '';
+  });
+
+  // ...
+}
+```
+
+You need to update your code like this **everywhere** you're using users directly or any derived state, like the current user's email.
+
+This also applies when you save selectors as functions. You'd need to refactor them like this. (No need to code along here. You're not actually going to refactor your state shape. This is still a hypothetical example.)
+
+```js title="src/app/user-profile-reducer.js"
+export const selectCurrentUsersId = state => state[slice].currentUsersId;
+
+export const selectUsers = state => state[slice].users;
+
+export const selectCurrentUser = state =>
+  state[slice].users.find(user => user.id === state[slice].currentUsersId);
+
+export const selectCurrentUsersEmail = state =>
+  state[slice].users.find(user => user.id === state[slice].currentUsersId)?.email ?? '';
+
+export const selectCurrentUsersFullName = state => {
+  const currentUser = state[slice].users.find(
+    user => user.id === state[slice].currentUsersId
+  );
+  return `${currentUser?.firstName ?? ''} ${currentUser?.lastName ?? ''}`;
+};
+
+export const selectIsLoggedIn = state => Boolean(state[slice].currentUsersId);
+```
+
+After this state change you'd need to update the three selectors that access the current user:
+
+- `selectCurrentUser`,
+- `selectCurrentUsersEmail`, and
+- `selectCurrentUsersFullName`.
+
+All of these selectors now need to be changed to use `find`.
+
+There was also a hidden change. `selectUsers` now returns an array instead of an object. But, arguably this was the only intentional change. All other selectors should still return the same but had to be refactored to so.
+
+This shows you that the code of the selectors violates one of the most important software design principles:
+
+> “A small change in requirements should necessitate a correspondingly small change in the software.” — N. D. Birrell, M. A. Ould, "A Practical Handbook for Software Development"
+
+Luckily, selectors have another key property.
+
+Your selectors ***compose***, which is their key feature that allows them to abstract away state shape dependencies.
+
+Assume you're back to your old state shape where you normalized your users. Then you could write your selectors using function composition like this. (You want to code along with this refactor.)
+
+```js title="src/app/user-profile-reducer.js"
+// ... existing code
+
+const selectUserProfileSlice = state => state[slice];
+
+const selectCurrentUsersId = state =>
+  selectUserProfileSlice(state).currentUserId;
+
+const selectUsers = state => selectUserProfileSlice(state).users;
+
+export const selectCurrentUser = state => {
+  const currentUserId = selectCurrentUsersId(state);
+  const users = selectUsers(state);
+
+  return users[currentUserId];
+};
+
+export const selectCurrentUsersEmail = state =>
+  selectCurrentUser(state)?.email ?? '';
+  
+export const selectCurrentUsersFullName = state => {
+  const currentUser = selectCurrentUser(state);
+  return `${currentUser?.firstName ?? ''} ${currentUser?.lastName ?? ''}`;
+};
+
+export const selectIsLoggedIn = state => Boolean(selectCurrentUsersId(state));
+```
+
+  
+`selectCurrentUsersId` and `selectUsers` can both use `selectUserProfileSlice`.
+
+`selectCurrentUser` can use `selectUsers` and `selectCurrentUsersId` to easily return the current user.
+
+Now, `selectCurrentUsersEmail` and `selectCurrentUsersFullName` can both use `selectCurrentUser` under the hood.
+
+Finally, your `selectIsLoggedIn` selector can also use `selectCurrentUsersId`.
+
+As you can see, this way all of your selectors are cleanly abstracted away. They only add what's unique about accessing their part of the state, which is specialization. And simultaneously, they hide what is obvious about accessing their state using other selectors, which is generalization.
+
+Again imagine, you'd need to refactor your users from being normalized to being in an array. (Again, skip this refactor.)
+
+```js title="src/app/user-profile-reducer.js" {12}
+const selectUserProfileSlice = state => state[slice];
+
+const selectCurrentUsersId = state =>
+  selectUserProfileSlice(state).currentUserId;
+
+const selectUsers = state => selectUserProfileSlice(state).users;
+
+export const selectCurrentUser = state => {
+  const currentUserId = selectCurrentUsersId(state);
+  const users = selectUsers(state);
+
+  return users.find(user => user.id === currentUserId);
+};
+
+export const selectCurrentUsersEmail = state =>
+  selectCurrentUser(state)?.email ?? '';
+  
+export const selectCurrentUsersFullName = state => {
+  const currentUser = selectCurrentUser(state);
+  return `${currentUser?.firstName ?? ''} ${currentUser?.lastName ?? ''}`;
+};
+
+export const selectIsLoggedIn = state => Boolean(selectCurrentUsersId(state));
+```
+
+You'd only need to change one line in the `selectCurrentUser` selector. All other selectors could stay the same.
+
+And that is what is meant with the point that selectors abstract away state shape dependencies because they compose. If your state shape changes, you usually only need to adjust the selectors corresponding directly to your shape change. In contrast, un-composed selectors require changes in many places, increasing the chances of bugs.
+
+#### Selectors Are Memoizable
+
+If you understand memoizing, it should be clear that selectors, as pure functions, can be memoized. If you're unfamiliar with memoizing, resume reading this article after you've read ["What Is Memoization? (In JavaScript & TypeScript)"](https://janhesters.com/blog/what-is-memoization-in-javascript-typescript) which explains memoization in depth.
+
+To learn how your can memoize your selectors, read the third article in this Redux series. It covers the `createSelector` API from Redux Toolkit, which you can use to memoize your selectors.
+
+#### Refactoring Selectors With Functional Programming
+
+The goal of this video is to provide you with a senior-level understanding of Redux. So let's raise the code quality level further. 
+
+You can clean up your selectors even more using functional programming.
+
+**Note:** If you're new to functional programming, either read ["Unleash JavaScript's Potential with Functional Programming"](https://janhesters.com/blog/unleash-javascripts-potential-with-functional-programming) before continuing, or skip this section and jump to "Display- / Container-Component Pattern" below.
+
+While reading this refactor, you might want to open this article in a new tab and look at the refactor side-by-side compared with its previous version without functional programming.
+
+```js title="src/app/user-profile-reducer.js"
+// ... actions & reducer
+
+const prop = key => obj => obj[key];
+const pipe = (...fns) => x => fns.reduce((y, f) => f(y), x);
+const converge = (merger, fns) => x => merger(...fns.map(fn => fn(x)));
+const propOr = defaultValue => key => obj => obj[key] ?? defaultValue;
+
+const selectUserProfileSlice = prop(slice);
+
+const selectCurrentUsersId = pipe(selectUserProfileSlice, prop('currentUserId'));
+
+const selectUsers = pipe(selectUserProfileSlice, prop('users'));
+
+export const selectCurrentUser = converge(prop, [
+  selectCurrentUsersId,
+  selectUsers,
+]);
+
+export const selectCurrentUsersEmail = pipe(
+  selectCurrentUser,
+  propOr('', 'email'),
+);
+
+export const selectCurrentUsersFullName = pipe(
+  selectCurrentUser,
+  converge(
+    (firstName, lastName) => `${firstName} ${lastName}`,
+    [propOr('', 'firstName'), propOr('', 'lastName')],
+  ),
+);
+
+export const selectIsLoggedIn = pipe(selectCurrentUsersId, Boolean);
+```
+
+You're going to use four functions.
+
+- **`prop`**: Retrieves the specified property from an object. This is useful for accessing specific slices of the state directly.
+- **`pipe`**: Combines multiple functions into a single function that executes from left to right, passing the return value of each function to the next.
+- **`converge`**: Accepts several selectors (or transformations) and a combining function. The selectors gather data from the state, and the combining function merges these pieces of data.
+- **`propOr`**: Similar to `prop`, but it provides a default value if the specified property is missing in the object.
+
+All of these functions are curried and you use them with partial applications.
+
+Use these helper functions to refactor each of the selectors.
+
+Your selectors still behave the exact same way, but are much cleaner and declarative. Over time reading and writing declarative code will become more intuitive than the old, imperative way.
+
+All helper functions are available in Ramda, so install it.
+
+```sh
+npm i ramda
+```
+
+Delete your custom helpers and Import the functions from Ramda instead.
+
+```js title="src/app/user-profile-reducer.js"
+import { converge, pipe, prop, propOr } from 'ramda';
+
+// ... rest of your reducers & selectors
+```
+
+You can refactor the selectors of the `counter` slice, too.
+
+```js title="src/app/example-reducer.js"
+// ... existing code
+
+const selectExampleSlice = prop(slice);
+
+const selectCount = pipe(selectExampleSlice, prop('count'));
+```
+
+Here, you also use `prop` to access the different slices and `pipe` to compose your selectors.
+
+### Display- / Container-Component Pattern
+
+The `connect` HOC works well with the display- / container-component pattern. If you're unfamiliar with it, this pattern organizes components into two categories:
+
+1. **Display- or dumb-components** are pure functions that take in props and return JSX. They never contain any hooks, state, or lifecycle methods if you're using classes. It's fine if they contain simple ternaries or mappings.
+2. **Container- or smart-components** are stateful and contain the logic. They can contain hooks, state or lifecycle methods in classes. Sometimes, when you use HOCs in container components, there is no JSX, which you will see later with Redux' `connect` HOC.
+
+Create a display-component at `src/app/user-profile-component.js`.
+
+```jsx title="src/app/user-profile-component.js"
+export const UserProfileComponent = ({ isLoggedIn, email, onLoginClicked }) => (
+  <div className="flex items-center space-x-4">
+    {isLoggedIn ? (
+      <p className="text-2xl">Email: {email}</p>
+    ) : (
+      <button
+        className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md bg-white px-4 py-2 text-sm font-medium text-black shadow transition-colors hover:bg-white/90"
+        onClick={() =>
+          onLoginClicked({ id: '123', email: 'jan@reactsquad.io' })
+        }
+      >
+        Login
+      </button>
+    )}
+  </div>
+);
+```
+
+The component takes in a `isLoggedIn` boolean and renders the email for the logged in user, or a button that when clicked logs the user in.
+
+Using this display-component, you can combine your user profile action creators and selectors using the `connect` HOC in a container-component.
+
+```js title="src/app/user-profile-container.js"
+'use client';
+
+import { connect } from 'react-redux';
+
+import {
+  loginSucceeded,
+  selectCurrentUsersEmail,
+  selectIsLoggedIn,
+} from './user-profile-reducer';
+import { UserProfileComponent } from './user-profile-component';
+
+const mapStateToProps = state => ({
+  email: selectCurrentUsersEmail(state),
+  isLoggedIn: selectIsLoggedIn(state),
+});
+
+const mapDispatchToProps = { onLoginClicked: loginSucceeded };
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(UserProfileComponent);
+```
+
+The `connect` function connects the Redux store with the `UserProfileComponent`. It uses `mapStateToProps` to subscribe to Redux store updates via selectors and map state to component props. It uses `mapDispatchToProps` to bind action creators to the Redux store dispatch, allowing the component to trigger actions.
+
+Notice how this file `src/app/user-profile-container.js` now doesn't contain any JSX.
+
+Now import the `UserProfileContainer` and render it in your `Home` component.
+
+```jsx title="src/app/page.js" {5, 28}
+'use client';
+
+import { increment, selectCount } from './example-reducer';
+import { useAppDispatch, useAppSelector } from './hooks';
+import UserProfileContainer from './user-profile-container';
+
+export default function Home() {
+  const count = useAppSelector(selectCount);
+  const dispatch = useAppDispatch();
+
+  return (
+    <main className="flex min-h-screen flex-col items-center p-24">
+      <h1 className="text-4xl font-bold">Redux Basics</h1>
+
+      <div className="flex items-center justify-center space-x-4">
+        <p className="text-2xl">Count: {count}</p>
+
+        <button
+          className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md bg-white px-4 py-2 text-sm font-medium text-black shadow transition-colors hover:bg-white/90"
+          onClick={() => {
+            dispatch(increment());
+          }}
+        >
+          Increment
+        </button>
+      </div>
+
+      <UserProfileContainer />
+    </main>
+  );
+}
+```
+
+If you run your app now, you can "log in" and see the email displayed in the UI.
+
+### 6. Middleware
+
+**Warning:** There will be a spike in difficulty here, but relax because this article will break down every step for you.
+
+Now you're going to learn the last building block: middleware.
+
+You're going to see two use cases that are commonly handled through middleware: logging and fetching data.
+
+#### Redux Logger
+
+Imagine you want to debug your Redux app and log out the actions that you dispatch and the state after the action has been handled.
+
+```js title="src/app/temp-wrappers.js"
+export function dispatchAndLog(store, action) {
+  console.log('dispatching', action);
+  store.dispatch(action);
+  console.log('next state', store.getState());
+} 
+
+dispatchAndLog(store, incrementBy(42));
+```
+
+You could create a `dispatchAndLog` function that logs the action before dispatching it and then logs the resulting state.
+
+```jsx title="src/app/some-component.js"
+import { incrementBy } from './example-reducer';
+import { useAppStore } from './hooks';
+import { dispatchAndLog } from './temp-wrappers';
+
+function SomeComponent() {
+  const store = useAppStore();
+
+  return (
+    <button
+      onClick={() => {
+        dispatchAndLog(store, incrementBy(42));
+      }}
+    >
+      Click Me
+    </button>
+  );
+}
+```
+
+You can import it in some component and call it by passing in your store and an action.
+
+When you run your app and click the button, it logs out the action and the state after your action has been handled.
+
+```sh
+dispatching { type: 'INCREMENT_BY', payload: 42 }
+next state { example: { count: 42 }, userProfile: { currentUserId: null, users: {} } }
+```
+
+#### Redux Thunk
+
+Now to the second use case, which is fetching data. One of the most common ways to handle the fetching of data in Redux are "thunks".
+
+A **thunk** is essentially a subroutine used to inject an additional calculation into another subroutine. It delays the calculation of a value until it is needed and can also insert operations at the point of execution.
+
+```js title="src/app/temp-thunk-example.js"
+// calculation of x is immediate
+const truth = 21 + 21; // 42
+
+// thunk: calculation of x is delayed
+const getTruth = () => 21 + 21;
+```
+
+The term "thunk" was coined after its inventors realized during a late-night discussion that some computational aspects could be precomputed, or "already [have] been thought of." They humorously named it "thunk", joking it was the past tense of "think" at two in the morning.
+
+You’ve learned that actions are objects. But with middleware, actions can become more. Using thunk middleware, actions can also be functions. Instead of dispatching an action object directly, you dispatch a function - the thunk - that can perform asynchronous tasks and then dispatch further actions based on the outcome.
+
+```js title="src/app/temp-thunk-example.js"
+function fetchDataThunk() {
+  // `getState` is never used by this particular thunk, but all
+  // thunks have access to both `dispatch` and `getState`.
+  return async (dispatch, getState) => {
+    dispatch({ type: 'data/fetchStart' });
+
+    try {
+      const response = await fetch('/api/data');
+      const data = await response.json();
+      dispatch({ type: 'data/fetchSuccess', payload: data });
+    } catch (error) {
+      dispatch({ type: 'data/fetchFailure', error });
+    }
+  };
+}
+```
+
+When an action is a function, you call it a "thunk." In Redux, a thunk is a higher-order function that returns another function. This returned function accepts the `dispatch` function as its first parameter and the `getState` function as the second, and returns a promise that resolves with nothing. It gets access to those arguments from a wrapper, which you will see in a second.
+
+You can create a `fetchDataThunk` to handle asynchronous API calls. It dispatches different actions depending on whether the fetch has started, succeeded, or failed.
+
+Here's how you might write a manual `dispatchAsync` wrapper to handle thunks.
+
+```js title="src/app/temp-wrappers.js"
+export function dispatchAsync(store, actionOrThunk) {
+  if (typeof actionOrThunk === 'function') {
+    // If it's a function, call it with dispatch and getState.
+    return actionOrThunk(store.dispatch, store.getState);
+  } else {
+    // If it's an action object, dispatch it directly.
+    return store.dispatch(actionOrThunk);
+  }
+}
+```
+
+This `dispatchAsync` function checks if the provided argument is a function. If it is, it assumes it's a thunk and calls it with the `dispatch` and `getState` methods from the store. Otherwise, it dispatches the action object as usual.
+
+You can use `dispatchAsync` in your component to handle this thunk.
+
+```jsx title="src/app/some-component.js"
+import { useAppStore } from './hooks';
+import { fetchData } from './temp-thunk-example';
+import { dispatchAsync } from './temp-wrappers';
+
+function SomeComponent() {
+  const store = useAppStore();
+
+  return (
+    <button
+      onClick={() => {
+        dispatchAsync(store, fetchData());
+      }}
+    >
+      Fetch Data
+    </button>
+  );
+}
+```
+
+You simply wrap the dispatching of the `fetchData()` thunk with `dispatchAsync`.
+
+Now, when the "Fetch Data" button is clicked, `dispatchAsync` checks if `fetchData()` is a function (which it is) and then calls it with the store's `dispatch` and `getState` methods. The thunk can then perform the asynchronous fetch operation and dispatch the appropriate actions based on the result.
+
+To prove that this works, you can compose both of your wrappers.
+
+```jsx title="src/app/some-component.js"
+import { useAppStore } from './hooks';
+import { fetchDataThunk } from './temp-thunk-example';
+import { dispatchAndLog, dispatchAsync } from './temp-wrappers';
+
+function SomeComponent() {
+  const store = useAppStore();
+
+  return (
+    <button
+      onClick={() => {
+        // Compose the two wrappers so that actions dispatched by the thunk get
+        // logged out.
+        dispatchAsync(store, (dispatch, getState) => {
+          // Wrap the dispatch function with dispatchAndLog.
+          const dispatchWithLog = action => dispatchAndLog(store, action);
+          // Call the thunk with the wrapped dispatch.
+          return fetchDataThunk()(dispatchWithLog, getState);
+        });
+      }}
+    >
+      Fetch Data
+    </button>
+  );
+}
+```
+
+Inside the `onClick` handler, you call `dispatchAsync`. Instead of passing the thunk directly, we pass a function that takes `dispatch` and `getState`. You create a `dispatchWithLog` function that wraps the store's dispatch with `dispatchAndLog`. You then return the `fetchDataThunk`, which is immediately invoked and returns its async inner function. This inner function is then being called with `dispatchWithLog` and `getState`. By doing this, every action dispatched within the thunk will go through `dispatchAndLog`, which logs the action and the next state.
+
+Here is what gets logged out now when you run your app and click "Fetch Data" and the fetch succeeds.
+
+```sh
+dispatching { type: 'data/fetchStart' }
+next state { example: { count: 0 }, userProfile: { currentUserId: null, users: {} } }
+dispatching { type: 'data/fetchSuccess', payload: { some: 'data' } }
+next state { example: { count: 0 }, userProfile: { currentUserId: null, users: {} } }
+```
+
+If it fails, the following would be logged out.
+
+```sh
+dispatching { type: 'data/fetchStart' }
+next state { example: { count: 0 }, userProfile: { currentUserId: null, users: {} } }
+dispatching { type: 'data/fetchFailure', error: { message: 'Error message' } }
+next state { example: { count: 0 }, userProfile: { currentUserId: null, users: {} } }
+```
+
+You can imagine that importing these wrapper functions in every component and compose all the wrappers where you use `dispatch` is inconvenient. And you'd need a new wrapper function for every new requirement.
+
+#### What Is Middleware?
+
+Middleware offers an easier solution. **Middleware** allows you to intercept actions after you dispatched them, but before they reach your reducers.
+
+```js
+const someMiddleware = store => next => action => {
+  // ... the middleware logic, which returns `next(action)`.
+}
+```
+
+Middleware in Redux are curried functions that first take a `store` object, then a `dispatch` function (called `next`), and finally the current `action`. Middleware returns a function that takes an action and optionally returns a value. This value is usually the next middleware.
+
+A logger middleware that solves the previously mentioned use case looks like this.
+
+```js
+const logger = store => next => action => {
+  console.log('dispatching', action);
+  let result = next(action);
+  console.log('next state', store.getState());
+  return result;
+};
+```
+
+But there are many more middleware.
+
+To understand the logger middleware and others, you first need to learn about Redux’s `applyMiddleware` function. `applyMiddleware` is essential for running middleware. When you provide the middleware to your store, there has to be one `applyMiddleware` function wrapped around all of your middleware. The best way to understand `applyMiddleware` is by coding your own version from scratch.
+
+Create a function called `applyMiddleware`, then update your custom `createStore` function to work with middleware.
+
+(**Note:** The following code example is absolutely self-contained for demonstration purposes, allowing you to focus on the new `applyMiddleware` and the modified `createStore` function. In other words, you don't need to code along. ***But*** you might want to open this article again in a new tab, so you can read the code and the explanation below side by side.)
+
+```js title="src/app/temp-apply-middleware-example.js"
+function applyMiddleware(...middlewares) {
+  return function enhancer(createStore, reducer, initialState) {
+    const store = createStore(reducer, initialState);
+
+    const middlewareAPI = {
+      getState: store.getState,
+      dispatch: (action, ...arguments_) => enhancedDispatch(action, ...arguments_),
+    };
+
+    const chain = middlewares.map(middleware => middleware(middlewareAPI));
+
+    const enhancedDispatch = chain.reduceRight((currentDispatch, currentMiddleware) => currentMiddleware(currentDispatch), store.dispatch);
+
+    return { ...store, dispatch: enhancedDispatch };
+  };
+}
+
+export function createStore(reducer, initialState, enhancer) {
+  if (enhancer) {
+    return enhancer(createStore, reducer, initialState);
+  }
+
+  let state = initialState;
+
+  const dispatch = action => {
+    state = reducer(state, action);
+  };
+
+  const getState = () => state;
+
+  return { dispatch, getState };
+}
+
+const logger = store => next => action => {
+  console.log('dispatching', action);
+  let result = next(action);
+  console.log('next state', store.getState());
+  return result;
+};
+
+const thunk = store => next => action => {
+  if (typeof action === 'function') {
+    return action(store.dispatch, store.getState);
+  }
+
+  return next(action);
+};
+
+const rootReducer = (state = { count: 0 }, { payload, type } = {}) => {
+  switch (type) {
+    case 'INCREMENT': {
+      return { ...state, count: state.count + 1 };
+    }
+    case 'DECREMENT': {
+      return { ...state, count: state.count - 1 };
+    }
+    default: {
+      return state;
+    }
+  }
+};
+
+const store = createStore(
+  rootReducer,
+  rootReducer(),
+  applyMiddleware(logger, thunk),
+);
+
+store.dispatch({ type: 'INCREMENT' });
+store.dispatch({ type: 'DECREMENT' });
+
+const incrementThunk = (dispatch, getState) => {
+  console.log('Current state before async:', getState());
+
+  setTimeout(() => {
+    dispatch({ type: 'INCREMENT' });
+    console.log('State after async:', getState());
+  }, 5000);
+}
+
+store.dispatch(incrementThunk);
+```
+
+ `applyMiddleware` is curried and takes in any number of middleware using the spread operator, so you have access to an array of middleware in the function body.
+
+It returns a function called `enhancer` that takes in your `createStore` function, a `reducer` and an `initialState`. These arguments will be passed to the `enhancer` from `createStore`, which you will see in a minute.
+
+It creates a new store using your `createStore` function.
+
+Then, it creates a `middlewareAPI` object that exposes a `getState` method and a `dispatch` method, just like the `store` object.
+
+Following that, it maps over all middleware and calls them with the `middlewareAPI`. Now you have an array of partially applied middleware called `chain`. They all have access to the middlewareAPI because it has been supplied as the `store` argument. Assuming you call `chain` with the `logger` and `thunk` middleware, then chain looks like this.
+
+```js
+const chain = [
+  // This IIFE is just there to visualize the partial application for you.
+  (store => (next => action => {
+    console.log('dispatching', action);
+    let result = next(action);
+    console.log('next state', store.getState());
+    return result;
+  }))({ /* middlewareAPI */}),
+  // This is how it really looks like 👇 `store` is the `middlewareAPI`.
+  next => action => {
+    if (typeof action === 'function') {
+      return action(store.dispatch, store.getState);
+    }
+
+    return next(action);
+  },
+];
+```
+
+Note that `store` here is the `applyMiddleware` object.
+
+The inner function of `applyMiddleware` then uses `reduceRight` over these partial applications in `chain` to compute the latest version of `dispatch` called `enhancedDispatch`.
+
+Remember, middleware generally takes in a store, the previous dispatch called `next` and returns a new dispatch function that takes an action as its argument.
+
+```js title="middleware-descriptive-names-example.js"
+// const middleware = store => previousDispatch => function newDispatch(action) {
+const middleware = store => next => action => {
+  // ...
+}
+```
+
+When using multiple middleware, each one takes in a `next` parameter, which is the dispatch function modified by the previous middleware in the chain. This lets each middleware wrap or change the dispatch behavior of the middleware before it in the `chain` array, or the original store's dispatch if it's the first middleware.
+
+You use `reduceRight` because middleware is usually written with the expectation that it will receive the action before any previously registered middleware handles it. This means middleware should be applied in the reverse order of how actions pass through them.
+
+Let's go through this step by step.
+
+1.) Initial `dispatch` - It starts with the original `dispatch` function from the store.
+
+```js title="temp-chain-explanation.js"
+const dispatch = store.dispatch;
+```
+
+2.) Apply `thunk` - The `thunk` middleware is the first to wrap around the initial dispatch using `reduceRight` with the `store` captured in its closure. It checks if the action is a function and, if so, executes it; otherwise, it proceeds.
+
+```js title="temp-chain-explanation.js"
+const dispatch = store.dispatch;
+
+const middleware = next => action => {
+  if (typeof action === 'function') {
+    return action(store.dispatch, store.getState);
+  }
+
+  return next(action);
+};
+```
+
+3.) Apply `logger` - The `logger` middleware is then wrapped around the dispatch modified by the `thunk` middleware. It logs the action and the state before and after the action is processed.
+
+```js title="temp-chain-explanation.js"
+const dispatch = action => {
+  if (typeof action === 'function') {
+    return action(store.dispatch, store.getState);
+  }
+
+  return store.dispatch(action);
+};
+
+const middleware = next => action => {
+  console.log('dispatching', action);
+  let result = next(action);
+  console.log('next state', store.getState());
+  return result;
+};
+```
+
+4.) Final `enhancedDispatch` - The `enhancedDispatch` is now fully composed, incorporating both middleware. First, it logs the action's details, then processes thunks, and finally logs the updated state. The `store` remains accessible through the closure from the creation of `chain`.
+
+```js title="temp-chain-explanation.js"
+const enhancedDispatch = action => {
+  console.log('dispatching', action);
+
+  let result = (action => {
+    if (typeof action === 'function') {
+      return action(store.dispatch, store.getState);
+    }
+
+    return store.dispatch(action);
+  })(action);
+
+  console.log('next state', store.getState());
+
+  return result;
+};
+```
+
+`applyMiddleware` finally returns a new store object with the modified dispatch.
+
+Your `createStore` function should now accept a third parameter called `enhancer`. If the `enhancer` is provided, it returns and calls the enhancer first with the `createStore` function itself, then with the `reducer` and `initialState`. This returns an enhanced version of the store where the `dispatch` function has been replaced with the `enhancedDispatch` which contains the middleware logic. The rest of `createStore` remains unchanged.
+
+Now, let's jump ahead and see how to use your updated `createStore` function. You pass `applyMiddleware` as the third argument, and `applyMiddleware` is called with your middleware. Since `applyMiddleware` returns a function with the same signature as `createStore` - taking in a `reducer` and `initialState`, and returning the store - this preserves the original behavior when middleware is applied. If you call the `createStore` function inside `applyMiddleware` without an `enhancer`, it functions normally.
+
+Middleware makes solving the logging problem simple. The `logger` middleware logs the current action and calls the next middleware in the chain. After all middleware has processed the action, logs the store's state and returns the result.
+
+The `thunk` middleware expands the capabilities of Redux's dispatch function, allowing you to handle asynchronous operations or complex synchronous logic. If the dispatched action is a function instead of a regular object, the `thunk` middleware intercepts it and passes `dispatch` and `getState` as arguments to that function.
+
+Now define a simple `rootReducer` that can handle an `INCREMENT` and a `DECREMENT` action and then set up the store with your middleware.
+
+Then dispatch some actions as objects and as functions. The function can be an asynchronous function, too.
+
+When you run this example, you get the following output.
+
+```sh
+$ npx tsx src/app/temp-apply-middleware-example.js
+dispatching { type: 'INCREMENT' }
+next state { count: 1 }
+dispatching { type: 'DECREMENT' }
+next state { count: 0 }
+Current state before async: { count: 0 }
+dispatching { type: 'INCREMENT' }
+next state { count: 1 }
+State after async: { count: 1 }
+```
+
+The logger function logs out your actions and the state after each action. And you can see that there is a delay before the thunk executes its logic. The logger captures the actions processed by the thunk because both middleware process every action.
+
+The logger and thunk middleware are both available as packages, so install them.
+
+```sh
+npm i redux-logger redux-thunk
+```
+
+Redux also exports `applyMiddleware`. Import it together with the middleware.
+
+```js title="src/app/store.js" {2, 6-7, 24}
+import {
+  applyMiddleware,
+  combineReducers,
+  legacy_createStore as createStore,
+} from 'redux';
+import logger from 'redux-logger';
+import { thunk } from 'redux-thunk';
+
+import { reducer as exampleReducer, slice as exampleSlice } from './example-reducer';
+import {
+  reducer as userProfileReducer,
+  slice as userProfileSlice,
+} from './user-profile-reducer';
+
+const rootReducer = combineReducers({
+  [exampleSlice]: exampleReducer,
+  [userProfileSlice]: userProfileReducer,
+});
+
+export const makeStore = () => {
+  return createStore(
+    rootReducer,
+    rootReducer(),
+    applyMiddleware(logger, thunk)
+  );
+};
+```
+
+Finally, you can modify your `makeStore` function to set up the middleware.
+
+When you now dispatch actions in your app, it logs them out. And you could also dispatch thunks now.
+
+So, let's answer the questions teased at the beginning of this article.
+
+### Why Redux?
+
+Redux became popular because of the following properties:
+
+- **Deterministic state resolution**, ensuring consistent view renders with pure components: Given the same initial state and actions, you always get the same resulting state. And given the same state, you always render the same UI.
+- **Transactional state management:** Every action in Redux can be treated as a transaction. The state transitions occur atomically, making sure either all operations complete successfully or your state remains unchanged.
+- **Isolated state management from I/O and side-effects:** Redux keeps state management separate from side-effects like API calls or time-dependent operations. It uses middleware to handle these operations, keeping the state management pure and predictable.
+- **Single source of truth for your application state:** Redux centralizes your application's state into one store.
+- **Easy state sharing between your components:** With a centralized store, any component can access the state without the need to pass props deeply through the component tree.
+- **Transaction telemetry with auto-logged action objects:** Using developer tools or middleware, Redux automatically logs actions and state changes. This feature provides you valuable insights into the sequence of state changes and actions, helping you understand and trace how the state evolves over time.
+- **Time travel debugging for easy state review:** Because Redux's state updates are deterministic, Redux allows you to step back and forth through your state changes.
+
+### Why Is Redux Becoming Less Popular?
+
+- **Boilerplate** - Redux often requires a lot of repetitive code to set up and manage, including actions, reducers, and store configurations.
+- **Learning curve -** Redux introduces several new concepts that developers must understand to use it effectively, such as reducers, dispatch, actions and action creators, the store, middleware, and selectors.
+- **Manual management of states** (such as loading and error) - Redux does not inherently handle asynchronous states like loading or error states.
+- **Manual resolution of race conditions and caching** - In Redux, handling concurrent data fetches and ensuring the latest request does not override the results of a previous one (race conditions) requires careful management of action dispatches and state updates. Similarly, implementing caching to avoid unnecessary network requests needs explicit logic.
+
+To address these issues, **server-state libraries** like React Query or useSWR became popular. And modern applications built with the newest versions of Next.js or Remix remove the need for global state management. These libraries and frameworks handle state behind the scenes and only expose what you need to build dynamic web apps, making Redux often unnecessary.
+
+But as stated in the beginning of this article, Redux is still used heavily in many applications, so it's tremendously valuable for you to know it.
+
+This article was very theory heavy and in this series, you're going to code two real-world apps using Redux so that you get some hands-on practice.
+
+I love you very much. Thank you for reading this article. If you've liked it, please follow me on [X*](https://x.com/janhesters) and let me know what you've learned.
+
+(* = formerly known as Twitter)

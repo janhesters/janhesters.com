@@ -1,0 +1,673 @@
+---
+title: "What Is Memoization? (In JavaScript & TypeScript)"
+datePublished: '2024-10-08'
+description: "Learn what memoization is and how it can speed up your code. It's a frequent topic in coding interviews."
+thumbnailUrl: 'https://i.magecdn.com/ada680/766252_unleash_javascripts_potential_with_functional_programming?f=webp,q.25,p.f,l.f'
+isDraft: true
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+Memoization and caching are foundational concepts in programming.
+
+You want to understand memoization, so you can understand concepts that build upon memoization. For example, the `memo` higher-order component in React, `useCallback` and `useMemo` hooks in React, selectors in Redux and much more.
+
+In this article, you're going to get a detailed look into memoization with examples in JavaScript and TypeScript.
+
+### What Is Memoization?
+
+**Memoization** is a way to **speed up performance** by **reducing computations**.
+
+When you first calculate a result, you save it. If you need the result for the same arguments again, you use the saved result instead of recalculating.
+
+And there are two ways that you can implement memoization:
+
+1. Implicit Caching
+2. Decorator Functions
+
+### Implicit Caching
+
+Implicit caching is when you manually implement caching logic within functions.
+
+Let's say you have a simple `add` function and you want to memoize it.
+
+```js
+function add(a, b) {
+  return a + b;
+}
+```
+
+You can rewrite this `add` function, so that it memoizes its results.
+
+If you want to code along with this article, initialize a new npm project.
+
+```sh
+npm init --y
+```
+
+Then write a function called `memoizeAdd()`.
+
+```js title="implicit-caching.js"
+function memoizeAdd() {
+  const cache = {};
+
+  return function memoizedAdd(a, b) {
+    const key = `${a},${b}`;
+
+    if (key in cache) {
+      return cache[key];
+    } else {
+      const result = a + b;
+
+      cache[key] = result;
+
+      return result;
+    }
+  };
+}
+
+const memoizedAdd = memoizeAdd();
+
+console.log(memoizedAdd(3, 4));  // Computes and caches the result.
+console.log(memoizedAdd(3, 4));  // Retrieves the result from cache.
+console.log(memoizedAdd(5, 6));  // Computes and caches a new result.
+console.log(memoizedAdd(3, 4));  // Still retrieves the result from cache.
+```
+
+Let's break down what's happening here.
+
+In `memoizeAdd()` you create a cache, which is typically a hash table or an object, where you store the results of function calls. Each entry uses the function's input as the key and the output as the value.
+
+```js
+const cache = {
+  '3,1': 4,
+  '9001,2012': 11_013,
+};
+```
+
+Next, you return the `memoizedAdd` function, which takes in two numbers `a` and `b`.
+
+Each unique combination of arguments corresponds to a key.
+
+Before executing the main logic, the function checks the cache using the current input as the key. If the input is in the cache, it returns the cached result.
+
+If the input is missing in the cache, the function computes the result, stores it in the cache, and then returns the result.
+
+When you call the `memoizedAdd` function, the result is stored together with its parameters. If you call it again with the same parameters, the result comes from the cache. If the parameters are new, the function computes the result again.
+
+When you run this code, you get the following output.
+
+```sh
+$ node implicit-caching.js 
+7
+7
+11
+7
+```
+
+### Decorator Functions For Memoization
+
+In languages that support higher-order functions, you can use decorators to add memoization without changing the function's core logic.
+
+Higher-order functions are functions that take in functions and return functions.
+
+If this concept is new to you, you might want to read ["Unleash JavaScript's Potential with Functional Programming"](https://janhesters.com/blog/unleash-javascripts-potential-with-functional-programming). This article explains higher-order functions and much more from first principles.
+
+Now, check out this simple example of a decorator function for memoization.
+
+```js title="decorator-function.js"
+function memoize(fn) {
+  const cache = new Map();
+
+  return function(...args) {
+    const key = JSON.stringify(args);
+
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+
+    const result = fn.apply(this, args);
+    cache.set(key, result);
+
+    return result;
+  };
+}
+
+function add(a, b) {
+  return a + b;
+}
+
+const memoizedAdd = memoize(add);
+
+console.log(memoizedAdd(3, 4));  // Calculates and caches the result.
+console.log(memoizedAdd(3, 4));  // Returns the cached result.
+console.log(memoizedAdd(5, 6));  // Computes and caches a new result.
+console.log(memoizedAdd(3, 4));  // Still retrieves the result from cache.
+```
+
+Let's go through this code step by step, too.
+
+First, you create a `memoize` function that takes another function, `fn`, as its argument.
+
+It starts by initializing a cache using a `Map`. This cache will store the results of the function calls. A `Map` is used instead of an object because it can handle a wider variety of key types.
+
+```js
+const cache = new Map();
+
+// Use numbers as key for cache.
+map.set('[3,1]', 4);
+// Use functions as key for cache. 
+map.set('[function increment(), function double()]', 42);
+```
+
+The returned function accepts any number of arguments. It serializes these arguments into a string to use as a key for the cache.
+
+Before executing the original function, the wrapper checks if the key already exists in the cache. If it does, the function returns the cached result.
+
+If the key is missing in the cache, the wrapper calls the original function using `fn.apply(this, args)`. It stores the result in the cache and returns it.
+
+You can now memoize your `add` function by passing it to the `memoize` function.
+
+The `memoizedAdd` function will work just like in the implicit caching example.
+
+And running your code yields the same result.
+
+```sh
+$ node decorator-function.js
+7
+7
+11
+7
+```
+
+### Recursion And The Fibonacci Sequence
+
+The `add` function is computationally cheap.
+
+To experience the benefits of memoization, you need to memoize an expensive function.
+
+A classic example is the `fibonacci` function. Outside of memoization, learning about this function is useful because it's a common topic in coding interviews.
+
+The Fibonacci sequence is a series of numbers where each number is the sum of the two preceding ones. It usually starts with 0 and 1. Here's how it begins:
+
+0, 1, 1, 2, 3, 5, 8, 13, 21, 34, ...
+
+In mathematical terms, you can express this as:
+
+```math
+F_n = \begin{cases} 
+0 & \text{if } n = 0,\\
+1 & \text{if } n = 1,\\
+F_{n-1} + F_{n-2} & \text{if } n > 1.
+\end{cases}
+```
+
+Here's what the `fibonacci` function looks like in JavaScript.
+
+```js title="fibonacci.js"
+function fibonacci(n) {
+  if (n <= 1) {
+    return n;
+  }
+
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+```
+
+If `n` is 0 or 1, the function returns `n` directly. These are the first two numbers in the Fibonacci sequence.
+
+For values of `n` greater than 1, the function calls itself twice: once for `fibonacci(n - 1)` and once for `fibonacci(n - 2)`, and adds the results of these two calls.
+
+Here's a table showing how the function computes `fibonacci(4)`:
+
+| Call            | n  | Calculation                   | End Result |
+|-----------------|----|-------------------------------|------------|
+| `fibonacci(4)`  | 4  | `fibonacci(3) + fibonacci(2)`  | 3 + 2 = 5  |
+| `fibonacci(3)`  | 3  | `fibonacci(2) + fibonacci(1)`  | 2 + 1 = 3  |
+| `fibonacci(2)`  | 2  | `fibonacci(1) + fibonacci(0)`  | 1 + 0 = 1  |
+| `fibonacci(1)`  | 1  | 1                             | 1          |
+| `fibonacci(0)`  | 0  | 0                             | 0          |
+| `fibonacci(2)`  | 2  | `fibonacci(1) + fibonacci(0)`  | 1 + 0 = 1  |
+| `fibonacci(1)`  | 1  | 1                             | 1          |
+| `fibonacci(0)`  | 0  | 0                             | 0          |
+
+You can see that `fibonacci(2)` is calculated twice when calling `fibonacci(4)`: once directly from `fibonacci(4)` and again from `fibonacci(3)`. 
+
+The negative performance impacts of these redundant calculations compound as the input to the `fibonacci` function increases. You want to read this article until the end to learn how memoization can make this computation lightning fast.
+
+### Stack Tracing
+
+Before memoizing your `fibonacci` function, add a name property to your memoized function. This makes stack tracing easier if your function throws an error.
+
+```js title="fibonacci.js" {17-20}
+function memoize(fn) {
+  const cache = new Map();
+
+  function memoizedFunction(...args) {
+    const key = JSON.stringify(args);
+
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+
+    const result = fn.apply(this, args);
+    cache.set(key, result);
+
+    return result;
+  }
+
+  Object.defineProperty(memoizedFunction, 'name', {
+    value: `memoized_${fn.name}`,
+    configurable: true
+  });
+
+  return memoizedFunction;
+}
+```
+
+Use `Object.defineProperty` to set the `name` property of the `memoizedFunction` to a more descriptive value, like `memoized_${fn.name}`, where `fn.name` is the name of the original function. By setting this property to be configurable, you allow further modifications or deletion of the property if necessary.
+# Measuring Memoization Performance
+
+Now you’re ready to measure the impact of memoization. Memoize your `fibonacci` function and time how long it takes to calculate large numbers.
+
+```js title="fibonacci.js" {35-42, 44, 46-50}
+function memoize(fn) {
+  const cache = new Map();
+
+  function memoizedFunction(...args) {
+    const key = JSON.stringify(args);
+
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+
+    const result = fn.apply(this, args);
+    cache.set(key, result);
+
+    return result;
+  }
+
+  Object.defineProperty(memoizedFunction, 'name', {
+    value: `memoized_${fn.name}`,
+    configurable: true
+  });
+
+  return memoizedFunction;
+}
+
+function fibonacci(n) {
+  if (n <= 1) {
+    return n;
+  }
+
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+const memoizedFibonacci = memoize(fibonacci);
+
+function measurePerformance(func, arg) {
+  const startTime = process.hrtime.bigint();
+  const result = func(arg);
+  const endTime = process.hrtime.bigint();
+  // Convert nanoseconds to milliseconds.
+  const duration = (endTime - startTime) / BigInt(1000000);
+  console.log(`${func.name}(${arg}) = ${result}, Time: ${duration}ms`);
+}
+
+const n = 42;
+
+console.log("Starting performance measurement:");
+measurePerformance(fibonacci, n);
+measurePerformance(memoizedFibonacci, n);
+// Second call to show caching effect.
+measurePerformance(memoizedFibonacci, n);
+```
+
+The `measurePerformance` function evaluates and reports the execution time of a given function by capturing start and end times with `process.hrtime.bigint()`, which provides precise timestamps in nanoseconds. After executing the function with a given argument, it calculates the duration in milliseconds by subtracting the start time from the end time and converting the result from nanoseconds. It then logs the function name, argument, output, and execution duration to the console.
+
+Using `measurePerformance`, you can compare the performance of the standard Fibonacci function with the memoized version.
+
+Here are the results for the performance measurements.
+
+```sh
+$ node fibonacci.js
+Starting performance measurement:
+fibonacci(42) = 267914296, Time: 2405ms
+memoized_fibonacci(42) = 267914296, Time: 2394ms
+memoized_fibonacci(42) = 267914296, Time: 0ms
+```
+
+As you can see, running the memoized version the second time is instant because the result is retrieved from the cache.
+
+### Clearing Cache
+
+When you use memoization, you want to implement `.clear()` method to manage your application's resources and performance. Here's why:
+
+- **Memory management**: It frees up resources by allowing you to manually purge the cache.
+- **Data freshness**: It ensures cached results stay accurate by removing outdated or incorrect data.
+- **Control over cache behavior**: It gives you the ability to reset the cache in response to events or conditions that affect data processing.
+- **Testing and debugging**: It allows you to operate your functions in a known state, without interference from cached data, which is important for reliable testing.
+- **Performance optimization**: It maintains cache efficiency by allowing periodic resets to manage size and lookup costs.
+
+Now, add the ability to clear the cache.
+
+```js title="fibonacci.js" {17-19, 56-58}
+function memoize(fn) {
+  const cache = new Map();
+
+  function memoizedFunction(...args) {
+    const key = JSON.stringify(args);
+
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+
+    const result = fn.apply(this, args);
+    cache.set(key, result);
+
+    return result;
+  }
+
+  memoizedFunction.clear = function clear() {
+    cache.clear();
+  };
+
+  Object.defineProperty(memoizedFunction, 'name', {
+    value: `memoized_${fn.name}`,
+    configurable: true
+  });
+
+  return memoizedFunction;
+}
+
+function fibonacci(n) {
+  if (n <= 1) {
+    return n;
+  }
+
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+const memoizedFibonacci = memoize(fibonacci);
+
+function measurePerformance(func, arg) {
+  const startTime = process.hrtime.bigint();
+  const result = func(arg);
+  const endTime = process.hrtime.bigint();
+  // Convert nanoseconds to milliseconds.
+  const duration = (endTime - startTime) / BigInt(1000000);
+  console.log(`${func.name}(${arg}) = ${result}, Time: ${duration}ms`);
+}
+
+const n = 42;
+
+// Measure memoized Fibonacci.
+measurePerformance(memoizedFibonacci, n);
+
+// Measure memoized Fibonacci second call.
+measurePerformance(memoizedFibonacci, n);
+
+// Clear cache and measure again.
+console.log('Clearing cache and measuring again:');
+memoizedFibonacci.clear();
+measurePerformance(memoizedFibonacci, n);
+```
+
+Then modify your usage example to include a call of the `.clear()` method after the result has already been memoized successfully.
+
+```sh
+$ node fibonacci.js
+memoized_fibonacci(42) = 267914296, Time: 2456ms
+memoized_fibonacci(42) = 267914296, Time: 0ms
+Clearing cache and measuring again:
+memoized_fibonacci(42) = 267914296, Time: 2484ms
+```
+
+As you can see, clearing the cache causes the function to compute its result again.
+
+### Memoization In TypeScript
+
+So far, all code has been written in JavaScript. Now you will translate the code examples into TypeScript.
+
+Install TypeScript and the node types.
+
+```sh
+$ npm i --save-dev typescript @types/node
+
+added 3 packages, and audited 4 packages in 1s
+
+found 0 vulnerabilities
+```
+
+Then initialize a new TypeScript project.
+
+```sh
+$  npx tsc --init 
+
+
+Created a new tsconfig.json with:                                        
+                                                                      TS 
+  target: es2016
+  module: commonjs
+  strict: true
+  esModuleInterop: true
+  skipLibCheck: true
+  forceConsistentCasingInFileNames: true
+
+
+You can learn more at https://aka.ms/tsconfig
+```
+
+Now you can write your `memoize` function in TypeScript.
+
+```ts title="fibonacci.ts" {1, 3-6, 8-9, 11, 22, 36, 46}
+type AnyFunction = (...args: any[]) => any;
+
+interface MemoizedFunction<T extends AnyFunction> extends CallableFunction {
+  (...args: Parameters<T>): ReturnType<T>;
+  clear: () => void;
+}
+
+function memoize<T extends AnyFunction>(fn: T): MemoizedFunction<T> {
+  const cache = new Map<string, ReturnType<T>>();
+
+  const memoizedFunction = function(...args: Parameters<T>): ReturnType<T> {
+    const key = JSON.stringify(args);
+
+    if (cache.has(key)) {
+      return cache.get(key)!;
+    }
+
+    const result = fn(...args);
+    cache.set(key, result);
+
+    return result;
+  } as MemoizedFunction<T>;
+
+  memoizedFunction.clear = function clear() {
+    cache.clear();
+  };
+
+  Object.defineProperty(memoizedFunction, 'name', {
+    value: `memoized_${fn.name}`,
+    configurable: true
+  });
+
+  return memoizedFunction;
+}
+
+function fibonacci(n: number): number {
+  if (n <= 1) {
+    return n;
+  }
+
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+const memoizedFibonacci = memoize(fibonacci);
+
+function measurePerformance(func: MemoizedFunction<typeof fibonacci>, arg: number) {
+  const startTime = process.hrtime.bigint();
+  const result = func(arg);
+  const endTime = process.hrtime.bigint();
+  // Convert nanoseconds to milliseconds.
+  const duration = (endTime - startTime) / BigInt(1000000);
+  console.log(`${func.name}(${arg}) = ${result}, Time: ${duration}ms`);
+}
+
+const n = 42;
+
+// Measure memoized Fibonacci.
+measurePerformance(memoizedFibonacci, n);
+
+// Measure memoized Fibonacci second call.
+measurePerformance(memoizedFibonacci, n);
+
+// Clear cache and measure again.
+memoizedFibonacci.clear();
+measurePerformance(memoizedFibonacci, n);
+```
+
+Here, you create an `AnyFunction` type, which represents a generic function type in TypeScript. This type is flexible and allows for any function that takes an arbitrary number of arguments of any type and returns any type.
+
+Next, you define a generic `MemoizedFunction` interface that extends the built-in `CallableFunction` interface and introduces a `clear` method. Here, `T` is a generic type parameter constrained to any function that matches the `AnyFunction` type. The interface ensures that your memoized function behaves like the original function in terms of accepting the same parameters and returning the same type and additionally exposes the `clear` method.
+
+You can now implement your memoize function so that it returns the `MemoizedFunction` interface. Using the `as` keyword, you can let TypeScript know that the returned function is a `MemoizedFunction`.
+
+Now when you hover over `memoizedFibonacci`, TypeScript knows the correct type of the function.
+
+```ts
+const memoizedFibonacci: MemoizedFunction<(n: number) => number>
+```
+
+And TypeScript also knows about the `.clear()` method on the memoized function.
+
+```ts
+(property) MemoizedFunction<(n: number) => number>.clear: () => void
+```
+
+### Recursion With Memoization
+
+Your function still has a shortcoming. Currently, the memoization only caches the results of the full function call for each argument, but does ***NOT*** cache the results of the intermediate recursive calls.
+
+What is a potential drawback of using recursion without memoization for solving certain problems?
+
+It is the significant increase in computational time and resource usage due to redundant calculations.
+
+Call the function with a big number `n` and then with `n + 1`.
+
+```ts title="fibonacci.ts"
+// ... previous code stays the same.
+
+const n = 42;
+
+measurePerformance(memoizedFibonacci, n);
+measurePerformance(memoizedFibonacci, n + 1);
+```
+
+Then run your code to see the difference in performance between `42` and `43`.
+
+```sh
+$ npx tsx example-5.ts                  
+memoized_fibonacci(42) = 267914296, Time: 2442ms
+memoized_fibonacci(43) = 433494437, Time: 3975ms
+```
+
+As you can see, `fibonacci(43)` takes much longer because it recalculates `fibonacci(42)` from scratch, even though the result is already cached. The same problem occurs with every other intermediate recursive call.
+
+You can fix this by using memoization in the implementation of the `fibonacci` function.
+
+```ts title="fibonacci.ts" {8, 11, 22, 24-26}
+// ... `memoize` is the same as above.
+
+function fibonacci(n: number): number {
+  if (n <= 1) {
+    return n;
+  }
+
+  return memoizedFibonacci(n - 1) + memoizedFibonacci(n - 2);
+}
+
+const memoizedFibonacci = memoize(fibonacci);
+
+function measurePerformance(func: MemoizedFunction<typeof fibonacci>, arg: number) {
+  const startTime = process.hrtime.bigint();
+  const result = func(arg);
+  const endTime = process.hrtime.bigint();
+  // Convert nanoseconds to milliseconds.
+  const duration = (endTime - startTime) / BigInt(1000000);
+  console.log(`${func.name}(${arg}) = ${result}, Time: ${duration}ms`);
+}
+
+const numbers = [10, 20, 30, 40, 42, 43, 500];
+
+numbers.forEach(n => {
+  measurePerformance(memoizedFibonacci, n);
+});
+```
+
+When you define the `fibonacci` function, use its memoized version to calculate the next number. 
+
+Now, run the function on various large numbers.
+
+```tsx
+$ npx tsx fibonacci.ts
+memoized_fibonacci(10) = 55, Time: 0ms
+memoized_fibonacci(20) = 6765, Time: 0ms
+memoized_fibonacci(30) = 832040, Time: 0ms
+memoized_fibonacci(40) = 102334155, Time: 0ms
+memoized_fibonacci(42) = 267914296, Time: 0ms
+memoized_fibonacci(43) = 433494437, Time: 0ms
+memoized_fibonacci(500) = 1.394232245616977e+104, Time: 0ms
+```
+
+The calculation is now virtually instant for every function call no matter how large.
+
+So when you memoize, ask yourself: "What do you want to memoize?" Do you want to memoize only the outer function, or do you want to also memoize intermediary results in the implementation?
+
+### Why Memoize? (Use Cases)
+
+When do you want to use memoization?
+
+Memoization is useful in:
+
+- **Recursive algorithms**: As shown with the Fibonacci sequence, recursive functions that repeat the same calculations can benefit greatly from memoization by avoiding redundant operations.
+- **Database queries**: You can cache results from expensive database queries.
+- **Data fetching**: In web development, memoization can cache responses from API calls. This reduces network traffic and speeds up response times by serving cached data for repeated requests with the same parameters.
+- **Data transformation**: You can cache results of transformations that are costly in processing time.
+- **Preventing component rendering**: In frontend frameworks like React, memoization can prevent unnecessary re-renders of components as long as their their props stay the same.
+
+### Memoization Trade-Offs
+
+As you've learned, memoization improves performance by reducing time complexity of operations and lowering the load on compute resources by avoiding repeated calculations.
+
+But memoization also comes with drawbacks.
+
+- **Memory usage**: Memoization increases memory consumption by storing function call results, which can be a problem in environments with limited memory.
+- **Complexity**: Adding memoization introduces complexity to your codebase, and requires careful cache management to avoid bugs and maintainability issues.
+- **Cache management**: You must implement strategies for cache eviction and invalidation to prevent outdated or incorrect data, which can be challenging.
+- **Side effects**: Functions with side effects are can be problematic for memoization because the side effects might need to occur with each function call. Memoization should primarily be used with pure functions.
+- **Concurrency issues**: In multi-threaded applications, memoization must be handled carefully to avoid race conditions and ensure thread safety when accessing the cache.
+
+import { ReadNext } from '../features/blog/read-next';
+import { frontmatter as unleashJavaScriptsPotentialWithFunctionalProgramming } from './blog.unleash-javascripts-potential-with-functional-programming.mdx';
+import { frontmatter as useCallbackVsUseMemo } from './blog.usecallback-vs-usememo.mdx';
+
+<ReadNext
+  posts={[
+    { ...unleashJavaScriptsPotentialWithFunctionalProgramming, slug: 'unleash-javascripts-potential-with-functional-programming' },
+    { ...useCallbackVsUseMemo, slug: 'usecallback-vs-usememo' },
+  ]}
+/>
