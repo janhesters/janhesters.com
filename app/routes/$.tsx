@@ -117,6 +117,7 @@ const redirectMapping: RedirectMapping = {
     '/unit-testing-reducers',
     '/unit-testing-reducers/',
   ],
+  '/archive': ['/bonus', '/bonus/'],
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
