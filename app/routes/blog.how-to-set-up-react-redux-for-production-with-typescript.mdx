@@ -38,10 +38,11 @@ And even though you can watch this video on its own if you're already familiar w
 
 ---
 
-The app you're building in this tutorial will have two pages:
+The app you're building in this tutorial will have three pages:
 
 1. A login screen where users can enter their email and password.
-2. A dashboard that fetches user data, displays some posts, and allows the user to log out.
+2. A dashboard that fetches user data, and allows the user to log out.
+3. A posts page that displays all posts.
 
 You'll organize your code by feature and split the app into five features. Remember, in Redux, a feature frequently corresponds to a state slice.
 
@@ -325,7 +326,7 @@ Your app is now ready for you to write your first reducer.
 
 ### `createSlice`
 
-Redux Toolkit provides a function called createSlice that lets you define reducers and actions together. Before you dive into using it, here's the reducer you're going to create, written manually.
+Redux Toolkit provides a function called `createSlice` that lets you define reducers and actions together. Before you dive into using it, here's the reducer you're going to create, written manually.
 
 ```js title="temp-manual-app-loading-reducer.js"
 import { not, prop } from 'ramda';
