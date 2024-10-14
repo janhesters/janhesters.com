@@ -1283,7 +1283,7 @@ You need to update your code like this **everywhere** you're using users directl
 
 This also applies when you save selectors as functions. You'd need to refactor them like this. (No need to code along here. You're not actually going to refactor your state shape. This is still a hypothetical example.)
 
-```js title="src/app/user-profile-reducer.js"
+```js title="src/app/user-profile-reducer.js" {6, 9, 12-14}
 export const selectCurrentUsersId = state => state[slice].currentUsersId;
 
 export const selectUsers = state => state[slice].users;

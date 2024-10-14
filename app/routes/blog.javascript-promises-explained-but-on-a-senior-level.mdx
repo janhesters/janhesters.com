@@ -1,0 +1,910 @@
+---
+title: 'JavaScript Promises Explained, But On A Senior-Level'
+datePublished: '2024-11-27'
+description: "Explore advanced techniques for Promise composition and how to seamlessly integrate async and regular functions."
+thumbnailUrl: 'https://i.magecdn.com/ada680/3e6072_javascript_generators_explained_senior_level?f=webp,q.25,p.f,l.f'
+isDraft: true
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+If you've been coding in JavaScript for a while, you've probably encountered promises.
+
+But do you truly understand them at a senior-level?
+
+Hi, I'm Jan, the CTO of ReactSquad, and today, you're going to dive deep into JavaScript promises.
+
+Whether you're a beginner or an experienced developer eager to learn some senior secrets, this video is packed with code examples and best practices to help you master promises.
+
+So let's start with ...
+
+### What Is A Promise?
+
+A **promise** is an object representing the eventual completion or failure of an asynchronous operation. Think of it as a placeholder for a future value. Instead of immediately returning the final value, an asynchronous method returns a promise to supply the value at some point in the future.
+
+### Promise Constructor
+
+You can create a promise using the `Promise` constructor, which requires an executor function. This executor function takes two arguments:
+
+- `resolve`: A function to call when the promise is fulfilled.
+- `reject`: A function to call when the promise is rejected.
+
+Here's how you create a resolving promise:
+
+```js
+const resolvingPromise = new Promise(resolve => {
+  resolve('Hello, world!');
+});
+```
+
+You use the `new` keyword to create a promise. The constructor takes a callback, called the  executor function. This executor functions first parameter is the resolve function. You pass to it the value that the promise should resolve to when the operation completed successfully, in this case `'Hello, world!'`.
+
+It's crucial to differentiate between the promise constructor and the promise instance. The promise constructor refers to the `Promise` class, whereas a promise instance is an object created using the `Promise` constructor, here `resolvingPromise`.
+
+And here's a rejecting promise:
+
+```js
+const rejectingPromise = new Promise((_, reject) => {
+  reject(new Error('Something went wrong'));
+});
+```
+
+In the rejectingPromise, you create a new promise that immediately rejects with an error message. By passing `(_, reject)` to the executor function, you focus on the reject function, which you call with an error object. You use an underscore `_` to ignore the `resolve` parameter in the rejecting promise since you don't need it.
+
+### Promise Chaining
+
+Promises are **chainable**, allowing you to handle sequences of asynchronous operations in a readable manner. The `Promise` object provides three main methods:
+
+- **`then`**: Attaches callbacks for the resolution or rejection of the Promise. It returns a new promise, allowing for further chaining.
+- **`catch`**: Attaches a callback for handling any errors or rejections in the promise chain. It also returns a new promise.
+- **`finally`**: Attaches a callback that will be executed regardless of the promise's fate (resolved or rejected). It is used for cleanup actions and also returns a new promise.
+
+#### `then`
+
+The `then` method is used to handle the resolved value of a Promise. It takes in a callback function that receives the resolved value as an argument.
+
+```js
+const resolvingPromise = new Promise(resolve => resolve('Hello, world!'));
+
+myPromise.then(result => {
+  console.log(result); // Output: Hello, world!
+});
+```
+
+Create a promise that immediately resolves with `'Hello, world!'`. Next, attach a `then` handler to the promise. The `then` method receives the resolved value and logs it to the console.
+
+You can also handle rejected promises with `then` by using the second parameter.
+
+```js
+const rejectingPromise = new Promise((_, reject) =>
+  reject(new Error('Something went wrong')),
+);
+
+rejectingPromise.then(null, error => {
+  console.error(error); // Output: Error: Something went wrong
+});
+```
+
+Create a rejecting promise again.
+
+Now when you call `then`, the first parameter is `null` because you don't have a fulfillment handler. The second parameter is also a callback function and receives the rejection reason as an argument.
+
+This allows you to handle both fulfillment and rejection in the same then method.
+
+Since the `then` method is a higher-order function, you can pass in arguments in point-free style.
+
+```js
+const resolvingPromise = new Promise(resolve => resolve('Hello, world!'));
+
+resolvingPromise.then(console.log); // Output: Hello, world!
+```
+
+Create a promise that resolves immediately.
+
+Attach a `then` handler to the promise. By passing `console.log` directly to `then`, you're using point-free style. The resolved value is automatically passed as an argument to `console.log`.
+
+#### `catch`
+
+The catch method is specifically for handling rejected Promises, making your code cleaner and more readable.
+
+```js
+const rejectingPromise = new Promise((_, reject) =>
+  reject(new Error('Something went wrong')),
+);
+
+rejectingPromise.catch(error => {
+  console.error(error); // Output: Error: Something went wrong
+});
+```
+
+Create a rejecting promise and attach a `catch` handler to `rejectingPromise`. The callback function receives the error object and logs it to the console. This is a more straightforward way to handle errors compared to using the second parameter of `then`.
+
+#### `finally`
+
+The `finally` method executes a callback regardless of whether the Promise was fulfilled or rejected, which is useful for cleanup tasks.
+
+```js
+const resolvingPromise = new Promise(resolve => resolve('Hello, world!'));
+
+resolvingPromise
+  .then((result) => {
+    console.log(result);
+  })
+  .finally(() => {
+    console.log('Promise settled');
+  });
+```
+
+Create a resolving promise.
+
+Attach a `then` handler to the promise. The callback function receives the resolved value and logs it to the console.
+
+Next, attach a `finally` handler to the promise. The `finally` block runs after the promise settles, regardless of the outcome.
+
+#### Complex Promise Chaining Examples
+
+When you chain promises, there are a few behaviors you should be aware of.
+
+- **Errors in `then` Handlers**: Throwing an error in a `then` handler causes the promise to be rejected, skipping subsequent `then` handlers until a `catch` is found.
+- **Catching Errors**: You can catch errors using a `catch` handler or the second parameter of `then`.
+- **Continuing the Chain**: After handling an error, you can continue chaining `then` handlers.
+- **Modifying Values**: You can modify the value passed through the chain at any point.
+
+Let's explore how promise chaining behaves with some examples.
+
+```javascript title="first-chain-example.js"
+const trace = message => value => {
+  console.log(message, value);
+  return value;
+};
+
+Promise.resolve(1)
+  .then(trace('first'))
+  .then(trace('second'));
+```
+
+Define a curried `trace` function that takes a `message` and returns another function. This returned function takes a `value`, logs the message and value, and then returns the value.
+
+Next, create a promise that immediately resolves with `1`. Attach two `then` handlers to the promise. Each `then` receives the resolved value `1`, logs it along with a message, and passes it to the next handler.
+
+When you run this code, you'll see:
+
+```sh
+$ node first-chain-example.js
+first 1
+second 1
+```
+
+Now, let's see what happens if you throw an error in one of the `then` handlers.
+
+```javascript title="second-chain-example.js"
+const trace = message => value => {
+  console.log(message, value);
+  return value;
+};
+
+const throwError = error => {
+  throw new Error(error);
+};
+
+Promise.resolve(2)
+  .then(throwError)
+  .then(trace('never gets logged out'))
+  .catch(trace('caught'));
+```
+
+Define the `trace` function again and a `throwError` function that takes a value and throws a new `Error` with that value.
+
+Create a promise that resolves immediately with `2`. Attach a `then` handler that calls `throwError`, which throws an error, causing the promise to be rejected. The next `then` handler is skipped because the promise is now in a rejected state. The control moves to the nearest `catch` handler.
+
+When you run this code, you'll see:
+
+```sh
+$ node second-chain-example.js
+caught Error: 2
+```
+
+The second `then` handler doesn't execute because errors cause the promise chain to skip directly to the next `catch`.
+
+After catching an error, you can continue chaining `then` handlers.
+
+```javascript title="third-chain-example.js"
+const trace = message => value => {
+  console.log(message, value);
+  return value;
+};
+
+Promise.reject(3)
+  .then(trace('never gets logged out'))
+  .catch(x => trace('caught')(x + 1))
+  .catch(trace('previous catch handles this - nothing gets logged out'))
+  .then(trace('gets the result from catch'));
+```
+
+Start with a promise that rejects with `3`. Then attach in succession a `then` handler, two `catch` handlers, and finally another `then` handler.
+
+When you run this code, you'll see:
+
+```sh
+$ node third-chain-example.js
+caught 4
+gets the result from catch 4
+```
+
+The initial `then` handler is skipped because the promise is rejected. The first `catch` handler receives the rejection reason `3`, increments it by `1`, logs it, and returns the new value `4`. The promise is now resolved with `4`.
+
+Any subsequent `catch` handlers are skipped since the promise is resolved. The next `then` handler receives the value `4`.
+
+Notice that you can modify the value passed through the chain in any `then` or `catch` handler, as you did here by incrementing the value by `1`.
+
+Now, let's do one last complex example with multiple rejections.
+
+```javascript title="fourth-chain-example.js"
+const trace = message => value => {
+  console.log(message, value);
+  return value;
+};
+
+const throwError = error => {
+  throw new Error(error);
+};
+
+Promise.resolve(4)
+  .then(trace('first'))
+  .catch(trace('nothing to catch - never gets logged out'))
+  .then(trace('second'))
+  .then(x => x + 1)
+  .then(trace("keep in mind you can change what's being passed through"))
+  .then(throwError)
+  .then(null, error => trace('caught through second parameter')(error))
+  .catch(trace('previous .then handles this - nothing gets logged out'))
+  .then(trace('this is the end'));
+```
+
+Resolve a promise with `4`. Then attach a `then` handler to it, a `catch` handler, 5 more `then` handlers, the last of which uses the second parameter of `then` to catch any errors, another `catch` handler and finally another `then` handler.
+
+When you run this code, you'll see:
+
+```sh
+$ node fourth-chain-example.js
+first 4
+second 4
+keep in mind you can change what's being passed through 5
+caught through second parameter Error: 5
+this is the end 5
+```
+
+Here's what's happening step by step:
+
+1. **Promise resolves with 4**: The chain starts with a resolved promise with the value `4`.
+2. **First `then`**: Logs `'first 4'` and returns `4`.
+3. **First `catch`**: Skipped because there is no error.
+4. **Second `then`**: Logs `'second 4'` and returns `4`.
+5. **Increment value**: The next `then` increments the value to `5`.
+6. **Log changed value**: The following `then` logs `"keep in mind you can change what's being passed through 5"` and returns `5`.
+7. **Throw error**: The next `then` throws an error with the value `5`.
+8. **Error handling in `then`**: The subsequent `then` catches the error using the second parameter, logs `'caught through second parameter Error: 5'`, and returns `5`.
+9. **Second `catch`**: Skipped because the error has been handled.
+10. **Final `then`**: Logs `'this is the end 5'`.
+
+### Promise States
+
+A promise exists in one of three states:
+
+1. **Pending**: This is the initial state of a promise. At this stage, the promise is neither fulfilled nor rejected, indicating that the asynchronous operation is still in progress.
+2. **Fulfilled**: A promise reaches this state if the asynchronous operation completes successfully. This triggers the execution of the `onFulfilled()` function, typically associated with a `resolve()` call in the promise's handling code.
+3. **Rejected**: If the asynchronous operation fails or encounters an error, the promise is rejected. This state triggers the `onRejected()` function, which is generally tied to a `reject()` call.
+
+Once a promise changes from pending to either fulfilled or rejected, it becomes settled. This means it has been resolved (either fulfilled or rejected) and will not change states again. Any further attempts to resolve or reject a settled promise will have no effect, preserving its immutability.
+
+There is no property that tells you the internal promise state. You can only observe the states of a promise indirectly by using the `Promise` constructor and inspecting the promise object.
+
+```js
+const pendingPromise = new Promise((resolve, reject) => {
+  console.log('Promise state:', pendingPromise); // Output: Promise { <pending> }
+  setTimeout(() => {
+    resolve('Fulfilled!');
+    console.log('Promise state after resolve:', pendingPromise); // Output: Promise { 'Fulfilled!' }
+  }, 1000);
+});
+
+pendingPromise.then(value => {
+  console.log('Resolved with:', value); // Output: Resolved with: Fulfilled!
+});
+```
+
+Create `pendingPromise`, which is initially in the "pending" state.
+
+Next, log `pendingPromise` immediately, which shows `Promise { <pending> }`. After 1 second, you resolve the promise with `'Fulfilled!'`.
+
+When you now log `pendingPromise` using `then`, it shows `Promise { 'Fulfilled!' }` after 1 second.
+
+### Example: `waitFor`
+
+You can tie what you've learned together and create a `waitFor` function.
+
+```js
+const waitFor = (value, ms) =>
+  new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (value) {
+        return resolve(value);
+      }
+
+      return reject(new Error('Value is falsy'));
+    }, timeout);
+  });
+
+waitFor(true, 1000).then(() => console.log('Done!'));
+```
+
+This `waitFor` function takes in a value and a timeout. It waits for the timeout. Then, if the value is truthy, the promise resolves. Otherwise, it rejects.
+
+**Important:** Always use return before resolve and reject inside your if and else blocks. Without return, the function might continue executing and potentially call both resolve and reject, leading to unexpected behavior.
+
+### Lazy vs. Eager
+
+Promises are eager. Eager describes the evaluation behavior of operations. There are two different evaluation strategies: eager and lazy.
+
+**Eager evaluation** computes values as soon as they are assigned. **Lazy evaluation** delays the computation until the value is needed.
+
+Here is what that means for promises:
+
+```js
+console.log("Before promise");
+
+const myPromise = new Promise(resolve => {
+  console.log("Inside promise");
+  resolve("Promise resolved");
+});
+
+console.log("After promise");
+
+myPromise.then(console.log);
+```
+
+If you run this code, you'll see the following output:
+
+```sh
+Before promise
+Inside promise
+After promise
+Promise resolved
+```
+
+Notice that "Inside promise" is logged right after "Before promise", even before we attach a then handler. This demonstrates the eager nature of Promises.
+
+If you want to see an example for lazy evaluation, check out ["JavaScript Generators Explained, But On A Senior-Level"](https://www.youtube.com/watch?v=FAK1YR4X-8I).
+
+### Promise Methods
+
+JavaScript provides several static methods on the Promise object to handle multiple Promises and other scenarios.
+
+#### `Promise.resolve`
+
+There is another way to create a promise without a function. You can use two static methods on the `Promise` object.
+
+The first one is `Promise.resolve`, which you can use to create a promise that immediately resolves with a given value.
+
+```js
+const promise1 = new Promise(resolve => resolve('Hello, world!'));
+const promise2 = Promise.resolve('Hello, world!');
+
+promise2.then((message) => {
+  console.log(message); // Output: Hello, world!
+});
+```
+
+Here, `promise1` and `promise2` are equivalent.
+
+#### `Promise.reject`
+
+There is also `Promise.reject`, which allows you to create a promise that immediately rejects with a given reason.
+
+```js
+const promise3 = new Promise(
+  (_, reject) => reject(new Error('Something went wrong'))
+);
+const promise4 = Promise.reject(new Error('Something went wrong'));
+
+promise4.catch(error => {
+  console.error(error); // Output: Error: Something went wrong
+});
+```
+
+Since the promise rejects now, you need to use `catch` (or the second parameter of `then`) to get the result. Again, `promise3` and `promise4` are equivalent.
+
+#### `Promise.all`
+
+Waits for all Promises in an iterable to be resolved and returns a new Promise that resolves to an array of their results.
+
+```js
+const wait = (ms, value) => new Promise(resolve => setTimeout(() => resolve(value), ms));
+
+const promises = [wait(2000, 'Hello'), wait(1000, 'World')];
+
+Promise.all(promises).then(results => {
+  console.log(results); // Output: ['Hello', 'World']
+});
+```
+
+Create a helper function `wait` that takes a value and a timeout. It returns a promise that resolves after the timeout.
+
+Next, create an array `promises` with two promises. One resolves after 2 seconds and the other after 1 second.
+
+Then, you call `Promise.all` with `promises`. It returns a new promise that resolves when all promises in the array have resolved. The resolved value is an array of the results of the input promises, in this case `['Hello', 'World']`. Since the first promise is slower and resolves after 2 seconds, it takes two seconds until the promise returned from `Promise.all` resolves with the array.
+
+#### `Promise.allSettled`
+
+The `Promise.allSettled` method waits until all promises have settled, meaning they've either fulfilled or rejected. It returns a new promise that resolves with an array of objects describing the outcome of each promise.
+
+```js
+const promise1 = Promise.resolve('Success');
+const promise2 = Promise.reject('Error');
+
+Promise.allSettled([promise1, promise2]).then((results) => {
+  results.forEach((result) => console.log(result));
+});
+// Output:
+// { status: 'fulfilled', value: 'Success' }
+// { status: 'rejected', reason: 'Error' }
+```
+
+Create two promises: one that resolves and one that rejects. When you use `Promise.allSettled`, it waits for both promises to settle and then logs an array with the results. Each result object contains a `status` property indicating whether the promise was fulfilled or rejected, and either a `value` or a `reason` property with the result.
+
+This method is useful when you want to handle multiple promises and process all outcomes, regardless of whether they succeeded or failed.
+
+#### `Promise.any`
+
+The `Promise.any` method returns a promise that fulfills as soon as any of the promises in the iterable fulfills. If all promises reject, it rejects with an `AggregateError`.
+
+```js
+const promise1 = Promise.reject('Error 1');
+const promise2 = new Promise((resolve) => setTimeout(resolve, 100, 'Success'));
+const promise3 = Promise.reject('Error 3');
+
+Promise.any([promise1, promise2, promise3])
+  .then((value) => {
+    console.log(value); // Output: Success
+  })
+  .catch((error) => {
+    console.error(error);
+  });
+```
+
+Create two rejecting promises and one that resolves after 100 milliseconds. `Promise.any` waits for the first promise to fulfill. Since `promise2` fulfills after 100 milliseconds, the `then` handler logs `'Success'`. If you modify the code so that all promises reject, the `catch` block will handle an `AggregateError`, indicating that all promises were rejected.
+
+#### `Promise.race`
+
+The `Promise.race` method takes in an array of promises and returns a promise that settles as soon as any of the promises in the iterable settles (fulfilled or rejected).
+
+```js
+const promise1 = new Promise((resolve) => setTimeout(resolve, 500, 'First'));
+const promise2 = new Promise((resolve) => setTimeout(resolve, 100, 'Second'));
+const promise3 = new Promise((_, reject) => setTimeout(reject, 50, 'Error'));
+
+Promise.race([promise1, promise2, promise3])
+  .then((value) => {
+    console.log('Resolved with:', value);
+  })
+  .catch((error) => {
+    console.error('Rejected with:', error); // Output after 50ms: Rejected with: Error
+  });
+```
+
+Create two promises that resolve after different timeouts and one that rejects after 50 milliseconds. Since `promise3` rejects the fastest, `Promise.race` settles immediately with that rejection.
+
+You can adjust the timeouts to see how `Promise.race` behaves when the first settled promise fulfills instead.
+
+```js
+const promise1 = new Promise((resolve) => setTimeout(resolve, 50, 'First'));
+const promise2 = new Promise((resolve) => setTimeout(resolve, 500, 'Second'));
+const promise3 = new Promise((_, reject) => setTimeout(reject, 100, 'Error'));
+
+Promise.race([promise1, promise2, promise3])
+  .then((value) => {
+    console.log('Resolved with:', value);
+  })
+  .catch((error) => {
+    console.error('Rejected with:', error); // Output after 50ms: Rejected with: Error
+  });
+```
+
+Change the timeouts so that `promise1` resolves after 50 milliseconds and `promise2` after 500 milliseconds. And `promise3` rejects now after 100 milliseconds. Since `promise1` fulfills the fastest, `Promise.race` resolves with `'First'`. `promise3` still rejects, but using `Promise.race` that doesn't matter.
+
+### `async` / `await`
+
+The `async` and `await` keywords provide a more readable and synchronous-looking way to work with Promises.
+
+- `async`: Declares an asynchronous function that returns a Promise.
+- `await`: Pauses the execution of an async function until a Promise is settled.
+
+You can make any function declaration asynchronous by writing the `async` keyword before the function keyword. And you can make arrow functions asynchronous by writing the `async` keyword before the parentheses of the parameter list.
+
+```js
+const fetchData = async () => {
+  const response = await fetch('https://api.example.com/data');
+  const data = await response.json();
+  return data;
+};
+
+fetchData().then((data) => {
+  console.log(data);
+});
+```
+
+Define an async function `fetchData` that fetches data from an API. Using `await`, you pause execution until the fetch promise resolves. You do the same for the `response.json()` call. When you call `fetchData`, you can use `.then` to handle the returned data because the `async` keyword makes the function return a promise.
+
+#### Top-Level `await`
+
+Usually you need to declare functions as `async` in order to be able to use `await` inside them. But some JavaScript environments allow you to use `await` in non-async functions. This feature is called "top-level `await`".
+
+```js
+const result = await Promise.resolve('Hello, world!');
+
+console.log(result); // Output: Hello, world!
+```
+
+With top-level `await`, you can await promises directly. So in this case, you don't need to use `then` to log out the result.
+
+#### Awaiting Synchronous Values
+
+You can `await` synchronous values like strings, numbers, booleans, and arrays.
+
+```js
+async function awaitSynchronous() {
+  const result = await 'Hello, world!';
+  return result;
+}
+
+awaitSynchronous().then(console.log); // Output: Hello, world!
+```
+
+Write a function `awaitSynchronous` that awaits a string. Since you're using the `await` keyword, the function becomes a promise returning function.
+
+Then you `await` the string, which does nothing because all "non-promise" values behave the same as they usually do in synchronous code.
+
+#### `try...catch`
+
+When using `async` / `await`, you can handle errors using `try...catch`, making your asynchronous code cleaner.
+
+```js
+const fetchData = async () => {
+  throw new Error('Network error');
+};
+
+const getData = async () => {
+  try {
+    const data = await fetchData();
+    console.log(data);
+  } catch (error) {
+    console.error('Error:', error.message); // Output: Error: Network error
+  }
+
+  return 'No error'
+};
+
+getData().then(console.log); // Output: No error
+```
+
+Define a function `fetchData` that throws a new error. Now you can use `getData` in another function called `getData`, which wraps the execution of `fetchData` in a `try...catch` block to handle any potential errors. When you now call `getData`, it will still resolve, but log out the error from the catch block in the console before logging out the resolved value through the `then` method.
+
+#### Special Case: `return await`
+
+In async functions, you might see `return await` before a potentially rejecting promise. While the function would work without `await`, using it can help with error handling.
+
+```js
+const getNumberWithAwait = async () => {
+  try {
+    return await Promise.reject(new Error('Oops!'));
+  } catch (error) {
+    console.error('Caught in getNumberWithAwait:', error.message);
+  }
+};
+
+const getNumberWithoutAwait = async () => {
+  try {
+    return Promise.reject(new Error('Oops!'));
+  } catch (error) {
+    console.error('Caught in getNumberWithoutAwait:', error.message);
+  }
+};
+
+getNumberWithAwait().then((number) => {
+  console.log('Result with await:', number); // Output: Result with await: undefined
+});
+
+getNumberWithoutAwait().then((number) => {
+  console.log('Result without await:', number);
+}).catch((error) => {
+  console.error('Caught outside:', error.message); // Output: Caught outside: Oops!
+});
+```
+
+You define two functions, which both reject with an error.
+
+First, `getNumberWithAwait`, which uses `await` before the `return` keyword.
+
+And second, `getNumberWithoutAwait`, which doesn't use `await` before the `return` keyword.
+
+When you now call both, you'll see that `getNumberWithAwait` resolves, while `getNumberWithoutAwait` rejects. Using `await` before the `return` ensures that any errors are caught within the `try...catch` block.
+
+### The Three Ways To Create A Promise Returning Functions
+
+Therefore, when you deal with promise returning functions, you can see that there are three ways to create a promise.
+
+```js
+const asyncInc1 = x => new Promise(resolve => resolve(x + 1));
+const asyncInc2 = x => Promise.resolve(x + 1);
+const asyncInc3 = async x => x + 1;
+```
+
+1. **Manual Resolution Promise**: `asyncInc1` manually constructs a new Promise and resolves it using `resolve`.
+2. **Immediate Resolution Promise**: `asyncInc2` uses `Promise.resolve` for a more concise and immediate resolution.
+3. **Async Function Promise**: `asyncInc3` defines an async function, which implicitly returns a promise resolving to the result.
+
+The three `asyncInc` functions are equivalent in terms of their behavior and return values. They all return a promise that resolves with `x` incremented by 1.
+
+Notice that `asyncInc3` does **_not_** use `await` inside the function. It still returns a promise because of the `async` keyword. As mentioned earlier, the `await` keyword has no effect on synchronous values.
+
+### Unwrapping
+
+The `then` method unwraps the value of a promise. This means that if you return a promise from within a `then` callback, it will be unwrapped so that the next `then` in the chain receives the resolved value, not the promise itself.
+
+```js
+const inc = x => x + 1;
+const asyncInc = async x => x + 1;
+
+Promise.resolve(20).then(inc).then(console.log); // Output: 21
+Promise.resolve(20).then(asyncInc).then(console.log); // Output: 21
+```
+
+Define two functions `inc` and `asyncInc`.
+
+Whether you call the `then` method with a normal function `inc` or a "promise lifting" function `asyncInc`, which lifts its result into the promise context, the value is unwrapped and passed on to the next `then` in the chain. Without this unwrapping you'd expect the second example to return `Promise { <pending> }`.
+
+The `await` keyword works the same way.
+
+```js
+async function example() {
+  const result = await Promise.resolve(20).then(inc);
+  return result;
+}
+
+example().then(console.log); // Output: 21
+```
+
+`Promise.resolve(20).then(inc)` returns a promise that resolves to `21`. The `await` keyword then unwraps that value so that `example` returns `21`.
+
+### Promises Cannot Be Aborted Or Cancelled
+
+Promises themselves do not have a built-in way to be cancelled once initiated. 
+
+Some people try to abuse the `Promise.race` method as a cancellation mechanism. This looks something like this:
+
+```js
+function fetchData() {
+  let timeout = setTimeout(() => {
+    console.log("Operation timed out");
+  }, 5000);
+
+  const fetchPromise = fetch('https://api.example.com/data')
+    .then(response => response.json())
+    .then(data => {
+      clearTimeout(timeout);
+      return data;
+    })
+    .catch(err => {
+      clearTimeout(timeout);
+      throw err;
+    });
+
+  const timeoutPromise = new Promise((_, reject) => 
+    setTimeout(() => reject(new Error('Timeout after 5 seconds')), 5000)
+  );
+
+  return Promise.race([fetchPromise, timeoutPromise]);
+}
+
+fetchData().then(data => console.log(data))
+  .catch(error => console.error(error));
+```
+
+`Promise.race()` is used to race the `fetchPromise` against a `timeoutPromise`. If the fetch operation does not complete within 5 seconds, the `timeoutPromise` rejects, effectively canceling the fetch.
+
+This approach is problematic because it shifts cancellation control away from the function that initially created the promise. This function is typically the ideal place for cleanup tasks like stopping timeouts or releasing memory resources. When cancellation control is external, these important cleanup activities might not be performed properly.
+
+In the code example for aborting promises with race, if the timeout triggers first, there's no way to actually stop the fetch operation from continuing in the background, potentially wasting resources.
+
+However, you **_can_** control the underlying asynchronous operations of promises even though promises themselves lack a built-in cancellation mechanism. For example, you can use an `AbortController` to abort a fetch request to a server.
+
+```js
+const controller = new AbortController();
+const signal = controller.signal;
+
+const fetchData = () => {
+  return fetch('https://api.example.com/data', { signal })
+    .then((response) => response.json());
+};
+
+const dataPromise = fetchData();
+
+setTimeout(() => {
+  controller.abort();
+}, 100);
+
+dataPromise
+  .then((data) => {
+    console.log('Data:', data);
+  })
+  .catch((error) => {
+    if (error.name === 'AbortError') {
+      console.error('Fetch aborted');
+    } else {
+      console.error('Fetch error:', error);
+    }
+  });
+```
+
+Create an abort controller and a signal.
+
+Use `AbortController` to cancel the fetch request after 100 milliseconds, which makes it likely that the server hasn't responded yet. While the promise itself isn't cancelled, the underlying operation is aborted, and the promise rejects with an `AbortError`. You can handle this error to know that the operation was intentionally cancelled.
+
+### Why Do You Need Promises?
+
+Before Promises, handling asynchronous code often meant dealing with callback hell—nested callbacks that made code hard to read and maintain. Promises provide a cleaner, more robust way to handle asynchronous operations.
+
+```js
+function getUser(userId, callback) {
+  setTimeout(() => {
+    if (!userId) return callback('Invalid user ID');
+    callback(null, { id: userId, name: 'John Doe' });
+  }, 100);
+}
+
+function getPosts(user, callback) {
+  setTimeout(() => {
+    if (!user) return callback('User not found');
+    callback(null, [{ id: 1, title: 'Post 1' }]);
+  }, 100);
+}
+
+function getComments(post, callback) {
+  setTimeout(() => {
+    if (!post) return callback('Post not found');
+    callback(null, ['Comment 1', 'Comment 2']);
+  }, 100);
+}
+
+getUser(userId, (error, user) => {
+  if (error) {
+    console.error('Error fetching user:', error);
+    return;
+  }
+  getPosts(user, (error, posts) => {
+    if (error) {
+      console.error('Error fetching posts:', error);
+      return;
+    }
+    getComments(posts[0], (error, comments) => {
+      if (error) {
+        console.error('Error fetching comments:', error);
+        return;
+      }
+      console.log('First comment:', comments[0]);
+    });
+  });
+});
+```
+
+Create three functions `getUser`, `getPosts`, and `getComments` that simulate asynchronous operations with callbacks.
+
+Now, in order to fetch the data, you have to nest the callbacks. This code becomes messy and hard to follow due to the nested callbacks and repetitive error handling. Developers called this "callback hell" for a reason.
+
+You can clean this up using promises to chain the asynchronous operations in a flat and readable manner.
+
+```js
+// ... original callback-based functions ...
+
+const promisify =
+  fn =>
+  (...args) =>
+    new Promise((resolve, reject) => {
+      fn(...args, (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      });
+    });
+
+const getUserAsync = promisify(getUser);
+const getPostsAsync = promisify(getPosts);
+const getCommentsAsync = promisify(getComments);
+
+getUserAsync(userId)
+  .then(user => getPostsAsync(user))
+  .then(posts => getCommentsAsync(posts[0]))
+  .then(comments => {
+    console.log('First comment:', comments[0]);
+  })
+  .catch(error => {
+    console.error('Error:', error);
+  });
+```
+
+First, write a `promisify` function to convert callback-based functions into promise-returning functions.
+
+Then, use the `promisify` function to convert your callback-based functions into promise-returning functions. This allows you to chain them using `then`, leading to cleaner and more maintainable code. Error handling is simplified with a single catch block at the end.
+
+### Promise Composition With `asyncPipe`
+
+If you've watched "Unleash JavaScript's Potential With Functional Programming", you know that you can compose functions together. If not, you want to watch that video before continuing with the rest of this video because it assumes you are familiar with function composition.
+
+In that video, you learn about the `pipe` function that composes functions in reverse mathematical order.
+
+```js
+const pipe = (...fns) => x => fns.reduce((y, f) => f(y), x);
+```
+
+This `pipe` function can **not** be used with promise because promises need the `then` method.
+
+But you can write an `asyncPipe` function that can compose promises.
+
+```js
+const asyncPipe = (...fns) => x => fns.reduce((y, f) => y.then(f), Promise.resolve(x));
+
+const asyncInc = async x => x + 1;
+const asyncDouble = async x => x * 2;
+
+const incrementAndDouble = asyncPipe(asyncInc, asyncDouble);
+
+incrementAndDouble(20).then(console.log); // 42
+```
+
+Write a function `asyncPipe` that composes multiple promise-returning functions. It takes a list of promise-returning functions and returns a new function that applies them in sequence. When you call `incrementAndDouble(20)`, it first increments `20` to `21` and then doubles it to `42`.
+
+But this version of `asyncPipe` only works with functions that return promises. What if you also want to compose regular functions together with asynchronous functions?
+
+You can write `asyncPipe` using `async` / `await`.
+
+```js
+const asyncPipe = (...fns) => x => fns.reduce(async (y, f) => f(await y), x);
+
+const asyncInc = async x => x + 1;
+const double = x => x * 2;
+const asyncSquare = async x => x * x;
+
+const incrementAndDouble = asyncPipe(asyncInc, double, asyncSquare);
+
+incrementAndDouble(20).then(console.log); // 1764 
+```
+
+Let's break down the steps in `asyncPipe`.
+
+| **Step** | **Accumulator `y`**                    | **Current Function `f`** | **Explanation**                                                                                                                                                                                                                                                                                                                |
+|----------|----------------------------------------|--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1        | `x` is `20`, so `y` is `20`           | `asyncInc`               | • You `await y`, which is `await 20`. Since `20` is not a promise, `await 20` returns `20`. <br /> • You then call `f(y)`, which is `asyncInc(20)`. This returns a promise because `asyncInc` is an async function. <br /> • **Note:** Even if `asyncInc` was synchronous (`inc`), since the reducer function uses `async` it always returns a promise. <br /> • The accumulator now holds a pending promise from `asyncInc(20)`.              |
+| 2        | Pending promise from `asyncInc(20)`   | `double`                 | • You `await y`, which is `await asyncInc(20)`, resolving the promise to `21`. <br /> • You then call `f(y)`, which is `double(21)`, resulting in `42`. <br /> • Although `double` is synchronous, the reducer function uses `async`, so the accumulator holds a pending promise of `42`.                                                                                                                               |
+| 3        | Pending promise of `42`               | `asyncSquare`            | • You `await y`, resolving the promise to `42`. <br /> • You then call `f(y)`, which is `asyncSquare(42)`. This returns a promise because `asyncSquare` is an async function. <br /> • The accumulator now holds a pending promise from `asyncSquare(42)`.                                                                                                                    |
+| **Final** | Pending Promise from `asyncSquare(42)` | -                        | The `.then` handler causes the promise to resolve and logs `1764` to the console.                                                                                                                                                                                                                                        |
+
+You might be asking yourself why you use `await y` instead of `await f(y)` in the reducer function inside `asyncPipe`. If you refactor `asyncPipe` to use `await f(y)`, it won't work and the code example above returns `NaN`.
+
+The reason for that is that because of `async` the accumulator `y` always returns a pending promise, so you need to await it. If you don't await it, the first step works because it would return `await (asyncInc(20))`, which is `21`. But because of the `async` keyword in the reducer function, the accumulator would be a pending promise of `21`. Then in the second step you would call `await double(Promise.resolve(21))`, which is `NaN`.
+
+Composing promises allows you to chain asynchronous operations in a clean and maintainable way reaping all the benefits of functional programming.
+
+Now go watch the video on screen because the YouTube algorithm thinks it's the perfect video for you to watch next.
+
+I love you very much. Thank you so much for watching. If you enjoyed this video, give it a thumbs up and subscribe to the channel for more advanced JavaScript videos.
