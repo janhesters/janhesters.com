@@ -1015,7 +1015,7 @@ incDoubleSquare(3); // 64
 ```
 ### `trace`
 
-You might be asking right now. "But way, what if you want to debug your code? Then you need to capture the intermediate results in variables, right?"
+You might be asking right now. "But wait, what if you want to debug your code? Then you need to capture the intermediate results in variables, right?"
 
 You actually do ***not***. You only need a helper higher-order function called `trace`.
 
@@ -1152,7 +1152,7 @@ addCurried(1, 4); // 5
 addCurried(1)(4); // 5
 ```
 
-The previous example used the mathematical names for the variables .If you want to name the variables more descriptively to understand `curry` now, you can write the function like this:
+The previous example used the mathematical names for the variables. If you want to name the variables more descriptively to understand `curry` now, you can write the function like this:
 
 ```js
 const curry =
@@ -1318,6 +1318,10 @@ try {
 Now it's your turn. Try the following exercise to practice what you've learned from this article. If you get stuck, you can always scroll up and read it again. If you prefer *not* to do the exercise, just read the solution and follow along.
 
 Create a function that takes in an array of numbers and filters all the even numbers (so it rejects the odd numbers), then doubles all the even numbers and lastly, sums up the result. Break down your functions to their most basic abstractions then compose them point-free. (Hint: You'll need to look up the modulo operator `%` to check if a number is even.)
+
+...
+
+Here is the solution:
 
 ```js
 const curry =

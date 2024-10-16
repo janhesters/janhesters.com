@@ -49,9 +49,9 @@ const resolvingPromise = new Promise(resolve => {
 });
 ```
 
-You use the `new` keyword to create a promise. The constructor takes a callback, called the  executor function. This executor functions first parameter is the resolve function. You pass to it the value that the promise should resolve to when the operation completed successfully, in this case `'Hello, world!'`.
+You use the `new` keyword to create a promise. The constructor takes a callback, called the  executor function. This executor function's first parameter is the `resolve` function. You pass to it the value that the promise should resolve to when the operation completed successfully, in this case `'Hello, world!'`.
 
-It's crucial to differentiate between the promise constructor and the promise instance. The promise constructor refers to the `Promise` class, whereas a promise instance is an object created using the `Promise` constructor, here `resolvingPromise`.
+It's crucial to differentiate between the promise constructor and the promise instance. The promise constructor refers to the `Promise` class (after the `new` keyword), whereas a promise instance is an object created using the `Promise` constructor, here `resolvingPromise`.
 
 And here's a rejecting promise:
 
@@ -61,7 +61,7 @@ const rejectingPromise = new Promise((_, reject) => {
 });
 ```
 
-In the rejectingPromise, you create a new promise that immediately rejects with an error message. By passing `(_, reject)` to the executor function, you focus on the reject function, which you call with an error object. You use an underscore `_` to ignore the `resolve` parameter in the rejecting promise since you don't need it.
+In the `rejectingPromise`, you create a new promise that immediately rejects with an error message. By passing `(_, reject)` to the executor function, you focus on the reject function, which you call with an error object. You use an underscore `_` to ignore the `resolve` parameter in the rejecting promise since you don't need it.
 
 ### Promise Chaining
 
@@ -572,7 +572,7 @@ async function awaitSynchronous() {
 awaitSynchronous().then(console.log); // Output: Hello, world!
 ```
 
-Write a function `awaitSynchronous` that awaits a string. Since you're using the `await` keyword, the function becomes a promise returning function.
+Write a function `awaitSynchronous` that awaits a string. Since you're using the `async` keyword, the function becomes a promise returning function.
 
 Then you `await` the string, which does nothing because all "non-promise" values behave the same as they usually do in synchronous code.
 
@@ -764,7 +764,7 @@ Use `AbortController` to cancel the fetch request after 100 milliseconds, which 
 
 ### Why Do You Need Promises?
 
-Before Promises, handling asynchronous code often meant dealing with callback hell—nested callbacks that made code hard to read and maintain. Promises provide a cleaner, more robust way to handle asynchronous operations.
+Before Promises, handling asynchronous code often meant dealing with callback hell - nested callbacks that made code hard to read and maintain. Promises provide a cleaner, more robust way to handle asynchronous operations.
 
 ```js
 function getUser(userId, callback) {
@@ -901,7 +901,7 @@ Let's break down the steps in `asyncPipe`.
 
 You might be asking yourself why you use `await y` instead of `await f(y)` in the reducer function inside `asyncPipe`. If you refactor `asyncPipe` to use `await f(y)`, it won't work and the code example above returns `NaN`.
 
-The reason for that is that because of `async` the accumulator `y` always returns a pending promise, so you need to await it. If you don't await it, the first step works because it would return `await (asyncInc(20))`, which is `21`. But because of the `async` keyword in the reducer function, the accumulator would be a pending promise of `21`. Then in the second step you would call `await double(Promise.resolve(21))`, which is `NaN`.
+The reason for that is that because of `async` the accumulator `y` always returns a pending promise, so you need to await it. If you don't await it, the first step works because it would return `await (asyncInc(20))`, which is `21`. But because of the `async` keyword in the reducer function, the accumulator would be a pending promise of `21`. Then in the second step you would call `await double(Promise.resolve(21))`, which is `NaN` because `Promise.resolve(21) * 2` would try to multiply an object - the promise - by two.
 
 Composing promises allows you to chain asynchronous operations in a clean and maintainable way reaping all the benefits of functional programming.
 
