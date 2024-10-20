@@ -234,6 +234,8 @@ function ErrorPage({
   subMessage?: string;
 }) {
   return (
+    // 146px is the height of the header and footer together on mobile.
+    // 102px is the height of both together on tablet and desktop.
     <div className="flex min-h-[calc(100vh-146px)] flex-col items-center justify-center px-4 text-center md:min-h-[calc(100vh-102px)]">
       <h2 className="mb-4 text-4xl font-bold text-foreground">{title}</h2>
 

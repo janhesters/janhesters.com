@@ -254,7 +254,7 @@ describe('calculate', async assert => {
 
 In these tests, `firstName`, `lastName` and `address` could be deleted and are irrelevant for `calculate`. Its the fault of the system that the tests are expensive relative to the code under test.
 
-If you need dozens or hundreds of lines of test setup to test a few lines of code, that's a design problem, not a test problem. For example, your tests might use a lot of [mocks because your code is too tightly coupled](https://medium.com/javascript-scene/mocking-is-a-code-smell-944a70c90a6a) and has many side-effects.
+If you need dozens or hundreds of lines of test setup to test a few lines of code, that's a design problem, not a test problem. For example, your tests might use a lot of [mocks because your code is too tightly coupled](https://medium.com/javascript-scene/mocking-is-a-code-smell-944a70c90a6a) and has many side effects.
 
 > "If you're unable to test it, you designed it wrong." - [Kent Beck](https://youtu.be/CAttTEUE9HM)
 
@@ -284,7 +284,7 @@ assert({
 
 Now run your tests and see how you feel. Watch how your mind drifts off while you wait for those tests to finish ...
 
-You can run your **unit tests** in **under a second** by isolating side-effects and composing your code from pure functions. Your **CI / CD pipeline** (including your integration and functional tests) should run in **under 10 minutes**.
+You can run your **unit tests** in **under a second** by isolating side effects and composing your code from pure functions. Your **CI / CD pipeline** (including your integration and functional tests) should run in **under 10 minutes**.
 
 Avoid interrupting flow to keep your engineering team productive.
 

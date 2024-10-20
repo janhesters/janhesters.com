@@ -667,7 +667,7 @@ But memoization also comes with drawbacks.
 - **Memory usage**: Memoization increases memory consumption by storing function call results, which can be a problem in environments with limited memory.
 - **Complexity**: Adding memoization introduces complexity to your codebase, and requires careful cache management to avoid bugs and maintainability issues.
 - **Cache management**: You must implement strategies for cache eviction and invalidation to prevent outdated or incorrect data, which can be challenging.
-- **side-effects**: Functions with side-effects are can be problematic for memoization because the side-effects might need to occur with each function call. Memoization should primarily be used with pure functions.
+- **side effects**: Functions with side effects are can be problematic for memoization because the side effects might need to occur with each function call. Memoization should primarily be used with pure functions.
 - **Concurrency issues**: In multi-threaded applications, memoization must be handled carefully to avoid race conditions and ensure thread safety when accessing the cache.
 
 import { ReadNext } from '../features/blog/read-next';

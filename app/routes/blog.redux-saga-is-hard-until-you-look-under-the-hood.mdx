@@ -1,7 +1,7 @@
 ---
 title: 'Redux Saga Is Hard Until You Look Under The Hood'
 datePublished: '2024-10-22'
-description: 'Learn how to isolate side-effects and write clean, maintainable asynchronous code using Redux Saga. Create your own saga middleware and understand how it works.'
+description: 'Learn how to isolate side effects and write clean, maintainable asynchronous code using Redux Saga. Create your own saga middleware and understand how it works.'
 thumbnailUrl: 'https://i.magecdn.com/ada680/eeb5ba_usecallback_vs_usememo?f=webp,q.20,p.f,l.f'
 isDraft: true
 ---
@@ -24,12 +24,12 @@ Redux Saga has a reputation for being hard to understand and is often seen as ov
 
 The Redux team even recommends to use their data fetching and caching library, RTK Query, instead of Redux Saga.
 
-However, when you master Redux Saga, it actually gives a reliable way to break down any problem - no matter how complex - and tame it into deterministic and side-effect-free code.
+However, when you master Redux Saga, it actually gives a reliable way to break down any problem - no matter how complex - and tame it into deterministic and side effect-free code.
 
 I wanted to write this article about sagas for you because:
 
 1. Sagas are still used in many old projects and can help you land more jobs,
-2. the philosophy of isolating side-effects that sagas teach you will change how you think about your code and help you to write cleaner code, and
+2. the philosophy of isolating side effects that sagas teach you will change how you think about your code and help you to write cleaner code, and
 3. I love sagas.
 
 This article is part 2 of a 5-part series on Redux that will elevate your understanding to the highest level, preparing you for any interview question involving Redux and enabling you to contribute to any Redux-based codebase. By the way, the third article in this series also covers how to use RTK Query.
@@ -42,8 +42,8 @@ Let's start with the basic question:
 
 > “Why do you want to use Redux Saga?”
 
-1. **Isolate asynchronous effects** - Manage your side-effects separately from your main application logic. Your components don't need to know that side-effects exist.
-2. **Deterministic testing of I/O related logic** - When you test code with side-effects, you're frequently forced to mock, especially when you’re unsure of what you’re doing. But Redux Saga makes it trivial to write tests for your API calls, database operations and other I/O tasks.
+1. **Isolate asynchronous effects** - Manage your side effects separately from your main application logic. Your components don't need to know that side effects exist.
+2. **Deterministic testing of I/O related logic** - When you test code with side effects, you're frequently forced to mock, especially when you’re unsure of what you’re doing. But Redux Saga makes it trivial to write tests for your API calls, database operations and other I/O tasks.
 
 If you want to, you can code along with this tutorial. If not, then skip to ["What Is Redux Saga?"](#what-is-redux-saga) below.
 
@@ -222,11 +222,11 @@ You can now access store values via selectors and manipulate them using dispatch
 
 Redux Saga is a middleware that uses generators to:
 
-- manage side-effects and manipulate actions, 
+- manage side effects and manipulate actions, 
 - decouple your code, and
 - define complex logic flows, sequences and data processes.
 
-Sagas typically transform impure functions - like database calls or API requests - into pure, deterministic ones by **isolating side-effects** through delaying their computation.
+Sagas typically transform impure functions - like database calls or API requests - into pure, deterministic ones by **isolating side effects** through delaying their computation.
 
 "Decoupling code" means to slice your app into small, independent blocks, so that your app's components depend less on each other. When components are decoupled, you can work on them without the risk of breaking anything else. If components are coupled, changing one might unintentionally break something else.
 
@@ -345,7 +345,7 @@ I know this was a lot, but now you have a big-picture overview, so you can learn
 Redux Saga consists of three components:
 
 1. **Effects** - Effects are action creators that describe future actions.
-2. **Sagas** - Sagas are generator functions that manage side-effects.
+2. **Sagas** - Sagas are generator functions that manage side effects.
 3. **Middleware** - The middleware, which contains effect handlers, manages the execution of the sagas and the corresponding effects.
 
 ### Effects
@@ -453,7 +453,7 @@ As mentioned earlier, you can omit the `channel` property because it's `undefine
 
 The term "saga" in Redux Saga comes from a [1987 paper by Hector Garcia-Molina and Kenneth Salem](https://www.cs.cornell.edu/andru/cs711/2002fa/reading/sagas.pdf). Their work describes a way to handle long-lived database transactions by breaking them into smaller parts with backup plans if something goes wrong.
 
-Redux Saga adapts this idea to manage complex asynchronous tasks and side-effects in app state management using generator functions. The name "saga" reflects the long-running, intricate processes this middleware handles, much like the complex stories found in historical sagas.
+Redux Saga adapts this idea to manage complex asynchronous tasks and side effects in app state management using generator functions. The name "saga" reflects the long-running, intricate processes this middleware handles, much like the complex stories found in historical sagas.
 
 If you're unfamiliar with generators, read ["JavaScript Generators Explained, But On A Senior-Level"](https://janhesters.com/blog/javascript-generators-explained-senior-level). That article will give you all the foundational knowledge you need to understand sagas.
 
@@ -859,7 +859,7 @@ When you now run your code, you should see the current count logged out in your 
 
 ### `call`
 
-How do you isolate side-effects with Redux Saga? You do that using the `call` effect.
+How do you isolate side effects with Redux Saga? You do that using the `call` effect.
 
 When using Redux saga, similar to how you do it with actions and selectors, you use objects that represent future computations rather than directly triggering computation with I/O. `call` never actually calls a function. Instead, it returns an object with a reference to a function and its arguments, and the saga middleware calls it for you.
 
@@ -963,7 +963,7 @@ To have something to isolate, create a `fetchUser` function that retrieves a use
 
 Then, use `call` to fetch the user whose ID is equal to the current count. Lastly, dispatch an `incrementBy` action to increase the count by the length of the user's name.
 
-`call` is a pure function that takes in a function to call and the arguments to call the function with. It then delays the calling of the function. The invocation of the function is done by the saga middleware at some later point in time. This is how call transforms an impure function, like an API call, or a database call into a pure function by isolating the side-effect.
+`call` is a pure function that takes in a function to call and the arguments to call the function with. It then delays the calling of the function. The invocation of the function is done by the saga middleware at some later point in time. This is how call transforms an impure function, like an API call, or a database call into a pure function by isolating the side effect.
 
 By the way, this saga is nonsense. You're going see real use-cases in article 3, 4, and 5 of this series. The purpose of this example saga is to help you understand how Redux Saga and its effects work.
 

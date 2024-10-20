@@ -63,7 +63,7 @@ If you look up functional programming you might get lost in academic lingo.
 
 If you're lucky you will find some kind of simple definition like this:
 
-> “**Functional programming** is the process of building software by composing functions. Functional programming is **declarative** rather than **imperative**. **Side-effects** are isolated. And application state usually flows through **pure functions**.”
+> “**Functional programming** is the process of building software by composing functions. Functional programming is **declarative** rather than **imperative**. **side effects** are isolated. And application state usually flows through **pure functions**.”
 
 You can relax because this article will explain all of these terms and more. Starting at Primitives.
 
@@ -311,7 +311,7 @@ const noop = () => {};
 A function is a **pure function**, if:
 
 1. given the same inputs, it always returns the same output, and
-2. it has no side-effects.
+2. it has no side effects.
 
 You've seen pure functions already. For example, both `sum` functions and the `square` function are pure.
 
@@ -348,7 +348,7 @@ console.log(sideEffectingFunction(10)); // 10, modifies externalArray, too
 console.log(externalArray); // Output: [5, 10]
 ```
 
-Even though `sideEffectingFunction`  returns something, it pushes code as a side-effect to an array and you can meaningfully call it without using it's return value.
+Even though `sideEffectingFunction`  returns something, it pushes code as a side effect to an array and you can meaningfully call it without using it's return value.
 
 > “A **dead giveaway** that a function is impure is if it makes sense to call it without using its return value. For pure functions, that's a noop.” - [Eric Elliott](https://twitter.com/_ericelliott/status/770260480141254657)
 
@@ -366,7 +366,7 @@ number = 5; // no change, still 5
 
 All pure functions are idempotent, but not all idempotent functions are pure functions.
 
-An idempotent function can cause idempotent side-effects.
+An idempotent function can cause idempotent side effects.
 
 A pure function cannot.
 
@@ -392,7 +392,7 @@ addItem("banana"); // Outputs "Added item: banana", returns 2
 
 ### Referential Transparency
 
-Idempotent functions without side-effects have a feature known as **referential transparency**.
+Idempotent functions without side effects have a feature known as **referential transparency**.
 
 That means that if you have a function call:
 
@@ -598,6 +598,7 @@ console.log(numbers); // Output: [2, 4]
 ```
 
 Before you look at declarative code, you need to understand immutability and abstraction.
+
 ### Immutability
 
 **Immutability** in programming means that an object or value ***cannot*** be modified after it is created; instead, any changes result in a new object or value.
@@ -778,7 +779,7 @@ console.log(evens);  // Output [2, 4]
 
 ### Expressions Over Statements
 
-In functional programming, you'll see many expressions and few statements. Expressions avoid intermediate variables, while statements often bring side-effects and mutable state.
+In functional programming, you'll see many expressions and few statements. Expressions avoid intermediate variables, while statements often bring side effects and mutable state.
 
 #### Statements
 

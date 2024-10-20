@@ -419,7 +419,7 @@ Wait a minute! **Did we write three functions without unit tests?** 😱
 
 Yes, we did. 😏
 
-The trick about testing a Lambda function - and async code in general - is to choose what to test and how. Generally, you only need integration tests for functions that have side-effects. BUT, if you compose an async function with pure functions, you want to write unit tests for the pure functions. This way, when the integration test fails, but the unit tests pass you at least know where the error is NOT located. If both the integration test and the unit tests fail, the unit tests will identify the error for you.
+The trick about testing a Lambda function - and async code in general - is to choose what to test and how. Generally, you only need integration tests for functions that have side effects. BUT, if you compose an async function with pure functions, you want to write unit tests for the pure functions. This way, when the integration test fails, but the unit tests pass you at least know where the error is NOT located. If both the integration test and the unit tests fail, the unit tests will identify the error for you.
 
 `fetchAddresses` is the function containing the I/O, no unit tests needed here.
 

@@ -87,7 +87,7 @@ This diagram shows you the data flow in Redux and how these 6 components work to
 
 Your React components have access to your store's `dispatch` method. You'll learn how this works later in this article.
 
-You then dispatch an action which get's passed to your middleware for processing and handling side-effects before reaching your reducers.
+You then dispatch an action which get's passed to your middleware for processing and handling side effects before reaching your reducers.
 
 Your reducers update the global application state.
 
@@ -198,7 +198,7 @@ The `default` case returns the current state unchanged, which is important for h
 Remember, **reducers must be pure functions** - that means:
 
 - they do ***NOT*** modify the inputs,
-- they do ***NOT*** perform side-effects like API calls, and
+- they do ***NOT*** perform side effects like API calls, and
 - they do ***NOT*** call non-pure functions like `Date.now()` or `Math.random()`.
 
 And make sure that each case uses the `return` statement to prevent any case from falling through.
@@ -1407,7 +1407,7 @@ The goal of this article is to provide you with a senior-level understanding of 
 
 You can clean up your selectors even more using functional programming.
 
-**Note:** If you're new to functional programming, either read ["Unleash JavaScript's Potential with Functional Programming"](https://janhesters.com/blog/unleash-javascripts-potential-with-functional-programming) before continuing, or skip this section and jump to "Display- / Container-Component Pattern" below.
+**Note:** If you're new to functional programming, either read ["Unleash JavaScript's Potential with Functional Programming"](https://janhesters.com/blog/unleash-javascripts-potential-with-functional-programming) before continuing, or skip this section and jump to "Display- / container component Pattern" below.
 
 While reading this refactor, you might want to open this article in a new tab and look at the refactor side-by-side compared with its previous version without functional programming.
 
@@ -1485,14 +1485,14 @@ const selectCount = pipe(selectExampleSlice, prop('count'));
 
 Here, you also use `prop` to access the different slices and `pipe` to compose your selectors.
 
-### Display- / Container-Component Pattern
+### Display- / container component Pattern
 
-The `connect` HOC works well with the display- / container-component pattern. If you're unfamiliar with it, this pattern organizes components into two categories:
+The `connect` HOC works well with the display- / container component pattern. If you're unfamiliar with it, this pattern organizes components into two categories:
 
 1. **Display- or dumb-components** are pure functions that take in props and return JSX. They never contain any hooks, state, or lifecycle methods if you're using classes. It's fine if they contain simple ternaries or mappings.
 2. **Container- or smart-components** are stateful and contain the logic. They can contain hooks, state or lifecycle methods in classes. Sometimes, when you use HOCs in container components, there is no JSX, which you will see later with Redux' `connect` HOC.
 
-Create a display-component at `src/app/user-profile-component.js`.
+Create a display component at `src/app/user-profile-component.js`.
 
 ```jsx title="src/app/user-profile-component.js"
 export const UserProfileComponent = ({ isLoggedIn, email, onLoginClicked }) => (
@@ -1515,7 +1515,7 @@ export const UserProfileComponent = ({ isLoggedIn, email, onLoginClicked }) => (
 
 The component takes in a `isLoggedIn` boolean and renders the email for the logged in user, or a button that when clicked logs the user in.
 
-Using this display-component, you can combine your user profile action creators and selectors using the `connect` HOC in a container-component.
+Using this display component, you can combine your user profile action creators and selectors using the `connect` HOC in a container component.
 
 ```js title="src/app/user-profile-container.js"
 'use client';
@@ -2072,7 +2072,7 @@ Redux became popular because of the following properties:
 
 - **Deterministic state resolution**, ensuring consistent view renders with pure components: Given the same initial state and actions, you always get the same resulting state. And given the same state, you always render the same UI.
 - **Transactional state management:** Every action in Redux can be treated as a transaction. The state transitions occur atomically, making sure either all operations complete successfully or your state remains unchanged.
-- **Isolated state management from I/O and side-effects:** Redux keeps state management separate from side-effects like API calls or time-dependent operations. It uses middleware to handle these operations, keeping the state management pure and predictable.
+- **Isolated state management from I/O and side effects:** Redux keeps state management separate from side effects like API calls or time-dependent operations. It uses middleware to handle these operations, keeping the state management pure and predictable.
 - **Single source of truth for your application state:** Redux centralizes your application's state into one store.
 - **Easy state sharing between your components:** With a centralized store, any component can access the state without the need to pass props deeply through the component tree.
 - **Transaction telemetry with auto-logged action objects:** Using developer tools or middleware, Redux automatically logs actions and state changes. This feature provides you valuable insights into the sequence of state changes and actions, helping you understand and trace how the state evolves over time.

@@ -48,7 +48,7 @@ export default function Blog() {
         </div>
       </div>
 
-      <div className="mx-auto mt-10 max-w-2xl">
+      <div className="mx-auto mt-1 max-w-2xl">
         <EmailCapture />
       </div>
     </main>

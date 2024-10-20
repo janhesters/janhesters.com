@@ -1113,9 +1113,9 @@ Finally, run your root saga with `sagaMiddleware.run(rootSaga);`.
 
 ### `connect` HOC In TypeScript
 
-It's time to create the UI for the app loading logic. You're going to use the `connect` higher-order component (HOC) with the display- / container-component pattern.
+It's time to create the UI for the app loading logic. You're going to use the `connect` higher-order component (HOC) with the display- / container component pattern.
 
-Create a simple display-component that shows the loading state.
+Create a simple display component that shows the loading state.
 
 ```tsx title="src/features/app-loading/app-loading-component.tsx"
 import { Spinner } from '@/components/spinner';
@@ -1138,7 +1138,7 @@ export function AppLoadingComponent() {
 }
 ```
 
-Use the `connect` HOC to create the container-component.
+Use the `connect` HOC to create the container component.
 
 ```tsx title="src/features/app-loading/app-loading-container.tsx"
 'use client';
@@ -1168,7 +1168,7 @@ export default connector(AppLoadingContainer);
 
 The main difference when using `connect` with TypeScript compared to JavaScript is that you use the `ConnectedProps` helper to infer the types of the props that `connect` injects. You do this by first calling `connect` as a partial application without a component to create the `connector`. Then you wrap your component with the `connector`.
 
-In this case, the container-component dispatches the `loadApp` action using `useEffect`. However, fetching data inside `useEffect` is considered an anti-pattern because:
+In this case, the container component dispatches the `loadApp` action using `useEffect`. However, fetching data inside `useEffect` is considered an anti-pattern because:
 
 - `useEffect` doesn't support server-side rendering, so data becomes available only after the page loads, causing delays.
 - It can create "network waterfalls," where nested components fetch data one after another, slowing down the load time.
@@ -1177,7 +1177,7 @@ In this case, the container-component dispatches the `loadApp` action using `use
 
 I'm still showing you this because many Redux apps fetch data like this.
 
-Next, create the display-component for the login page by copying the code from the [`authentication-01` block](https://ui.shadcn.com/blocks) from Shadcn to `app/features/user-authentication/user-authentication-page-component.tsx`, and modifying it to handle props.
+Next, create the display component for the login page by copying the code from the [`authentication-01` block](https://ui.shadcn.com/blocks) from Shadcn to `app/features/user-authentication/user-authentication-page-component.tsx`, and modifying it to handle props.
 
 ```tsx title="src/features/user-authentication/user-authentication-component.tsx"
 import { Spinner } from '@/components/spinner';
@@ -1262,9 +1262,9 @@ export function UserAuthenticationComponent({
 
 There's nothing particularly special going on here.
 
-Since this component will receive props from Redux, you import `UserAuthenticationPropsFromRedux` from the container-component, which we're about to create next. Other than that, it's just a simple card that provides a form for users to log in. This form is disabled and shows a spinner while the login request is in progress.
+Since this component will receive props from Redux, you import `UserAuthenticationPropsFromRedux` from the container component, which we're about to create next. Other than that, it's just a simple card that provides a form for users to log in. This form is disabled and shows a spinner while the login request is in progress.
 
-You can write the container-component without any JSX.
+You can write the container component without any JSX.
 
 ```ts title="src/features/user-authentication/user-authentication-container.tsx"
 'use client';
@@ -1289,9 +1289,9 @@ export type UserAuthenticationPropsFromRedux = ConnectedProps<typeof connector>;
 export default connector(UserAuthenticationComponent);
 ```
 
-Again, this is a classic container-component in TypeScript. You connect the `isAuthenticating` state using `mapStateToProps` and inject the `login` action via `mapDispatchToProps`. Export the `UserAuthenticationPropsFromRedux` type, which we referenced earlier in the display-component. Finally, wrap your display-component with the `connector`.
+Again, this is a classic container component in TypeScript. You connect the `isAuthenticating` state using `mapStateToProps` and inject the `login` action via `mapDispatchToProps`. Export the `UserAuthenticationPropsFromRedux` type, which we referenced earlier in the display component. Finally, wrap your display component with the `connector`.
 
-There is one more page you need to build, which is the dashboard page. Start with the display-component.
+There is one more page you need to build, which is the dashboard page. Start with the display component.
 
 ```tsx title="src/features/dashboard/dashboard-page-component.tsx"
 import { Spinner } from '@/components/spinner';
@@ -1406,11 +1406,11 @@ You get the current user's name, whether the user profiles are loading, and the 
 
 Hook up the `fetchUserProfiles` and `logout` actions to dispatch via `mapDispatchToProps`.
 
-Export the `DashboardPagePropsFromRedux` type, which you use to define the props of the display-component.
+Export the `DashboardPagePropsFromRedux` type, which you use to define the props of the display component.
 
-Then, fetch the user profiles when the page loads using a `useEffect`. Spread the remaining props into the display-component.
+Then, fetch the user profiles when the page loads using a `useEffect`. Spread the remaining props into the display component.
 
-Finally, export the connected container-component.
+Finally, export the connected container component.
 
 ### HOCs For Authentication And Loading
 
@@ -1457,7 +1457,7 @@ This simple component takes in an object with two React components and a boolean
 
 It then destructures all three and, based on whether `isPermitted` is `true` or `false`, it either renders the `PermittedComponent` or the `NotPermittedComponent`.
 
-Using this display-component, you can create the HOC.
+Using this display component, you can create the HOC.
 
 ```ts title="src/hocs/requires-permission/index.ts"
 'use client';
@@ -1501,7 +1501,7 @@ import requiresPermission from './requires-permission';
 export default requiresPermission(UserAuthentication, selectIsAuthenticated);
 ```
 
-First, `withAuth`, which partially applies the `UserAuthentication` container-component and the `selectIsAuthenticated` selector to the `requiresPermission` HOC to create a HOC that shows the user authentication interface if users are logged out.
+First, `withAuth`, which partially applies the `UserAuthentication` container component and the `selectIsAuthenticated` selector to the `requiresPermission` HOC to create a HOC that shows the user authentication interface if users are logged out.
 
 ```ts title="src/hocs/with-loading.ts"
 'use client';
@@ -1637,7 +1637,7 @@ import authenticatedPage from '@/hocs/authenticated-page';
 export default authenticatedPage(DashboardPage);
 ```
 
-For the dashboard, it's even easier because you only need to wrap the HOC for authenticated pages around the container-component for the dashboard.
+For the dashboard, it's even easier because you only need to wrap the HOC for authenticated pages around the container component for the dashboard.
 
 You can now run your app via `npm run dev` and visit `/login`.
 
@@ -1667,8 +1667,8 @@ Let's start with the flow for an anonymous user visiting the login page.
 10. `handleLogin` executes `loginRequest`, dispatches `loginSucceeded` to store the token, and then calls handleFetchCurrentUsersProfile again.
 11. This time, `handleFetchCurrentUsersProfile` retrieves a user using the token and dispatches the user into the store.
 12. Since there's now a user in the store, `redirectIfLoggedIn('/dashboard')` redirects to the dashboard.
-13. `withAuthenticatedPage` shows the permitted component, which is the `Dashboard` container-component because the app is loaded and the user is authenticated.
-14. The `Dashboard` container-component dispatches `fetchUserProfiles`, which fetches and dispatches the user profiles with `usersListFetched`.
+13. `withAuthenticatedPage` shows the permitted component, which is the `Dashboard` container component because the app is loaded and the user is authenticated.
+14. The `Dashboard` container component dispatches `fetchUserProfiles`, which fetches and dispatches the user profiles with `usersListFetched`.
 15. The app is fully loaded. The user can now click "Log Out," which dispatches the `clear` action, resetting the state of all slices to the initial state and calling the log-out endpoint.
 
 Let's also walk through the flow for an anonymous user visiting the dashboard page.
@@ -1697,7 +1697,7 @@ You can simulate the flows for a logged-in user by hardcoding a token in the sto
 7. `handleFetchCurrentUsersProfile` executes the `getCurrentUserRequest` using the stored token. It successfully retrieves the user data.
 8. Once the user data is fetched, `handleLoadApp` dispatches the `finishedAppLoading` action.
 9. `finishedAppLoading` sets `appIsLoading` to `false`. The `withLoading` HOC now displays its permitted component, the `Dashboard` container, as the user is authenticated and the app is loaded.
-10. The `Dashboard` container-component might dispatch actions like `fetchUserProfiles` to fetch additional data needed for the dashboard.
+10. The `Dashboard` container component might dispatch actions like `fetchUserProfiles` to fetch additional data needed for the dashboard.
 12. The user interacts with the dashboard. Clicking "Log Out" will dispatch the `clear` action, resetting all slices to their initial states and removing the token, effectively logging the user out.
 
 The flow for an authenticated user visiting `/dashboard` follows the same steps as the previous flow from point 4 onward.
@@ -1718,7 +1718,7 @@ If you were to expand this app built on this foundational architecture, every pa
 
 ### RTK Query
 
-Earlier, you implemented data fetching and caching manually using Redux Sagas. While Sagas are flexible enough to handle even the most complex flows with side-effects, due to their architecture their code always requires some minimum complexity, even for simple data-fetching tasks. And for most apps, the majority of side-effects are simple CRUD tasks.
+Earlier, you implemented data fetching and caching manually using Redux Sagas. While Sagas are flexible enough to handle even the most complex flows with side effects, due to their architecture their code always requires some minimum complexity, even for simple data-fetching tasks. And for most apps, the majority of side effects are simple CRUD tasks.
 
 And these simple CRUD operations is where RTK Query shines.
   
@@ -2289,9 +2289,9 @@ Now that you've seen how to use RTK Query to fetch data, let's compare it to the
 #### When To Use Sagas Over RTK Query?
 
 - **Complex Side Effects:** If you need to handle more complex side effects, such as orchestrating multiple actions, conditional logic, or performing actions based on other actions.
-- **Non-Data-Fetching Side-Effects:** Sagas are not limited to data fetching and can handle any side effects. For example, real-time data through web sockets or server-sent events.
+- **Non-Data-Fetching side effects:** Sagas are not limited to data fetching and can handle any side effects. For example, real-time data through web sockets or server-sent events.
 - **Complex Flows:** Sagas allow you to handle complex synchronous and asynchronous flows that need to be triggered, stopped, and continued based on various conditions.
-- **You Use TDD And Want To Unit Test Your Side-Effects:** Because sagas isolate side-effects, they're easily TDD-able with unit tests, which RTK Query is NOT. You can cover RTK Query's logic only through functional or E2E tests.
+- **You Use TDD And Want To Unit Test Your side effects:** Because sagas isolate side effects, they're easily TDD-able with unit tests, which RTK Query is NOT. You can cover RTK Query's logic only through functional or E2E tests.
 
 Pick the right tool for the job. To do that, you want to answer the following questions:
 
@@ -2299,7 +2299,7 @@ Pick the right tool for the job. To do that, you want to answer the following qu
 - What is the project already using?
 - How complex will the data flow be?
 
-And remember, sagas and RTK Query can be used at the same time. In some apps, you might use both - RTK Query for simple data fetching and sagas for more complex side-effects.
+And remember, sagas and RTK Query can be used at the same time. In some apps, you might use both - RTK Query for simple data fetching and sagas for more complex side effects.
 
 I love you very much. Thank you so much for watching. If you liked this video give it a thumbs up and subscribe to the channel.
 
