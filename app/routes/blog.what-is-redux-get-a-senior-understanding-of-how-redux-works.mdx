@@ -1813,7 +1813,10 @@ function applyMiddleware(...middlewares) {
 
     const chain = middlewares.map(middleware => middleware(middlewareAPI));
 
-    const enhancedDispatch = chain.reduceRight((currentDispatch, currentMiddleware) => currentMiddleware(currentDispatch), store.dispatch);
+    const enhancedDispatch = chain.reduceRight(
+      (currentDispatch, currentMiddleware) => currentMiddleware(currentDispatch),
+      store.dispatch,
+    );
 
     return { ...store, dispatch: enhancedDispatch };
   };
