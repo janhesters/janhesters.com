@@ -1,0 +1,1438 @@
+---
+title: "How To Set Up Next.js 15 For Production In 2024"
+datePublished: '2024-10-29'
+description: "Learn how you can set up a scalable Next.js app. This article covers everything from initial configuration with TypeScript, Tailwind CSS, and ESLint to advanced topics like internationalization, database integration using Prisma, and end-to-end testing with Playwright."
+thumbnailUrl: 'https://i.magecdn.com/ada680/ebb0f4_nextjs_for_production_yt_thumbnail_v1?f=webp,q.25,p.f,l.f'
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+I've worked on Next.js applications that scaled to over 100k monthly active users and landing pages with millions of monthly visitors. In this article, I'll share all the lessons I've learned through countless iterations.
+
+Whether you're part of a small team of one, two, or three developers, or you work on a massive Next.js project with multiple teams on the same codebase, it's critical to get the foundation of your app right from the start. Even if you're working on an existing project, you will discover some hard-earned insights that you can apply to your app today.
+
+Let me take you by the hand and show you all the steps and packages that you want to set up and explain to you why they're useful, so your app scales smoothly.
+
+<iframe
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  allowFullScreen
+  className="aspect-video w-full"
+  frameBorder="0"
+  referrerPolicy="strict-origin-when-cross-origin"
+  src="https://www.youtube.com/embed/bNSqh5rVqFE?si=3Vwdz20T1GSOzqiV"
+  title="How To Set Up Next.js 15 For Production In 2024"
+></iframe>
+
+### Initialize Your Project
+
+Begin by creating a new Next.js project.
+
+```bash
+npx create-next-app@latest
+```
+
+It may ask you if it can install the latest `create-next-app` version, just hit yes.
+
+```bash
+Need to install the following packages:
+create-next-app@15.0.0
+Ok to proceed? (y)
+```
+
+And then configure your project by hitting `yes` on everything (TypeScript, Tailwind, app router).
+
+```bash
+✔ **What is your project named?** … reactsquad-production
+✔ **Would you like to use** **TypeScript****?** … No / Yes
+Yes
+✔ **Would you like to use** **ESLint****?** … No / Yes
+Yes
+✔ **Would you like to use** **Tailwind CSS****?** … No / Yes
+Yes
+✔ **Would you like to use** **`src/` directory****?** … No / Yes
+Yes
+✔ **Would you like to use** **App Router****? (recommended)** … No / Yes
+Yes
+✔ **Would you like to customize the default** **import alias** **(@/*)?** … No / No
+```
+
+Then change into the directory of your project and open it in your favorite editor.
+
+```bash
+$ cd nextjs-for-production 
+~/dev/nextjs-for-production (main) 🤯
+$ cursor .
+```
+
+#### Run The Development Server
+
+You want to verify that your setup worked.
+
+1. Run `npm run dev` to start the development server.
+2. Visit `http://localhost:3000` to view your application.
+
+### Type Checks With TypeScript
+
+Your project has TypeScript already configured, but you also want to add an explicit command to your `package.json` that checks all your files for type errors.
+
+```json title="package.json"
+"type-check": "tsc -b"
+```
+
+You're going to use this command later together with other automated static analysis checks.
+
+### Code Formatting
+
+When you collaborate with a large team on a project, it's important to unify the way that everyone writes code. Discuss choices like using semicolons, quote styles, and tabs versus spaces with your team.
+
+Then use tools to enforce your style guide and format code automatically.
+
+There are two tools for that: [Prettier](https://prettier.io/) and [ESLint](https://eslint.org/).
+
+#### Prettier
+
+Prettier is an opinionated code formatter that eliminates style discussions during code reviews.
+
+Install Prettier together with its Tailwind plugin.
+
+```bash
+npm install --save-dev prettier prettier-plugin-tailwindcss
+```
+
+Create a `prettier.config.js` file with your preferred rules.
+
+```js title="prettier.config.js"
+module.exports = {
+  arrowParens: 'avoid',
+  bracketSameLine: false,
+  bracketSpacing: true,
+  htmlWhitespaceSensitivity: 'css',
+  insertPragma: false,
+  jsxSingleQuote: false,
+  plugins: ['prettier-plugin-tailwindcss'],
+  printWidth: 80,
+  proseWrap: 'always',
+  quoteProps: 'as-needed',
+  requirePragma: false,
+  semi: true,
+  singleQuote: true,
+  tabWidth: 2,
+  trailingComma: 'all',
+  useTabs: false,
+};
+```
+
+Add a formatting script to your `package.json`.
+
+```json title="package.json"
+"format": "prettier --write .",
+```
+
+Run the formatter to apply your style.
+
+```sh
+$ npm run format
+
+> nextjs-for-production@0.1.0 format
+> prettier --write .
+
+next.config.mjs 4ms (unchanged)
+package-lock.json 54ms (unchanged)
+package.json 1ms (unchanged)
+postcss.config.mjs 2ms (unchanged)
+README.md 20ms (unchanged)
+src/app/globals.css 17ms (unchanged)
+src/app/layout.tsx 30ms (unchanged)
+src/app/page.tsx 11ms (unchanged)
+tailwind.config.ts 2ms (unchanged)
+tsconfig.json 2ms (unchanged)
+```
+
+Your files are now "prettier", but you also want to use ESLint.
+
+#### ESLint
+
+ESLint can scan your code for both stylistic and logical issues. Install ESLint and its plugins, like unicorn, playwright and import sort.
+
+```bash
+npm install --save-dev @typescript-eslint/parser eslint-plugin-unicorn eslint-plugin-import eslint-plugin-playwright eslint-config-prettier eslint-plugin-prettier eslint-plugin-simple-import-sort
+```
+
+Update your `.eslintrc.json`.
+
+```json title=".eslintrc.json"
+{
+  "extends": [
+    "next/core-web-vitals",
+    "plugin:unicorn/recommended",
+    "plugin:import/recommended",
+    "plugin:playwright/recommended",
+    "plugin:prettier/recommended"
+  ],
+  "plugins": ["simple-import-sort"],
+  "rules": {
+    "simple-import-sort/exports": "error",
+    "simple-import-sort/imports": "error",
+    "unicorn/no-array-callback-reference": "off",
+    "unicorn/no-array-for-each": "off",
+    "unicorn/no-array-reduce": "off",
+    "unicorn/prevent-abbreviations": [
+      "error",
+      {
+        "allowList": {
+          "e2e": true
+        },
+        "replacements": {
+          "props": false,
+          "ref": false,
+          "params": false
+        }
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["*.js"],
+      "rules": {
+        "unicorn/prefer-module": "off"
+      }
+    }
+  ]
+}
+```
+
+This tutorial's plugins offer different functions. For detailed descriptions, visit their respective GitHub pages.
+
+But in short, they enforce coding standards, organize imports, and ensure correct use of modern JavaScript features. Since ESLint and Prettier can conflict, this setup makes them work together smoothly. The plugins also help prevent bugs and keep styles consistent, especially with tools like Vitest and Playwright.
+
+Add a linting script to your `package.json`.
+
+```json title="package.json"
+"lint:fix": "next lint --fix",
+```
+
+Run it to format all files according to your new rules.
+
+```sh
+$ npm run lint:fix
+
+> nextjs-for-production@0.1.0 lint:fix
+> next lint --fix
+
+✔ No ESLint warnings or errors
+```
+
+If you get a TypeScript version warning, you can ignore that.
+
+**Note:** As of this article's writing, ESLint 9 is available, but this tutorial uses ESLint 8 because many plugins do **_not_** yet support the latest version.
+
+### Commitlint
+
+When collaborating with a large team, it's also helpful to enforce consistent commit messages to keep the project history clear. By choosing the right standards, you can automate changelog and release generation with correct semantic versioning.
+
+Install [Commitlint](https://commitlint.js.org/) and its necessary configurations. This includes [Husky](https://typicode.github.io/husky/), which helps manage Git hooks.
+
+```sh
+npm install --save-dev @commitlint/cli@latest @commitlint/config-conventional@latest husky@latest
+```
+
+Initialize Husky in your project to set up the basic configuration.
+
+```sh
+npx husky-init && npm install
+```
+
+Add hooks to automate linting and type checking before each commit, and customize your commit message workflow.
+
+```sh
+npx husky add .husky/pre-commit 'npm run lint && npm run type-check'
+npx husky add .husky/prepare-commit-msg 'exec < /dev/tty && npx cz --hook || true'
+```
+
+The `pre-commit` hook runs after `git commit`, but before the commit message is finalized and runs linting and type-checking on your code.
+
+The `prepare-commit-msg` hook runs after `git commit` is initiated but before the commit message editor opens. It runs `commitizen` CLI to let you craft conventional commit messages. You'll learn how to use this hook in a bit.
+
+Remove the line that says `npm test` from `.husky/_/pre-commit`.
+
+Make sure these scripts are executable.
+
+```sh
+chmod a+x .husky/pre-commit
+chmod a+x .husky/prepare-commit-msg
+```
+
+Here, `chmod` stands for "change mode." This command allows you to change the access permissions or modes of a file or directory in Unix and Unix-like operating systems. The argument `a+x` adds execute permissions for all users.
+
+Install [Commitizen](https://commitizen-tools.github.io/commitizen/), which provides a CLI for crafting conventional commit messages.
+
+```sh
+npm install --save-dev commitizen cz-conventional-changelog
+```
+
+Configure Commitizen in your `package.json` to use the conventional changelog standard.
+
+```json title="package.json"
+"config": {
+  "commitizen": {
+    "path": "cz-conventional-changelog"
+  }
+},
+```
+
+The conventional changeloge standard is a specification for adding human and machine-readable meaning to commit messages. It is designed to automate the producing of changelogs and releases based on the Git history of your project.
+
+A future article will explain this standard in detail. It's included in this tutorial because getting it right from the start is important. You can use it and benefit from it without needing an in-depth understanding.
+
+Create your `commitlint.config.cjs` file with rules that suit your team's needs. This setup ensures your commit messages are consistent and relevant to the changes made.
+
+```js title="commitlint.config.cjs"
+const config = {
+  extends: ['@commitlint/config-conventional'],
+  rules: {
+    'references-empty': [1, 'never'],
+    'footer-max-line-length': [0, 'always'],
+    'body-max-line-length': [0, 'always'],
+  },
+};
+
+module.exports = config;
+```
+
+Run the following command to start crafting your commit messages using a guided CLI.
+
+```sh
+$ git add --all
+$ npx cz
+cz-cli@4.3.0, cz-conventional-changelog@3.3.0
+
+? Select the type of change that you're 
+committing: (Use arrow keys)
+❯ feat:     A new feature 
+  fix:      A bug fix 
+  docs:     Documentation only changes 
+  style:    Changes that do not affect the 
+meaning of the code (white-space, formatting, 
+missing semi-colons, etc) 
+```
+
+The cz command asks a series of questions and then writes your commit message for you.
+
+```sh
+? Select the type of change that you\'re committing: feat:     A new feature
+? What is the scope of this change (e.g. component or file name): (press enter to skip)
+? Write a short, imperative tense description of the change (max 63 chars):
+ (61) set up TS type checks, ESLint, Prettier, Commitlint and Husky
+? Provide a longer description of the change: (press enter to skip)
+ Sets up package.json script to do TS type checks. Sets up Prettier and ESLint with good rules. Configures Husky and sets up Commitizen using the conventional commit standard.
+? Are there any breaking changes? No
+? Does this change affect any open issues? No
+[main eb69ccd] feat(set up static analysis checks): set up TS type checks, ESLint, Prettier, Commitlint and Husky
+ 7 files changed, 3108 insertions(+), 159 deletions(-)
+ create mode 100755 .husky/pre-commit
+ create mode 100755 .husky/prepare-commit-msg
+ create mode 100644 commitlint.config.cjs
+```
+
+As you answer all questions, the Husky hooks will automatically run TypeScript type checks and linting.
+
+### Folder structure
+
+There are usually two popular ways to organize your code: grouping by type or grouping by feature.
+
+Group by type looks like this:
+
+```
+.  
+├── components  
+│ ├── todos  
+│ └── user  
+├── reducers  
+│ ├── todos  
+│ └── user  
+└── tests  
+    ├── todos  
+    └── user
+```
+
+And grouping by feature looks like this:
+
+```
+.  
+├── todos  
+│ ├── component  
+│ ├── reducer  
+│ └── test  
+└── user  
+    ├── component  
+    ├── reducer  
+    └── test
+```
+
+Grouping files by feature in a project organizes all related components, reducers, and tests together, making it easier to manage and modify each feature. It has the following benefits:
+
+- **Scalability**: Large applications are easier to scale and maintain because each feature acts like a mini-application. You avoid scrolling up and down in your file list to find all the files you need.
+- **Collaboration**: Developers can focus on specific features without disrupting others’ work.
+- **Onboarding**: New developers understand the project structure faster, as all files for a feature are in one place.
+- **Refactoring**: Updating a feature is streamlined since all its elements are grouped together.
+- **Modularity**: Features can be reused, shared, or turned into standalone packages more easily.
+- **Micro-frontends**: If your application ever grows to 30 or more engineers, it is easy to refactor to micro-frontends.
+
+Here is a more concrete example.
+
+```
+src/
+├── app/
+│   ├── ...
+│   ├── (group)/
+│   │   ├── about/
+│   │   │   └── page.tsx
+│   │   ├── settings/
+│   │   │   └── page.tsx
+│   │   └── layout.tsx
+│   ├── dashboard/
+│   │   ├── page.tsx
+│   │   └── layout.tsx
+│   ├── layout.tsx
+│   └── page.tsx
+├── components/
+│   ├── ...
+│   └── header/
+│       ├── header-component.tsx
+│       ├── header-component.test.ts
+│       └── header.module.css
+├── features/
+│   ├── ...
+│   ├── todos/
+│   │   ├── ...
+│   │   ├── todos-component.tsx
+│   │   ├── todos-component.test.ts
+│   │   ├── todos-container.ts
+│   │   ├── todos-reducer.ts
+│   │   ├── todos-reducer.test.ts
+│   │   └── todos-styles.ts
+│   └── user/
+│       ├── ...
+│       ├── user-reducer.ts
+│       └── user-reducer.test.ts
+├── hocs/
+│   ├── ...
+│   └── with-layout.tsx
+├── hooks/
+├── redux/
+│   ├── root-reducer.ts
+│   ├── root-saga.ts
+│   └── store.ts
+├── ...
+└── middleware.ts
+```
+
+This example shows you how you can organize your `src/` directory. Generally, everything is grouped by feature. Tests files live next to their respective implementation files. But anything that is shared by multiple features is then grouped in general folders, such as `components/` or `HOCs/` or `hooks/`. Shared setup for state management - in this example for Redux - lives in a `redux/` folder.
+
+Some people also like to group by feature within the `app/` folder. Here is how that would look like.
+
+```
+src/
+├── app/
+│   ├── ...
+│   ├── (group)/
+│   ├── dashboard/
+│   │   ├── components/
+│   │   │   ├── dashboard-header.tsx
+│   │   │   ├── dashboard-header.test.ts
+│   │   │   ├── dashboard-widgets.tsx
+│   │   │   └── dashboard-widgets.test.ts
+│   │   ├── services/
+│   │   │   ├── fetch-data.ts
+│   │   │   ├── fetch-data.test.ts
+│   │   │   ├── auth-service.ts
+│   │   │   └── auth-service.test.ts
+│   │   ├── page.tsx
+│   │   └── layout.ts
+│   ├── layout.tsx
+│   └── page.tsx
+├── ...
+└── middleware.ts
+```
+
+In this tutorial, you're going to group files by feature in the first way.
+
+### Vitest
+
+If you want to avoid bugs and prevent regressions, you need to write tests. [Vitest](https://vitest.dev/) is a great choice because it has the same API as the most popular framework, which is [Jest](https://jestjs.io/), but it runs faster.
+
+Install Vitest.
+
+```bash
+npm install -D vitest
+```
+
+And configure a testing command in your `package.json`.
+
+```json title="package.json"
+"test": "vitest --reporter=verbose",
+```
+
+Then create an `example.test.ts` file and write a short test to check to check Vitest works.
+
+```ts title="src/example.test.ts"
+import { describe, expect, test } from 'vitest';
+
+describe('example', () => {
+  test('given a passing test: passes', () => {
+    expect(1).toStrictEqual(1);
+  });
+});
+```
+
+It should pass.
+
+```sh
+$ npm test
+
+> nextjs-for-production@0.1.0 test
+> vitest --reporter=verbose
+
+
+ DEV  v2.0.5 /Users/jan/dev/nextjs-for-production
+
+ ✓ src/example.test.ts (1)
+   ✓ example (1)
+     ✓ given a passing test: passes
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  14:06:24
+   Duration  203ms (transform 20ms, setup 0ms, collect 17ms, tests 1ms, environment 0ms, prepare 56ms)
+
+
+ PASS  Waiting for file changes...
+       press h to show help, press q to quit
+```
+
+If you want to learn how you can write better tests, check out [this article](https://janhesters.com/blog/12-keys-write-senior-level-tests) that teaches you 12 evergreen testing principles that every senior developer should know.
+
+#### React Testing Library
+
+You also want to write tests for your React components. For that, you can use the [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/), often abbreviated as RTL.
+
+```sh
+npm install --save-dev @testing-library/react @testing-library/dom @testing-library/jest-dom @testing-library/user-event @types/react @types/react-dom happy-dom @vitejs/plugin-react vite-tsconfig-paths
+```
+
+Then, create a `vitest.config.ts` file.
+
+```ts title="vitest.config.ts"
+import react from '@vitejs/plugin-react';
+import tsconfigPaths from 'vite-tsconfig-paths';
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  plugins: [react(), tsconfigPaths()],
+  server: {
+    port: 3000,
+  },
+  test: {
+    environment: 'happy-dom',
+    globals: true,
+    setupFiles: ['./src/tests/setup-test-environment.ts'],
+    include: ['./src/**/*.{spec,test}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    watch: {
+      ignored: [
+        String.raw`.*\/node_modules\/.*`,
+        String.raw`.*\/build\/.*`,
+        String.raw`.*\/postgres-data\/.*`,
+      ],
+    },
+    coverage: {
+      reporter: ['text', 'json', 'html'],
+    },
+  },
+});
+```
+
+It sets up the development server, specifies testing parameters like that the  environment is `happy-dom` and file paths, and defines coverage report formats.
+
+And create a file called `src/tests/setup-test-environment.ts` to set up your test environment.
+
+```ts title="src/tests/setup-test-environment.ts"
+import '@testing-library/jest-dom/vitest';
+
+// See https://reactjs.org/blog/2022/03/08/react-18-upgrade-guide.html#configuring-your-testing-environment.
+
+// @ts-ignore
+globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+```
+
+The first line imports additional assertions, which extend Vitest's built-in assertions, allowing you to more easily test DOM nodes. For example, you can check if an element is visible, has a certain text content, or includes specific attributes.
+
+The global environment flag ensures that tests involving state updates work as expected without timing issues.
+
+Next, you want to set up a custom render method `src/tests/react-test-utils.tsx`.
+
+```tsx title="src/tests/react-test-utils.tsx"
+/* eslint-disable import/export */
+import type { RenderOptions } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import type { ReactElement } from 'react';
+
+const customRender = (
+  ui: ReactElement,
+  options?: Omit<RenderOptions, 'queries'>,
+) =>
+  render(ui, {
+    wrapper: ({ children }) => <>{children}</>,
+    ...options,
+  });
+
+// re-export everything
+export * from '@testing-library/react';
+
+// override render method
+export { customRender as render };
+export { default as userEvent } from '@testing-library/user-event';
+```
+
+You can use this to wrap your code in providers, for example, when using Redux, or adding layouts and styling.
+
+Make sure your configuration worked by writing a test for a React component.
+
+```tsx title="src/features/example.test.tsx"
+import { describe, expect, test } from 'vitest';
+
+import { render, screen } from '@/tests/react-test-utils';
+
+function MyReactComponent() {
+  return <div>My React Component</div>;
+}
+
+describe('MyReactComponent', () => {
+  test('given no props: renders a text', () => {
+    render(<MyReactComponent />);
+
+    expect(screen.getByText('My React Component')).toBeInTheDocument();
+  });
+});
+```
+
+You import `render` and `screen` from your test utils file instead of from RTL directly.
+
+`toBeInTheDocument()` is one of those special assertions that you configured earlier in your test environment setup file.
+
+It should pass, too.
+
+```sh
+ ✓ src/features/example.test.tsx (1)
+   ✓ MyReactComponent (1)
+     ✓ given no props: renders a text
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  09:33:32
+   Duration  402ms (transform 24ms, setup 55ms, collect 87ms, tests 9ms, environment 80ms, prepare 45ms)
+
+
+ PASS  Waiting for file changes...
+       press h to show help, press q to quit
+```
+
+### Styling
+
+Now let's talk about styling. The two most important aspects to get right are **accessibility** and **maintainability**. One of the most popular libraries out there that nails both of these aspects is [Shadcn](https://ui.shadcn.com/). It uses [Tailwind](https://tailwindcss.com/) for streamlined style management and [Radix](https://www.radix-ui.com/) for enhanced accessibility.
+
+Initialize Shadcn in your project.
+
+```sh
+$ npx shadcn@latest init
+
+✔ **Which** **style** **would you like to use?** › New York
+✔ **Which color would you like to use as** **base color****?** › Slate
+✔ **Would you like to use** **CSS variables** **for colors?** … no / yes
+
+✔ Writing components.json...
+✔ Initializing project...
+✔ Installing dependencies...
+
+Success! Project initialization completed. You may now add components.
+```
+
+Now, if you need a card or any other component, you can easily add it to your project using the Shadcn command line interface.
+
+```sh
+npx shadcn@latest add card
+```
+
+### Internationalization
+
+As your app scales, you want to translate it to multiple languages, so it can reach more users.
+
+And adding internationalization - or i18n - in a later cycle of an app, can be a pain because you'll have to find all hardcoded strings and replace them with translation function calls.
+
+Install negotiator and a locale matcher.
+
+```sh
+npm install negotiator @formatjs/intl-localematcher
+```
+
+The `@formatjs/intl-localematcher` package selects the best language for your app's content based on a user's language preferences. The `negotiator` package helps your app to figure out what type of content (like language or format) your user's browser can handle best, based on the information the browser sends.
+
+You'll also need to install the TypeScript types for the negotiator package.
+
+```sh
+npm install --save-dev @types/negotiator
+```
+
+Then, create your i18n config in a new file at `src/features/internationalization/i18n-config.ts`.
+
+```ts title="src/features/internationalization/i18n-config.ts"
+export const i18n = {
+  defaultLocale: 'en-US',
+  locales: ['en-US'],
+} as const;
+
+export type Locale = (typeof i18n)['locales'][number];
+```
+
+Use that `i18n` config, in your `localization-middleware` at
+`src/features/internationalization/localization-middleware.ts`.
+
+```ts title="src/features/internationalization/localization-middleware.ts"
+import { match } from '@formatjs/intl-localematcher';
+import Negotiator from 'negotiator';
+import { type NextRequest, NextResponse } from 'next/server';
+
+import { i18n } from './i18n-config';
+
+function getLocale(request: NextRequest) {
+  const headers = {
+    'accept-language': request.headers.get('accept-language') ?? '',
+  };
+  const languages = new Negotiator({ headers }).languages();
+  return match(languages, i18n.locales, i18n.defaultLocale);
+}
+
+export function localizationMiddleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const pathnameHasLocale = i18n.locales.some(
+    locale => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`,
+  );
+
+  if (pathnameHasLocale) {
+    return;
+  }
+
+  const locale = getLocale(request);
+  request.nextUrl.pathname = `/${locale}${pathname}`;
+  return NextResponse.redirect(request.nextUrl);
+}
+```
+
+The purpose of this middleware is to automatically detect and redirect your users to the appropriate language version of the website based on their browser language preferences.
+
+Then create a middleware file `src/middleware.ts` in the root of your project, and use your localization middleware there.
+
+```ts title="src/middleware.ts"
+import { NextRequest } from 'next/server';
+
+import { localizationMiddleware } from './features/internationalization/localization-middleware';
+
+// Matcher ignoring `/_next/` and `/api/` and svg files.
+export const config = { matcher: ['/((?!api|_next|.*.svg$).*)'] };
+
+export function middleware(request: NextRequest) {
+  return localizationMiddleware(request);
+}
+```
+
+It's time to add your translations. Create a `json` dictionary for your English translations at `src/features/internationalization/dictionaries/en-us.json`.
+
+```json
+{
+  "counter": {
+    "decrement": "Decrement",
+    "increment": "Increment"
+  },
+  "landing": {
+    "welcome": "Welcome"
+  }
+}
+```
+
+And then, create a file `src/features/internationalization/get-dictionaries.ts` for your `getDictionary` function.
+
+```ts
+import "server-only";
+import type { Locale } from "./i18n-config";
+
+// We enumerate all dictionaries here for better linting and typescript support.
+// We also get the default import for cleaner types.
+const dictionaries = {
+  "en-US": () => import("./dictionaries/en-US.json").then((module) => module.default),
+};
+
+export const getDictionary = async (locale: Locale) =>
+  dictionaries[locale]?.() ?? dictionaries["en-US"]();
+```
+
+It takes in a locale and then returns the respective dictionary.
+
+If you want to add a hook that lets your users pick their language, it can look like this.
+
+```ts title="src/features/internationalization/use-switch-locale-href.ts"
+import { usePathname } from 'next/navigation';
+
+import { Locale } from './i18n-config';
+
+export function useSwitchLocaleHref() {
+  const pathName = usePathname();
+
+  const getSwitchLocaleHref = (locale: Locale) => {
+    if (!pathName) return '/';
+    const segments = pathName.split('/');
+    segments[1] = locale;
+    return segments.join('/');
+  };
+
+  return getSwitchLocaleHref;
+}
+```
+
+And then you can use that hook in a component, and use it's return value in a `<Link />` like this.
+
+```tsx title="src/app/[lang]/page.tsx"
+<Link href={getSwitchLocaleHref(locale)}>{locale}</Link>
+```
+
+Change your URL structure to support i18n. Create a new folder `[lang]` in your `app/` folder, which creates a dynamic segment for the language.
+
+Move your `page.tsx` and `layout.tsx` files into that folder, and modify the layout to set the correct language on the `<html />` tag.
+
+```tsx title="src/app/[lang]/layout.tsx"
+import '../globals.css';
+
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+
+import { Locale } from '@/features/internationalization/i18n-config';
+
+const inter = Inter({ subsets: ['latin'] });
+
+export const metadata: Metadata = {
+  title: "Jan Hesters' Next.js for production tutorial",
+  description: 'Brought to you by ReactSquad.io',
+};
+
+export default function RootLayout({
+  children,
+  params,
+}: Readonly<{
+  children: React.ReactNode;
+  params: { lang: Locale };
+}>) {
+  return (
+    <html lang={params.lang}>
+      <body className={inter.className}>{children}</body>
+    </html>
+  );
+}
+```
+
+Going forward, you can use the `getDictionary` function in any server component.
+
+```tsx title="src/app/[lang]/page.tsx"
+import { getDictionary } from '@/features/internationalization/get-dictionaries';
+import { Locale } from '@/features/internationalization/i18n-config';
+
+import { CounterComponent } from './counter-component';
+
+export default async function IndexPage({
+  params: { lang },
+}: {
+  params: { lang: Locale };
+}) {
+  const dictionary = await getDictionary(lang);
+
+  return (
+    <div>
+      <p>Current locale: {lang}</p>
+      <p>This text is rendered on the server: {dictionary.landing.welcome}</p>
+      <CounterComponent dictionary={dictionary.counter} />
+    </div>
+  );
+}
+```
+
+For client components, you'll want to pass in the respective dictionary instead.
+
+```tsx title="src/app/[lang]/counter-component.tsx"
+'use client';
+
+import { useState } from 'react';
+
+import type { getDictionary } from '@/features/internationalization/get-dictionaries';
+
+export function CounterComponent({
+  dictionary,
+}: {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>['counter'];
+}) {
+  const [count, setCount] = useState(0);
+
+  return (
+    <p>
+      This component is rendered on the client:
+      <button onClick={() => setCount(n => n - 1)}>
+        {dictionary.decrement}
+      </button>
+      {count}
+      <button onClick={() => setCount(n => n + 1)}>
+        {dictionary.increment}
+      </button>
+    </p>
+  );
+}
+```
+
+### Database
+
+This tutorial is going to use [Postgres](https://www.postgresql.org/) for its database because it is well battle-tested, but you're going to use the [Prisma ORM](https://www.prisma.io/) to abstract away the database layer. This gives you the flexibility to use a variety of databases, and simplifies the API that you use to interact with it.
+
+```sh
+npm install prisma --save-dev
+```
+
+You'll also need to install the Prisma client.
+
+```sh
+npm install @prisma/client
+```
+
+Initialize Prisma.
+
+```sh
+npx prisma init
+```
+
+This auto-generates your `prisma/schema.prisma` file.
+
+```prisma title="prisma/schema.prisma"
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Uses connection pooling
+  url = env("DATABASE_URL")
+}
+
+model UserProfile {
+  id                         String   @id @default(cuid())
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+  email                      String   @unique
+  name                       String   @default("")
+  acceptedTermsAndConditions Boolean  @default(false)
+}
+```
+
+Add a a`UserProfile` model to it, which has an email and a name and a boolean whether they accepted your terms and conditions.
+
+If you ran `npx prisma init`, rename your `.env` file to `.env.local`, otherwise create it and make sure it contains the credentials for your Prisma database.
+
+```
+DATABASE_URL="postgresql://johndoe:randompassword@localhost:5432/mydb?schema=public"
+```
+
+Now create a `src/lib/prisma.ts` file, which will contain your Prisma client connection.
+
+```ts title="src/lib/prisma.ts"
+import { PrismaClient } from '@prisma/client';
+
+declare global {
+  var __database__: PrismaClient;
+}
+
+let prisma: PrismaClient;
+
+if (process.env.NODE_ENV === 'production') {
+  prisma = new PrismaClient();
+} else {
+  if (!global.__database__) {
+    global.__database__ = new PrismaClient();
+  }
+  prisma = global.__database__;
+}
+
+export default prisma;
+```
+
+The re-assignment ensures that in a non-production environment (like during development or testing), only one instance of the Prisma client is created and reused across the entire application. This approach prevents the overhead of repeatedly initializing new connections to the database every time a module that needs database access is imported.
+
+Modify your `package.json` to include the following helper commands for Prisma.
+
+```json
+"prisma:deploy": "npx prisma migrate deploy && npx prisma generate",
+"prisma:migrate": "npx prisma migrate dev --name",
+"prisma:push": "npx prisma db push && npx prisma generate",
+"prisma:reset-dev": "run-s prisma:wipe prisma:seed dev",
+"prisma:seed": "tsx ./prisma/seed.ts",
+"prisma:setup": "prisma generate && prisma migrate deploy && prisma db push",
+"prisma:studio": "npx prisma studio",
+"prisma:wipe": "npx prisma migrate reset --force && npx prisma db push",
+```
+
+Some of these commands use the `run-s`, `tsx` and `dotenv` packages, which you'll need to install.
+
+```sh
+npm install --save-dev npm-run-all tsx dotenv
+```
+
+Here’s an explanation of each Prisma command:
+
+- **"prisma:deploy"**: Deploys database migrations and generates Prisma Client. It runs migrations on production databases and updates the client API.
+- **"prisma:migrate"**: Creates a new migration from changes in the Prisma schema, applying it in the development environment. You must specify a name for the migration after the command.
+- **"prisma:push"**: Pushes the schema changes directly to the database and updates the Prisma Client. Useful for prototyping without creating migration files.
+- **"prisma:reset-dev"**: Resets the development database by wiping it, re-seeding it, and applying migrations in development mode.
+- **"prisma:seed"**: Runs a TypeScript seed script to populate the database with initial data.
+- **"prisma:setup"**: Generates the Prisma Client, deploys migrations to the database, and pushes the schema to the database.
+- **"prisma:studio"**: Opens Prisma Studio, a GUI for viewing and editing the database records.
+- **"prisma:wipe"**: Resets the database by forcefully dropping all data and migrations and then pushes the schema changes.
+
+```
+npm run prisma:setup
+```
+
+If your Prisma doesn't recognize your `.env.local` file, set your environment variable manually in your terminal. On Mac, this can be done using the `export` command.
+
+```sh title=".env.local"
+export DATABASE_URL="postgresql://johndoe:randompassword@localhost:5432/mydb?schema=public"
+```
+
+Create a `prisma/seed.ts` file. You can use it to seed your database with data for development.
+
+```ts title="prisma/seed.ts"
+import { exit } from 'node:process';
+
+import { PrismaClient } from '@prisma/client';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.env.local' });
+
+const prisma = new PrismaClient();
+
+const prettyPrint = (object: any) =>
+  console.log(JSON.stringify(object, undefined, 2));
+
+async function seed() {
+  const user = await prisma.userProfile.create({
+    data: {
+      email: 'jan@reactsquad.io',
+      name: 'Jan Hesters',
+      acceptedTermsAndConditions: true,
+    },
+  });
+
+  console.log('========= 🌱 result of seed: =========');
+  prettyPrint({ user });
+}
+
+seed()
+  .then(async () => {
+    await prisma.$disconnect();
+  })
+  // eslint-disable-next-line unicorn/prefer-top-level-await
+  .catch(async error => {
+    console.error(error);
+    await prisma.$disconnect();
+    exit(1);
+  });
+```
+
+If you run it, it'll create your user.
+
+```sh
+$ npm run prisma:seed
+
+> reactsquad-production@0.1.0 prisma:seed
+> tsx ./prisma/seed.ts
+
+========= 🌱 result of seed: =========
+{
+  "user": {
+    "id": "clzekb5sp0000ock9gsp72p33",
+    "createdAt": "2024-08-03T20:04:27.289Z",
+    "updatedAt": "2024-08-03T20:04:27.289Z",
+    "email": "jan@reactsquad.io",
+    "name": "Jan Hesters",
+    "acceptedTermsAndConditions": true
+  }
+}
+```
+
+In your server components, you can use `prisma` to fetch any data.
+
+```tsx title="src/app/[lang]/dashboard.tsx"
+import prisma from '@/lib/prisma';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+
+export default async function Dashboard() {
+  const user = await prisma.userProfile.findUnique({
+    where: { email: 'jan@reactsquad.io' },
+  });
+
+  return (
+    <Card className="max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>User Profile</Card.Title>
+      </CardHeader>
+      <CardContent>
+        {user ? (
+          <ul>
+            <li>Name: {user.name}</li>
+            <li>Email: {user.email}</li>
+          </ul>
+        ) : (
+          <p>User not found.</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+#### Use Facades
+
+It's a good idea to abstract away your database calls using facades. A facade is a design pattern where you **provide a simplified interface to a complex subsystem**.
+
+Create a file that contains all facades related to your user profile model `features/user-profile/user-profile-model.ts`.
+
+```ts title="src/features/user-profiles/user-profiles-model.ts"
+import { UserProfile } from '@prisma/client';
+
+import prisma from '@/lib/prisma';
+
+export async function retrieveUserProfileFromDatabaseByEmail(
+  email: UserProfile['email'],
+) {
+  return await prisma.userProfile.findUnique({ where: { email } });
+}
+```
+
+There are two main reasons for using facades.
+
+1. **Increase vendor resistance -** You can switch third-party providers easily. For example, you might switch from Firebase to Supabase or vice versa. Instead of updating your whole codebase to reflect the change,  you only update the facade.
+2. **Simplify your code** - A facade can reduce the code you need to write in your application because it reduces the API to your specific application needs. Simultaneously, it makes your code easier to understand because you can give the facade descriptive names.
+
+Then use your facade in your server component.
+
+```tsx title="src/app/[lang]/dashboard.tsx"
+import { retrieveUserProfileFromDatabaseByEmail } from '@/features/user-profiles/user-profiles-model';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+
+export default async function Dashboard() {
+  const user =
+    await retrieveUserProfileFromDatabaseByEmail('jan@reactsquad.io');
+
+  return (
+    <Card className="max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>User Profile</Card.Title>
+      </CardHeader>
+
+      <CardContent>
+        {user ? (
+          <ul>
+            <li>Name: {user.name}</li>
+            <li>Email: {user.email}</li>
+          </ul>
+        ) : (
+          <p>User not found.</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+#### Vercel Postgres
+
+You can use Vercel Postgres for your production deployment. They have an easy to follow guide, which you can [check out in the Vercel documentation](https://vercel.com/docs/storage/vercel-postgres). But here are the steps real quick for your convenience.
+
+To set up a database in your Vercel project, follow these steps:
+
+1. Go to the **Storage** tab and click the **Create Database** button.
+2. When the **Browse Storage** modal opens, choose **Postgres** and click **Continue**.
+
+For creating a new database:
+
+1. In the dialog box, type `sample_postgres_db` (or a name you prefer) in the **Store Name** field. Ensure the name has only alphanumeric characters, "_" or "-", and does not exceed 32 characters.
+2. Choose a region. For lower latency, select a region close to your function region, which is US East by default.
+3. Click **Create**.
+
+Then you'll need to add `POSTGRES_URL_NON_POOLING` to the `datasource` in your Prisma schema.
+
+```prisma
+datasource db {
+  provider  = "postgresql"
+  // Uses connection pooling
+  url       = env("DATABASE_URL")
+  // Uses direct connection, ⚠️ make sure to keep this to `POSTGRES_URL_NON_POOLING`
+  // or you'll have dangling databases from migrations
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+```
+
+Vercel uses connection poolers, which manage a pool of database connections that can be reused by different parts of an application, rather than establishing a new connection for each database request. The `directUrl` property is used to ensure operations requiring direct database access, such as migrations, can bypass the connection pooler for reliable execution.
+
+You can get the environment variables for your Vercel database by pulling them from Vercel.
+
+```sh
+vercel env pull .env
+```
+
+### Playwright
+
+You also want to use E2E tests because E2E tests give you the most confidence that your app works as intended. E2E tests are skipped far too often, but you really should make it a habit to write them. The benefits are compounding.
+
+Initialize [Playwright](https://playwright.dev/).
+
+```
+$ npm init playwright@latest
+Getting started with writing end-to-end tests with Playwright:
+Initializing project in '.'
+✔ Where to put your end-to-end tests? · playwright
+✔ Add a GitHub Actions workflow? (y/N) · false
+✔ Install Playwright browsers (can be done manually via 'npx playwright install')? (Y/n) · true
+```
+
+If this is your first time using Playwright, you can have a look through the `test-examples/` folder that the initialization script creates, and then deleted it because you won't need it.
+
+Modify the `webServer` key in your `playwright.config.ts` file.
+
+```ts title="playwright.config.ts"
+webServer: {
+  command: process.env.CI ? 'npm run build && npm run start' : 'npm run dev',
+  port: 3000,
+},
+```
+
+Add two scripts for your E2E tests to your `package.json`.
+
+```json title="package.json"
+"test:e2e": "npx playwright test",
+"test:e2e:ui": "npx playwright test --ui",
+```
+
+The first one runs your Playwright test in headless mode, while the second one runs your test in UI mode, which gives you time travel debugging, watch mode and more.
+
+```ts title="playwright/example.spec.ts"
+import { expect, test } from '@playwright/test';
+
+test.describe('landing page', () => {
+  test('given any user: shows the test user', async ({ page }) => {
+    await page.goto('/');
+
+    await expect(page.getByText('Jan Hesters')).toBeVisible();
+    await expect(page.getByText('jan@reactsquad.io')).toBeVisible();
+  });
+});
+```
+
+Run your tests to check that your Playwright setup worked.
+
+```sh
+$ npm run test:e2e
+
+> reactsquad-production@0.1.0 test:e2e
+> npx playwright test
+
+
+Running 3 tests using 3 workers
+  3 passed (3.9s)
+```
+
+It ran three tests because by default Playwright is configured to run in Chrome, Safari, and Firefox.
+
+### GitHub Actions
+
+It's good practice to run your app with CI/CD. CI/CD stands for continuous delivery and continuous deployment.
+
+Add a secret for your database URL to your [repository's settings in GitHub](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository).
+
+```
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/testdb"
+```
+
+Then create your GitHub Actions YAML configuration in a `.github/workflows/pull-request.yml` file for a comprehensive CI/CD pipeline including linting, type checking, testing, and more.
+
+```yaml title=".github/workflows/pull-request.yml"
+name: Pull Request
+
+on: [pull_request]
+
+jobs:
+  lint:
+    name: ⬣ ESLint
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: 📥 Download deps
+        uses: bahmutov/npm-install@v1
+
+      - name: 🔬 Lint
+        run: npm run lint
+
+  type-check:
+    name: ʦ TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: 📥 Download deps
+        uses: bahmutov/npm-install@v1
+
+      - name: 🔎 Type check
+        run: npm run type-check --if-present
+
+  commitlint:
+    name: ⚙️ commitlint
+    runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]'
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: ⚙️ commitlint
+        uses: wagoid/commitlint-github-action@v4
+
+  vitest:
+    name: ⚡ Vitest
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:12
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: 📥 Download deps
+        uses: bahmutov/npm-install@v1
+
+      - name: 🛠 Setup Database
+        run: npm run prisma:wipe
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+
+      - name: ⚡ Run vitest
+        run: npm run test -- --coverage
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+
+  playwright:
+    name: 🎭 Playwright
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:12
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: 📥 Download deps
+        uses: bahmutov/npm-install@v1
+
+      - name: 🌐 Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: 🛠 Setup Database
+        run: npm run prisma:wipe
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+
+      - name: 🎭 Playwright Run
+        run: npx playwright test
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+
+      - name: 📸 Playwright Screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+```
+
+Now every time you make a pull request to your app, it automatically runs your tests to ensure it works, runs TypeScript type checks and lints it, so that everyone contributes code with the same formatting.
+
+import { ReadNext } from '../features/blog/read-next';
+import { frontmatter as unleashJavaScriptsPotentialWithFunctionalProgramming } from './blog.unleash-javascripts-potential-with-functional-programming.mdx';
+import { frontmatter as higherOrderComponentsAreMisunderstoodInReact } from './blog.higher-order-components-are-misunderstood-in-react.mdx';
+
+<ReadNext
+  posts={[
+    { ...unleashJavaScriptsPotentialWithFunctionalProgramming, slug: 'unleash-javascripts-potential-with-functional-programming' },
+    { ...higherOrderComponentsAreMisunderstoodInReact, slug: 'higher-order-components-are-misunderstood-in-react' },
+  ]}
+/>
