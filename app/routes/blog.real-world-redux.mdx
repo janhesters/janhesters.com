@@ -28,6 +28,8 @@ I'm Jan, I'm the CTO of ReactSquad and in this video, you get to sit shotgun and
 
 **Note to Cheta or Ibrahim:** Record the whole flow of the app including asking for permissions, etc. at the END of this tutorial, so we can show it here. Remember, you can record the iOS device through the simulator (button on the top right of the simulator).
 
+Make sure you're using the latest version of Expo and let me know if you needed to upgrade (this tutorial is still written for Expo SDK 51).
+
 Also, this script has many notes like this one. **During** and **after** recording the video, double check that you took **_all_** the notes into account.
 
 Furthermore, when you record the code snippets: relax.
@@ -53,6 +55,8 @@ Even though this video can be watched on its own as a standalone video and you c
 If you get stuck at some point as a new developer, go watch parts 1 to 3 first and then resume wherever you got stuck because you do need to understand Redux to understand what's going on in this video. I'm going to mention this throughout the video to give you pointers what to watch as prerequisites, but this video is definitely NOT for you if you're new to React, or Redux.
 
 If you're familiar with React but new to React Native, that's okay - you can still follow along. If you feel uncomfortable, a quick React Native crash course might help.
+
+// TODO: thoroughly dsecribe the Loom recording of the app.
 
 So, without further ado, let's get started!
 
@@ -91,6 +95,33 @@ $ cd real-world-redux && code .
 **Note to Cheta & Ibrahim:** Show & "explore" the `app/` folder a bit because it'll be deleted in the next step. Show the folders in the side bar, open some files, scroll through some code (slowly), etc.
 
 ---
+
+### Make Sure Expo Works
+
+---
+
+**Note to Cheta or Ibrahim:** Show a recording of each of the steps here, e.g. show the QR code in the terminal, show the developer menu in the simulator, etc.
+
+---
+
+Make sure that your Expo environment is working correctly.
+
+```sh
+$ npm start
+```
+
+If you want to run the app on a physical device, use the Expo Go app and scan the QR code displayed in your terminal.
+
+Alternatively, you can run it on a simulator:
+
+- Press `i` to open the iOS simulator.
+- Press `a` to open the Android emulator.
+
+If you encounter any issues running the app on a device or simulator, you can run it in your web browser by accessing http://localhost:8081.
+
+In the simulator, you can press `r` to reload the app and `m` to open the developer menu.
+
+### Remove Expo Boilerplate
 
 When you create an Expo project, it is created in TypeScript. But this tutorial is going to use JavaScript instead. In the 5th part of this series, you're going to create a TypeScript app with Redux.
 
@@ -190,7 +221,7 @@ If you want to learn more, you can look up the respective plugins and configs on
 
 ### Folder Structure
 
-Create a `src/` directory for your source code.
+Create a `src/` directory for your source code as the parent of the `app/` directory.
 
 Furthermore, you're going to group your files by feature.
 
@@ -208,30 +239,7 @@ When you group files by feature in a project, you organize all related component
     └── test
 ```
 
-### Make Sure Expo Works
-
----
-
-**Note to Cheta or Ibrahim:** Show a recording of each of the steps here, e.g. show the QR code in the terminal, show the developer menu in the simulator, etc.
-
----
-
-Make sure that your Expo environment is working correctly.
-
-```sh
-$ npm start
-```
-
-If you want to run the app on a physical device, use the Expo Go app and scan the QR code displayed in your terminal.
-
-Alternatively, you can run it on a simulator:
-
-- Press `i` to open the iOS simulator.
-- Press `a` to open the Android emulator.
-
-If you encounter any issues running the app on a device or simulator, you can run it in your web browser by accessing http://localhost:8081.
-
-In the simulator, you can press `r` to reload the app and `m` to open the developer menu.
+After you've moved the `app/` directory into `src/` directory run your app again and verify that you did not break anything.
 
 ### Install & Configure Testing Tools
 
@@ -268,6 +276,12 @@ In your package.json, add the Jest configuration:
   // ...
 }
 ```
+
+The `"preset"` property tells Jest to use the `jest-expo` preset, which is a configuration that Jest uses to run tests in a React Native environment.
+
+The `"setupFilesAfterEnv"` property tells Jest to use the `src/tests/setup-jest.js` file as a setup file for your tests.
+
+The `"transformIgnorePatterns"` property tells Jest to ignore certain node modules that are not compatible with Jest.
 
 Next, create the Jest setup file `src/tests/setup-jest.js`:
 
@@ -368,7 +382,31 @@ You can use the group syntax `()` to prevent a segment from showing in the URL.
 - `app/(main)/_layout.js` wraps around `/home`, but NOT `/main/home`.
 - `app/_layout.js` wraps around everything (`/main/home`  and `/home`).
 
-You want to access your theme throughout your entire app. So, wrap a `ThemeProvider` around your app in your root layout.
+This is useful because assume you want to have two routes: `/home` and `/about`.
+
+Now you want to have different layouts for each of these routes. If you'd just create the following 3 files:
+
+- `app/_layout.js`
+- `app/home.js`
+- `app/about.js`
+
+In this case, home and about would share the same layout.
+
+If you want to have different layouts for each of these routes, you need to create the following files:
+
+- `app/(home)/_layout.js`
+- `app/(home)/home.js`
+- `app/(about)/_layout.js`
+- `app/(about)/about.js`
+
+Another possibility would be to structure your routes like this:
+
+- `app/home/_layout.js`
+- `app/home/index.js`
+- `app/about/_layout.js`
+- `app/about/index.js`
+
+You want to access your theme throughout your entire app. So, rename `src/app/_layout.tsx` to `src/app/_layout.js` and wrap a `ThemeProvider` around your app in your root layout.
 
 ```jsx title="src/app/_layout.js"
 import { ThemeProvider } from '@rneui/themed';
@@ -460,7 +498,7 @@ The first helper you'll write is `asyncPipe`. Create a file `src/utils/async-pip
 export const asyncPipe = () => () => 0;
 ```
 
-When you use TDD, you always start by writing an empty function, component, or a 'do nothing' version of the implementation first. This approach lets you write failing tests against an actual implementation, rather than seeing your tests fail simply because the thing you're testing can't be imported as it doesn't exist yet.
+When you use TDD, you always start by writing an empty function, component, or a 'do nothing' version of the code you want to test first. This approach lets you write failing tests against a placeholder implementation, rather than seeing your tests fail simply because the thing you're testing can't be imported as it doesn't exist yet.
 
 Write the tests for this function. Create `src/utils/async-pipe.test.js` adjacent to the `src/utils/async-pipe.js` file because remember, you're grouping by feature, which means that the implementations live next to their tests.
 
@@ -482,9 +520,11 @@ describe('asyncPipe()', () => {
 });
 ```
 
-Run your tests and see that it fails, as expected. It's important to see tests fail before making them pass to ensure they're working correctly.
+Run your tests with `npm test` and see that it fails, as expected. It's important to see tests fail before making them pass to ensure they're working correctly.
 
-In the recordings that you see on screen, you see me running a specific test. But that is just for your convenience so in this video it's easier to see the respective test's results. You should keep running your watch script, which runs your tests for you whenever you save your file.
+`npm test` starts a so-called watch script. This is a long-running process that watches for file changes and automatically reruns your tests when you save your file for all files that have been affected by the change. This watch script runs by default when you use Jest. You need to run this command in your root folder but it will find all files in your project even if they're deeply nested within folders.
+
+In the recordings that you see on screen, you see me running a specific test by using something like `npm test async-pipe.test.js`. But that is just for your convenience so in this video it's easier to see the respective test's results. You should keep running your watch script, which runs your tests for you whenever you save your file.
 
 ---
 
@@ -820,7 +860,7 @@ export const requestLocalNotificationsPermissions = asyncPipe(
 
 This function uses `asyncPipe` to chain the following operations:
 
-1. Request permissions using `Notifications.requestPermissionsAsync()`.
+1. Request permissions using `Notifications.requestPermissionsAsync()`. This function triggers a modal on the device asking the user to allow notifications. After user granted or prohibited permissions, it returns a promise that resolves to an object containing data about the notification permissions on the device. You probably have experienced promises where you are waiting on computers to return a response or a result from database. But this promise "waits" for user interaction and resolves with the result of that user's decision.
 2. Extract the 'status' property from the result.
 3. Check if the status is 'granted' using the `isGranted` function.
 
@@ -846,6 +886,8 @@ export function useAppComesToForegroundEffect(effect) {
   const [appStateVisible, setAppStateVisible] = useState(appState.current);
 
   useEffect(() => {
+    // This variable is called subscription because it proactively listens for
+    // changes in the app's state until ...
     const subscription = AppState.addEventListener('change', nextAppState => {
       if (
         /inactive|background/.test(appState.current) &&
@@ -859,6 +901,7 @@ export function useAppComesToForegroundEffect(effect) {
     });
 
     return () => {
+      // ... it's unsubscribed in the cleanup function of this useEffect hook.
       subscription.remove();
     };
 
@@ -923,7 +966,7 @@ Then, define an `ensureNotificationPermissions` function that checks if the user
 
 By using the `useAppComesToForegroundEffect` hook and the `ensureNotificationPermissions` function, it checks for permissions whenever the app comes to the foreground. This is important because the user could revoke permissions at any time when they leave the app, which would break the app's functionality.
 
-Lastly, it passes whether the user has granted permissions to the wrapped component as a prop.
+Lastly, it passes whether the user has granted permissions to the wrapped component as a prop. You will later wrap the HOC around the onboarding screen, which uses the `hasNotificationPermissions` prop to automatically forward users into the main app if they have granted permissions.
 
 Now, create a `useEffectOnce` hook that runs a function exactly once.
 
@@ -941,7 +984,7 @@ import { renderHook } from '@testing-library/react-native';
 import { useEffectOnce } from './use-effect-once';
 
 describe('useEffectOnce()', () => {
-  test('runs the effect exactly once', () => {
+  test('runs the effect exactly once per component mount', () => {
     const effect = jest.fn();
 
     expect(effect).not.toHaveBeenCalled();
@@ -957,7 +1000,7 @@ describe('useEffectOnce()', () => {
 });
 ```
 
-You can test hooks by using the `renderHook` function from Testing Library. You need to create a mock function using `jest.fn()`. You can run assertions on this mock function. Check that it hasn't been called. Then render your hook and check that it has been callled. Rerender the hook and assert that it hasn't been called again.
+You can test hooks by using the `renderHook` function from Testing Library. In this you will render the hook twice. You need to create a mock function using `jest.fn()`. You can run assertions on this mock function. Check that it hasn't been called. Then render your hook, which happens implicitly when you call `renderHook`, and check that it has been called. Rerender the hook and assert that it hasn't been called again.
 
 After watching your tests fail, implement the `useEffectOnce` hook.
 
@@ -991,7 +1034,7 @@ export function useEffectOnce(effect) {
 
 Use `useRef` to check that the effect only runs if the component is mounted for the first time. It's not enough to have an empty dependency array because React 18 mounts and unmounts your component twice during development mode.
 
-Let's tie all of these functions together in your React components. You're going to use the display component and container component pattern. display components are responsible for how things look - they are pure functions that take in props and return JSX. container components handle logic and side effects. They contain hooks and are connected to your Redux store.
+Let's tie all of these functions together in your React components. You're going to use the display / container component pattern. Display components are responsible for how things look - they are pure functions that take in props and return JSX. Container components handle logic and side effects. They contain hooks and are connected to your Redux store.
 
 In true TDD fashion, create a component that renders nothing.
 
@@ -1001,7 +1044,7 @@ export function OnboardingScreenComponent() {
 }
 ```
 
-When you're testing a display component, you first need to think about what it should render. This determines the props it receives, which depend on what the component should display.
+When you're testing a display component, you first need to think about what it should render. This determines the props the component receives, which depend on what the component should display.
 
 By default, the onboarding screen should show a message informing the user that they will be asked for permission to send notifications. It should also have a button that starts the permission request flow. Therefore, it needs an `onRequestPermissionPress` function prop.
 
@@ -1072,11 +1115,11 @@ describe('OnboardingScreen component', () => {
 });
 ```
 
-First, create a `createProps` factory function to make it easy to generate the props for the component, allowing you to only override the ones you need for each specific test case.
+First, create a `createProps` factory function to make it easy to generate the props for the component, so you only need to override the ones you need for each specific test case.
 
 Then, write the first test that checks if the user was not asked for permissions. It should display a message informing the user that they will be asked for permission and a button to request permissions.
 
-Your second test should check that if the user was asked for permissions but declined, it displays a message telling them to go to their settings to allow push notifications manually.
+Your second test should check that if the user was asked for permissions but declined, it displays a message telling them to go to their settings to allow push notifications manually. In this test, you explicitly set `hasAllowedPermissions` to `false`, even though `hasAllowedPermissions` is `false` by default. This is good practice to make sure that the test always behaves the same even if the `createProps` factory function changes.
 
 Your third and final test should verify that if the user was asked for permissions and allowed them, it displays a message indicating they can now use the app, along with a button to send a test notification and a button to navigate to the home screen.
 
@@ -1265,7 +1308,7 @@ Import the necessary components from React Native Elements, Expo, and React Nati
 
 Create a `styles` object using `StyleSheet.create` at the bottom of your file. If you've never used React Native, [`StyleSheet`](https://reactnative.dev/docs/stylesheet) is a tool that allows you to define styles for your application's interface. You create an object where each key is a style name, and the associated value is a set of CSS-like properties. These styles are then applied to components using the `style` prop to customize their appearance. I'm going to show you the styles on screen for all UI components, but I won't explain them in-depth going forward. If you're coding along, you can also grab the styles from the GitHub repository linked in the description.
 
-Create a `noop` function to use as a default for function props.
+Create a `noop` function to use as a default for function props. This makes it safe to use your display component anywhere and if a developer forgets to pass in a function prop, the app won't crash when the user presses a button.
 
 Then, define your component. It takes in the props we discussed earlier and renders a `SafeAreaProvider` with a `View`. Inside that `View` is the `SafeAreaView`, which guards against the notches on iOS devices.
 
@@ -1361,6 +1404,9 @@ function OnboardingScreenContainer({ hasNotificationPermissions }) {
   return (
     <OnboardingScreenComponent
       hasAllowedPermissions={
+        // This order is important because hasAllowedPermissions only updates
+        // when the user is on this screen whereas hasNotificationPermissions
+        // updates when the app switches between foreground and background.
         hasAllowedPermissions || hasNotificationPermissions
       }
       onGetStartedPress={handleGetStartedPress}
@@ -1374,7 +1420,7 @@ function OnboardingScreenContainer({ hasNotificationPermissions }) {
 export default withNotificationPermissions(OnboardingScreenContainer);
 ```
 
-First, import necessary modules and components. You'll need `AsyncStorage` for storing some flags, `Notifications` for handling notifications, `router` from `expo-router` for navigation, and `useState` for React state management.
+First, import necessary modules and components. You'll need `AsyncStorage` for storing some flags across app restarts, `Notifications` for handling notifications, `router` from `expo-router` for navigation, and `useState` for React state management.
 
 Define the `OnboardingScreenContainer` function that takes `hasNotificationPermissions` as a prop. This prop will come from the `withNotificationPermissions` HOC, which will wrap this container.
 
@@ -1383,7 +1429,7 @@ Inside, initialize two states with `useState`: `hasAllowedPermissions` and `wasA
 Inside the `useEffectOnce` hook, define an asynchronous function `init`. This function performs several operations:
 
 1. It checks the current permission status with `getHasLocalNotificationsPermissions`.
-2. It retrieves values from `AsyncStorage` to check if the user was previously asked for permissions or if they have started the app after granting permissions.
+2. It retrieves values from `AsyncStorage` to check if the user was previously asked for permissions. This state is persisted even if the user closed the app and re-opens it again.
 3. If the user granted permissions and already got started, navigate the user directly to the home screen using `router.replace`.
 
 Because the onboarding screen will always render first when the app is loaded, the `init` function ensures that users who have already granted permissions and completed onboarding are taken directly to the home screen.
@@ -1434,7 +1480,9 @@ export const rootState = rootReducer(undefined, { type: '' });
 
 Import `combineReducers` from Redux Toolkit and create a root reducer that does nothing for now. This temporary reducer prevents your app from crashing until you add actual reducers. Also, export `rootState`, which you'll use in your unit tests later.
 
-Next, create an empty root saga in `src/redux/root-saga.js`.
+Here, you create the root state by calling the root reducer with `undefined` and an empty action as arguments. This guards your app against refactors with Redux Toolkit. While the reducers that you're going to write in this tutorial can be called without arguments and still return their initial state, the reducers created by `createSlice` lack this behavior.
+
+Next, create an empty root saga in `src/redux/root-saga.js`. You will use sagas in the last third of this tutorial to schedule your reminders. While we're setting up the store, it's convenient to also configure the saga middleware already.
 
 ```js title="src/redux/root-saga.js
 import { all } from 'redux-saga/effects';
@@ -1491,7 +1539,7 @@ Create your store using the persisted reducer and middleware. If your only conta
 
 Run your root saga with `sagaMiddleware.run(rootSaga)`, and lastly, export the store and persistor.
 
-If at any point during development your app is in a buggy state or behaves differently from this tutorial, it could be because a weird state has been persisted. You can purge the state by calling `persistor.purge()`. But remember to only do this in development.
+If at any point during development your app is in a buggy state or behaves differently from this tutorial, it could be because a weird state has been persisted. You can purge the state by calling `persistor.purge()` in your `store.js` file. But remember to only do this in development.
 
 Next, integrate your store and persistor into your root layout.
 
@@ -1531,6 +1579,11 @@ On the home screen, you want to show your user a list of reminders. The app shou
 - Subscribe to Jan Hesters on YouTube!
 
 The home screen and all upcoming screens are going to be rendered in a stack navigator. A stack navigator in Expo manages navigation between screens, where each new screen is placed on top of a stack, much like pages in a book. Users navigate forward by pushing a screen onto the stack and go back by popping it off.
+
+---
+
+**Note to Cheta or Ibrahim:** Show a recording of this stack transition of "pushing" and "popping" screens so we can overlay it here.
+---
 
 Begin by creating a new folder `src/app/(main)` to group the main screens of your app.
 
@@ -1574,7 +1627,7 @@ export function HeaderButton({ iconName, ...props }) {
 
 Import `Button` and `Icon` from `@rneui/themed`. Create a `HeaderButton` that renders a button with a transparent background and an icon. The `iconName` prop specifies which icon to display.
 
-Next, create a higher-order component (HOC) to handle header configurations.
+You can configure layouts directly in the layout file or by using higher-order components (HOCs). So, create a higher-order component (HOC) to handle header configurations for your stack navigator.
 
 ```jsx title="src/features/navigation/with-header.js"
 import { Stack } from 'expo-router';
@@ -1596,6 +1649,8 @@ export const withHeader = options => Component =>
 ```
 
 Curry your `withHeader` component to first take in `options` for the header configuration. The `Stack.Screen` component is used to configure the appearance of the screen's header. In this case, you make the header text white.
+
+You're going to use the `withHeader` HOC as a wrapper for your home screen, so you'll need to create the related reducers first.
 
 Since you'll be saving your reminders in Redux, it's time to apply TDD to create your first reducer.
 
@@ -1677,11 +1732,13 @@ const initialState = {};
 export const reducer = (state = initialState, { type, payload } = {}) => state;
 
 export const selectRemindersSlice = () => {};
+
+export const selectRemindersArray = () => {};
 ```
 
 Export a `sliceName` constant that is the name of the slice.
 
-Define an empty initial state and a reducer that returns its state unchanged. Additionally, define a selector that should return the reminders array from the state, but it does nothing yet.
+Define an empty initial state and a reducer that returns its state unchanged. Additionally, define two selectors that should return the reminders array from the state, but they do nothing yet.
 
 Writing tests for reducers is easy because every component in Redux - actions, reducers, and selectors - is a pure function.
 
@@ -1798,7 +1855,7 @@ Add the default reminders to the initial state. You normalize this state as an o
 
 Create a selector that grabs the reminders slice from the root state.
 
-Then compose the `selectRemindersArray` selector using `values`, which retrieves each value from an object and returns them in an array.
+Then compose the `selectRemindersArray` selector using `values`, which retrieves each value from an object and returns them in an array. You want to have the reminders as an array so you can map over them in your component in a list.
 
 Run your test again. This time, it passes.
 
@@ -1817,7 +1874,7 @@ export const reminderDeleted = reminderId => ({
 // ... your selectors
 ```
 
-Add a test for the `reminderDeleted` action.
+Add a test for the `reminderDeleted` action creator.
 
 ```js title="src/features/reminders/reminders-reducer.test.js" {8-32}
 import { rootReducer } from '../../redux/root-reducer';
@@ -1827,7 +1884,7 @@ describe('reminders reducer', () => {
   describe('selectRemindersArray() selector', () => {
     // ... existing test
 
-    test('given a reminder deleted action: deletes the item and returns the correct array', () => {
+    test('given a reminder deleted action and the id of the reminder to delete: deletes the reminder and returns the correct array', () => {
       const reminderId = 'hardcoded-third-reminder';
       const state = rootReducer(undefined, reminderDeleted(reminderId));
 
@@ -1858,21 +1915,21 @@ describe('reminders reducer', () => {
 
 Write a test that calculates the state after the `reminderDeleted` action has been dispatched. Then use the `selectRemindersArray` selector to check if the array without the deleted reminder is returned.
 
-Before you watch this test fail, notice how the test couples the action creator to the selector. Action creators and selectors are like pairs of getters and setters. They are the only interface you should use to interact with your Redux store and therefore it is best praticte test them together like this.
+Before you watch this test fail, notice how the test couples the action creator to the selector. Action creators and selectors are like pairs of getters and setters. They are the only interface you should use to interact with your Redux store and therefore it is best practice to test them together like this.
 
 Using action creators in conjunction with your selectors and your root reducer in your tests like this gives you confidence that:
 
-1. You hooked up your reducer to your rootReducer, and you did it correctly.
-2. Your action creators modify your state in the correct way.
-3. Your action creators interact correctly with each other (- if you use several to set up the test).
+1. You hooked up your slice's reducer to your `rootReducer`, and you did it correctly.
+2. Your action creators modify your state in the way that you intended (= the right slices, the right data shape, etc.).
+3. Your action creators interact correctly with each other (- if you use several to set up the test, which you will see later in this tutorial when you toggle on which days your user wants to receive reminders).
 4. Your selectors return the correct value.
 
 You should test selectors with at least two cases: 
 
 1. One with default state, and
-2. one with the state you desire.
+2. one with modified state.
 
-For the default state, you can call the `rootReducer` without arguments to get the global initial state. You did this in your first test. And again, if you can't call your `rootReducer` without arguments to produce the default state (for example because you're using Redux Toolkit's `createSlice`), you can create and export the `rootState` from your root reducer file.
+For the default state, you can call the `rootReducer` without arguments to get the global initial state. You did this in your first test, which returned the default reminders array. And again, if you can't call your `rootReducer` without arguments to produce the default state. For example because you're using Redux Toolkit's `createSlice`. In this case you can create and export the `rootState` from your root reducer file.
 
 ```js title="src/redux/root-reducer.js" {3}
 // ...
@@ -1880,11 +1937,17 @@ For the default state, you can call the `rootReducer` without arguments to get t
 export const rootState = rootReducer(undefined, { type: '' });
 ```
 
-To test the selector's behavior with state, you can simply pass the action as the second argument to your root reducer, as you did in the test for the `reminderDeleted` action.
+To test the selector's behavior with populated state, you can simply pass the action as the second argument to your root reducer, as you did in the test for the `reminderDeleted` action.
 
-If your selector depends on several pieces of state controlled by multiple actions, you can create an actions array and reduce over it to build up the state. You will see examples of this in a later tutorial.
+If your selector depends on several pieces of state managed by multiple actions, you can create an actions array and reduce over it to build up the state. You will see examples of this in a later tutorial.
 
 Now watch your test fail, and then implement the case to handle the `reminderDeleted` action in your reducer.
+
+---
+
+**Note to Cheta or Ibrahim:** In cases like this, modify the relevant code in the reducer file, so do NOT show the comments (`// ... your initial state` etc.) like I'm doing for the script / article version.
+
+---
 
 ```js title="src/features/reminders/reminders-reducer.js" {3-14}
 // ... your initial state
@@ -1938,7 +2001,7 @@ export const createPopulatedReminder = ({
 
 Whenever you create reminders, whether in your tests or your actual code, you should use the `createReminder` factory function. It provides default parameters, so you only need to provide the values that are unique to the reminder you're creating. In general, factories make it easy to amend your entities. If you create all entities in your app with factories, they will automatically receive the new properties. As a neat little bonus, you even get type inference from them, even in JavaScript.
 
-The `createPopulatedReminder` factory function uses `faker` to generate mock data. The [`faker` package](https://fakerjs.dev/api/) is a JavaScript library that creates large amounts of fake but realistic data for testing and development. It can generate names, addresses, phone numbers, emails, lorem ipsum text, and more. You'll use this factory to create realistic reminder fixtures for your tests.
+The `createPopulatedReminder` factory function uses `faker` to generate mock data. The [`faker` package](https://fakerjs.dev/api/) is a JavaScript library that creates large amounts of fake but realistic data for testing and development. It can generate names, addresses, phone numbers, emails, lorem ipsum text, and more. You'll use this factory to create realistic reminder fixtures for your tests. If you've never heard the word "fixture", it means the predefined data used in testing scenarios.
 
 Now write your tests for the `ReminderItemComponent`.
 
@@ -1994,7 +2057,7 @@ Define the `createProps` function and use your factory to populate the defaults.
 
 In your first test, check if the reminder message is displayed correctly using `screen.getByText` to locate the text element containing the message.
 
-In your second test, ensure that when the reminder item is pressed, the appropriate handler is triggered. Use `screen.getByRole` to get the button associated with the reminder message and `fireEvent.press` to trigger the press event. Then check that the `onPress` handler was called with the correct arguments.
+In your second test, ensure that when the reminder item is pressed, the appropriate handler is triggered. Use `screen.getByRole` to get the button associated with the reminder message and `fireEvent.press` to trigger the press event. Then check that the `onPress` handler was called with the id of the reminder.
 
 Finally, test the delete functionality by checking that pressing the delete button calls the onDeletePressed handler with the correct identifier.
 
@@ -2064,6 +2127,8 @@ Import `Button` and `Text` from `@rneui/themed`, and `StyleSheet`, `TouchableOpa
 Define the `styles` object using `StyleSheet.create`.
 
 In React Native, `TouchableOpacity` is a component that makes any view responsive to touch, similar to how a `<button />` tag works in web development with React. When `TouchableOpacity` is pressed, it decreases the opacity of the wrapped view, providing visual feedback to the user. Hook up your `TouchableOpacity` to the `onPress` handler and pass in the `id` as an argument.
+
+// TODO: record a gif of a simple press to show what the touchable opacity does.
 
 Inside the `TouchableOpacity`, render a `View` with a `Text` component that displays the reminder message. `View` functions like `<div />` in web development. Then, render a `Button` that displays the delete icon and is connected to the `onDeletePressed` handler.
 

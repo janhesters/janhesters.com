@@ -170,7 +170,7 @@ const trace = message => value => {
   return value;
 };
 
-Promise.resolve(1)
+new Promise(resolve => resolve(1))
   .then(trace('first'))
   .then(trace('second'));
 ```
@@ -199,7 +199,7 @@ const throwError = error => {
   throw new Error(error);
 };
 
-Promise.resolve(2)
+new Promise(resolve => resolve(2))
   .then(throwError)
   .then(trace('never gets logged out'))
   .catch(trace('caught'));
@@ -226,7 +226,7 @@ const trace = message => value => {
   return value;
 };
 
-Promise.reject(3)
+new Promise((_, reject) => reject(3))
   .then(trace('never gets logged out'))
   .catch(x => trace('caught')(x + 1))
   .catch(trace('previous catch handles this - nothing gets logged out'))
@@ -261,7 +261,7 @@ const throwError = error => {
   throw new Error(error);
 };
 
-Promise.resolve(4)
+new Promise(resolve => resolve(4))
   .then(trace('first'))
   .catch(trace('nothing to catch - never gets logged out'))
   .then(trace('second'))
@@ -431,7 +431,8 @@ Since the promise rejects now, you need to use `catch` (or the second parameter 
 Waits for all Promises in an iterable to be resolved and returns a new Promise that resolves to an array of their results.
 
 ```js
-const wait = (ms, value) => new Promise(resolve => setTimeout(() => resolve(value), ms));
+const wait = (ms, value) =>
+  new Promise(resolve => setTimeout(() => resolve(value), ms));
 
 const promises = [wait(2000, 'Hello'), wait(1000, 'World')];
 
@@ -696,29 +697,19 @@ Some people try to abuse the `Promise.race` method as a cancellation mechanism. 
 
 ```js
 function fetchData() {
-  let timeout = setTimeout(() => {
-    console.log("Operation timed out");
-  }, 5000);
+  const fetchPromise = fetch('https://api.example.com/data').then(response =>
+    response.json(),
+  );
 
-  const fetchPromise = fetch('https://api.example.com/data')
-    .then(response => response.json())
-    .then(data => {
-      clearTimeout(timeout);
-      return data;
-    })
-    .catch(err => {
-      clearTimeout(timeout);
-      throw err;
-    });
-
-  const timeoutPromise = new Promise((_, reject) => 
-    setTimeout(() => reject(new Error('Timeout after 5 seconds')), 5000)
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('Timeout after 5 seconds')), 5000),
   );
 
   return Promise.race([fetchPromise, timeoutPromise]);
 }
 
-fetchData().then(data => console.log(data))
+fetchData()
+  .then(data => console.log(data))
   .catch(error => console.error(error));
 ```
 
@@ -823,7 +814,10 @@ const promisify =
   (...args) =>
     new Promise((resolve, reject) => {
       fn(...args, (error, result) => {
-        if (error) return reject(error);
+        if (error) {
+          return reject(error);
+        }
+
         resolve(result);
       });
     });

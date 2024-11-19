@@ -53,9 +53,14 @@ You'll organize your code by feature and split the app into five features. Remem
 5. **Posts:** This feature allows you to create and list posts.
 
 Quick note on grouping by feature: Although the dashboard will display user profiles, you're separating the dashboard UI from the user profiles logic. That's because in a real-world app, the dashboard might display more than just user profiles - like usage stats, stock performances, or notifications. Plus, user profiles might appear in places beyond the dashboard, like in the settings where admins manage permissions.
+
+TODO: here zwei flows wie Redux mit dem Server redet (entweder React first dann dispatch, oder middleware only)
+
 ### Project Setup
 
 Now, let's get started.
+
+TODO: trust me bro
 
 If you want to code along, which I highly recommend if you want to retain the most knowledge, create a new Next.js project.
 
@@ -125,7 +130,7 @@ npx shadcn@latest add input
 npx shadcn@latest add label
 ```
 
-And create a component for a spinner in `src/components/spinner.tsx`.
+Now, create a custom component for a spinner in `src/components/spinner.tsx`.
 
 ```tsx title="src/components/spinner.tsx"
 import { SVGProps } from 'react';
@@ -149,6 +154,10 @@ export const Spinner = (props: SVGProps<SVGSVGElement>) => (
 );
 ```
 
+### Reminder: Redux Data Flow vs. Redux Code Flow
+
+Explain how data flows in a Redux app. And explain where which component of Redux lives. Explain decision process why what was written when.
+
 ### Redux Toolkit
 
 Earlier, you installed Redux Toolkit (RTK). If you're new to Redux and following this series, this is your first look at Redux Toolkit.
@@ -161,9 +170,9 @@ Redux Toolkit is written in TypeScript and makes it easy to set up and type Redu
 
 Using Redux Toolkit, there are two ways to create action creators: explicitly and implicitly.
 
-You will see how to do it implicitly later in this tutorial when you use the `createSlice` function.
+You will see how to do it implicitly later in this tutorial when you use the `createSlice` function. `createSlice` usually couples action to a specific slice.
 
-To create an action creator explicitly, you use the `createAction` function.
+To create an action creator explicitly, you use the `createAction` function. This allows you to define actions that are not related to a specific slice, but instead are shared across multiple slices.
 
 Create a file in `src/redux/clear.ts` and define a `clear` action creator using `createAction`. 
 
@@ -173,7 +182,7 @@ import { createAction } from '@reduxjs/toolkit';
 export const clear = createAction('all/clear');
 ```
 
-You pass in the type of the action as the argument. You will use the `clear` action creator in your reducers to reset them to the initial state, after your user logs out.
+You pass in the type of the action as the argument. You will use the `clear` action creator in your reducers to reset them to the initial state, after your user logs out. This is an example for a "global" action that will be used in multiple reducers.
 
 Calling `clear` returns an object with the given type property.
 
@@ -186,9 +195,9 @@ Why would you use `createAction` over manually defining the action creator? Beca
 ```ts title="temp-create-action-example.ts"
 import { createAction } from '@reduxjs/toolkit';
 
-// Hardcode the type of the payload.
+// Hardcode the type of the payload (dynamic).
 const setAge = createAction<number>('setAge');
-// Use a literal type for the action's type.
+// Use a literal type for the action's type (manual).
 const setName = createAction<string, 'setName'>('setName');
 
 // Calling the actions with specific values
@@ -196,9 +205,11 @@ const ageAction = setAge(30);
 const nameAction = setName("John");
 
 // Logging the actions
-console.log(ageAction);
+console.log(ageAction); 
 console.log(nameAction);
 ```
+
+In the first action, you dynamically infer the type of the action type. In the second action, you manually define the type of the action type as the constant `'setName'`.
 
 When you run this code, it logs out actions of the shape that you're used to.
 
@@ -207,7 +218,24 @@ When you run this code, it logs out actions of the shape that you're used to.
 { type: "setName", payload: "John" }
 ```
 
-Next, create your root reducer in `src/redux/root-reducer.ts` next.
+It's important to understand that `createAction` also sets a property `type` of the function object on the action creator.
+
+```ts title="temp-create-action-example.ts"
+const login = ({ token }) => ({ type: login.type, payload: { token } });
+console.log(login.type); // undefined
+login.type = 'login';
+console.log(login.type); // `${name}/login`
+```
+
+Functions in JavaScript are objects, so you can add properties to them just like any other object. `createAction` sets a `type` property on the action creator. This allows you to access `login.type` directly.
+
+So this is the same as:
+
+```ts title="temp-create-action-example.ts"
+const login = createAction<{ token: string }>('login');
+```
+
+Next, create your root reducer in `src/redux/root-reducer.ts`.
 
 ```ts title="src/redux/root-reducer.ts"
 import { combineReducers } from '@reduxjs/toolkit';
@@ -245,6 +273,18 @@ export type AppDispatch = AppStore['dispatch'];
 
 Import `configureStore` and use it inside your `makeStore` function. Then export types for your `AppStore`, your `RootState` and your `AppDispatch`. If you watched the first video of this series, you should understand what's going on here. The only new thing is the TypeScript types.
 
+```ts
+type MakeStore = typeof makeStore;
+// () => { getStore: () => RootState, dispatch: () => {} /* ... */}
+type AppStore = ReturnType<MakeStore>;
+// { getStore: () => {}, dispatch: () => {} /* ... */ }
+type GetState = AppStore['getState'];
+// () => RootState
+type RootState = ReturnType<GetState>;
+```
+
+TODO: explain how `configureStore` does the heavy lifting for the types.
+
 Create your Redux hooks in `src/redux/hooks.ts`.
 
 ```ts title="src/redux/hooks.ts"
@@ -259,6 +299,12 @@ export const useAppStore = useStore.withTypes<AppStore>();
 ```
 
 Make your custom hooks TypeScript compatible by importing the types you just defined from your store and passing them to the respective hooks.
+
+```tsx
+const count = useAppSelector(state => state.count);
+```
+
+TODO: explain why each hook is passed the types.
 
 Next, you'll also need a store provider, so create `src/redux/store-provider.ts`.
 
@@ -324,14 +370,20 @@ This makes the Redux context available in every client-side component throughout
 
 Your app is now ready for you to write your first reducer.
 
+TODO: show graphic from first script and "check off" store.
+
 ### `createSlice`
 
 Redux Toolkit provides a function called `createSlice` that lets you define reducers and actions together. Before you dive into using it, here's the reducer you're going to create, written manually.
 
-```js title="temp-manual-app-loading-reducer.js"
+```js title="temporary-manual-app-loading-reducer.js"
 import { not, prop } from 'ramda';
 
+// action creator
+
 export const finishedAppLoading = () => ({ type: 'FINISHED_APP_LOADING' });
+
+// reducer
 
 export const slice = 'appLoading';
 const initialState = { appIsLoading: true };
@@ -347,6 +399,8 @@ export const reducer = (state = initialState, { type } = {}) => {
   }
 };
 
+// selectors
+
 const selectAppLoadingSlice = prop(slice);
 
 export const selectAppIsLoading = pipe(
@@ -355,13 +409,16 @@ export const selectAppIsLoading = pipe(
 );
 
 export const selectAppFinishedLoading = pipe(selectAppIsLoading, not);
+// not(true); // false ℹ️
 ```
 
 This Redux slice manages the loading state of your application.
 
-The slice includes an action creator, `finishedAppLoading`, which dispatches an action to change the `appIsLoading` state to `false` when called, signifying that the app has finished loading.
+The slice includes an action creator, `finishedAppLoading`, which dispatches an action to change the `appIsLoading` state to `false` when called. This signifies that the app has finished loading.
 
-The selectors `selectAppIsLoading` and `selectAppFinishedLoading` are defined using Ramda to efficiently retrieve the current loading state and its negation, respectively. This allows the rest of the application to react to changes in the loading state based on these derived values.
+The selector `selectAppIsLoading` is defined using Ramda to efficiently retrieve the current loading state. `selectAppFinishedLoading` does the same but as a negation, using the Ramda `not` function. This allows the rest of the application to react to changes in the loading state based on these derived values and enables descriptive representations of both loading states.
+
+If this is too much for you, you might want to rewatch the first video of this series as a refresher.
 
 Now, use `createSlice` to create our app loading reducer in TypeScript.
 
@@ -412,11 +469,11 @@ The `name` property holds the name of the slice.
 
 The `initialState` sets the starting state.
 
-The `reducers` key is an object where each key is a function. These functions determine how the state changes when specific actions are dispatched to the store. Each key becomes an action creator that you can destructure from the `actions` property on the slice object returned by `createSlice`. In this case, when the action created by the `finishedAppLoading` action creator is dispatched, it sets `appIsLoading` to `false`.
+The `reducers` key is an object where each key is a function. These functions determine how the state changes when specific actions are dispatched to the store. Behind the scenes, they generate the switch statement with the action handlers. Each key becomes an action creator that you can destructure from the `actions` property on the slice object returned by `createSlice`. This is what was meant earlier when you learned that `createSlice` implicitly creates action creators. In this case, when the action created by the `finishedAppLoading` action creator is dispatched, it sets `appIsLoading` to `false`.
 
-You might be wondering right now, "Wait, am I mutating the state directly? I thought reducers were supposed to change state immutably?" With `createSlice`, you can directly manipulate the slice's state because it uses a library called [Immer](https://github.com/immerjs/immer) under the hood. Immer tracks every attempt to change the state. It then safely replays those mutations using their immutable equivalents to create an updated result.
+You might be wondering right now, "Wait, am I mutating the state by changing the `appIsLoading` property on the `state` object directly? I thought reducers were supposed to change state immutably?" With `createSlice`, you can directly manipulate the slice's state because it uses a library called [Immer](https://github.com/immerjs/immer) under the hood. Immer tracks every attempt to change the state. It then safely replays those mutations using their immutable equivalents to create an updated result.
 
-The last key, `selectors`, is an object where each key is a selector that takes in this specific slice's state instead of the root state. This simplifies defining selectors. You can then destructure these selectors from the slice object. If you want to define selectors using composition that build upon other selectors, like `selectAppFinishedLoading`, you'll still have to define them outside of `createSlice`.
+The last key, `selectors`, is an object where each key is a selector that takes in this specific slice's state instead of the root state. This simplifies defining selectors. You can then destructure these selectors from the slice object. If you want to compose selectors, like `selectAppFinishedLoading`, you have to do that outside of `createSlice`.
 
 There can be two more keys on that object, `reducerPath` and `extraReducers`, which you're going to see later in this tutorial.
 
@@ -480,7 +537,7 @@ export const {
   },
   extraReducers: builder => {
     builder.addCase(clear, () => initialState);
-  },
+  }, // clear().type; // 'all/clear'
   selectors: {
     selectIsAuthenticating: prop<'isAuthenticating'>('isAuthenticating'),
     selectAuthenticationToken: prop<'token'>('token'),
@@ -496,9 +553,9 @@ Create the `login` action using the `PayLoadAction` type. This tells TypeScript 
 
 The second action, `loginSucceeded`, has a payload with a token, which you store in your state. It's common practice in Redux to save the auth token in reducers. This is safe because if an attacker gains access to your user's browser and can run JavaScript on your page, you're already in serious trouble.
 
-The third action, `stopAuthenticating`, simply sets the `isAuthenticating` boolean to `false`.
+The third action, `stopAuthenticating`, simply sets the `isAuthenticating` boolean to `false`. This will be dispatched by a saga once it finishes authenticating. You will see this later.
 
-When a user logs out, you want to reset all relevant reducers to their initial state. That's where the `clear` action you defined earlier comes in. You can use `extraReducers` to allow the slice to handle actions from outside its scope. `extraReducers` is a function that takes a `builder` as the first parameter. It works like a switch statement but with better TypeScript support, as it can infer the action type from the provided action creator.
+When a user logs out, you want to reset all relevant reducers to their initial state. That's where the `clear` action you defined earlier comes in. You can use `extraReducers` to allow the slice to handle actions defined outside its scope. `reducers` does _**not**_ allow you do this. `extraReducers` is a function that takes a `builder` as the first parameter. It works like a switch statement but with better TypeScript support, as it can infer the action type from the provided action creator.
 
 ```ts title="temp-extra-reducers-example.ts"
 import type { PayloadAction } from '@reduxjs/toolkit';
@@ -528,6 +585,11 @@ const dataSlice = createSlice({
       })
       // `addMatcher` allows for custom logic to determine if the
       // reducer should handle the action.
+      // The first parameter is a function that takes an action and returns a
+      // boolean, which determines if the action should be handled by the
+      // reducer.
+      // The second parameter is a callback function that receives the current
+      // state and the payload, describing how the state should be handled.
       // This example checks if the action type is 'setError' and 
       // then processes the action.
       .addMatcher(
@@ -595,7 +657,7 @@ export type UserProfile = {
 
 ```
 
-You're going to use `createEntityAdapter` to manage the user profiles. It provides a standardized way to store normalized entity data in a slice of the Redux state. It offers built-in methods for efficiently performing CRUD operations on normalized data.
+You're going to use Redux Toolkit's `createEntityAdapter` to manage the user profiles. It provides a standardized way to store normalized entity data in a slice of the Redux state. It offers built-in methods for efficiently performing CRUD operations on normalized data.
 
 ---
 
@@ -707,7 +769,7 @@ The `sortComparer` option in `createEntityAdapter` specifies a comparison functi
 
 Now, use `createSlice` to create your reducer. It should handle two actions. 
 
-The first action handles the case when the current user's profile has been fetched successfully. When that happens, you need to set that ID as the `currentUsersId`. You also need to add that profile to all profiles if it doesn't exist yet.
+The first action handles the case when the current user's profile has been fetched successfully. When that happens, you need to set that ID as the `currentUsersId`. You also need to add that profile to the `entities` object containing all profiles if it doesn't exist yet.
 
 The adapter created by `createEntityAdapter` exposes a collection of 12 [CRUD functions](https://redux-toolkit.js.org/api/createEntityAdapter#crud-functions) that execute the most common CRUD operations on the `ids` array and the `entities` object.
 
@@ -719,9 +781,15 @@ Hook up the external `clear` action so the user profile slice will reset to its 
 
 Next, you add two selectors to grab the current user's id and the loading state.
 
-When you destructure the slice object, you'll destructure a new property `selectSlice`. This property is the selector that returns the slice from the root state.
+When you destructure the slice object, you'll destructure a new property `selectSlice`. This property is the selector that returns the slice from the root state. It is the selector that you needed to define manually in the first video of this series.
 
-`userProfileSelectors` is created using `getSelectors` from `userProfilesAdapter`, specifying `selectUserProfileSlice` to direct the selectors to the correct slice of the state. Its a collection of five [common selectors](https://redux-toolkit.js.org/api/createEntityAdapter#selector-functions). Here are pseudo-implementations for them:
+```js
+const selectUserProfileSlice = state => state[slice];
+```
+
+Therefore, both `selectCurrentUsersId` and `selectUserProfilesAreLoading` are composed from `selectUserProfileSlice` implicitly through the `selectors` property in `createSlice`. The other selectors that you'll define now will be composed using it explicitly.
+
+`userProfileSelectors` is created using `getSelectors` from `userProfilesAdapter`, receiving `selectUserProfileSlice` as an argument to point the selectors to the correct slice of the state. Its a collection of five [common selectors](https://redux-toolkit.js.org/api/createEntityAdapter#selector-functions). Here are pseudo-implementations for them:
 
 ```js title="temp-get-selectors-example.js"
 // Returns the array of IDs from the state, which represent the
@@ -733,7 +801,7 @@ const selectIds = state => state.userProfiles.ids;
 const selectEntities = state => state.userProfiles.entities;
 
 // Maps over the state.ids array to return an array of entities
-// in the same order as the IDs.
+// in the same order as the ids-array.
 const selectAll = state =>
   state.userProfiles.ids.map(id => state.userProfiles.entities[id]);
 
@@ -750,9 +818,11 @@ You use `selectById` to create `selectCurrentUsersProfile`, which returns the cu
 
 Using `selectCurrentUsersProfile`, you compose another selector that returns the current user's name.
 
+All selectors created by `getSelectors` are memoized. You can also memoize specific selectors using a new helper function `createSelector`.
+
 ### `createSelector`
 
-Redux Toolkit provides a helper function for selectors called `createSelector`. This function is re-exported from [Reselect](https://reselect.js.org/api/createselector/), which is a library for creating memoized selector functions.
+Redux Toolkit provides a helper function for selectors called `createSelector`. This function is re-exported from [Reselect](https://reselect.js.org/api/createselector/), which is a library for creating memoized selector functions. It is useful for any case that is not handled by the 5 selectors provided by `getSelectors`.
 
 `createSelector` accepts one or more "input selectors" and a callback function that combines their results and returns a memoized selector. If you have more than one input selector, you can pass them as an array.
 
@@ -780,7 +850,7 @@ const selectCurrentUsersProfile = (state: RootState) =>
   userProfileSelectors.selectById(state, selectCurrentUsersId(state));
 ```
 
-You don't need to use `createSelector` here because every selector from the `.getSelectors` method already memoizes the result.
+You don't need to use `createSelector` here because every selector from the `.getSelectors` method already memoizes the result. In other words, the version using `createSelector` and the version using `selectById` are equivalent.
 
 Next, you can use function composition together with `createSelector` to create a memoized selector that returns `true` if the user is authenticated.
 
@@ -793,7 +863,7 @@ export const selectIsAuthenticated = createSelector(
 
 This value is derived based on whether there is a current user profile in the state.
 
-Actually, even for this selector, the use of `createSelector` is contrived and unnecessary. All these selectors change infrequently and therefore are no performance bottlenecks. But I still wanted to teach you this important API. You should only use `createSelector` when you're experiencing performance problems due to too many re-renders, or if the derivation of the value in your selector is computationally expensive.
+Actually, even for this selector, the use of `createSelector` in the app of this tutorial is contrived and unnecessary. All these selectors change infrequently and therefore are no performance bottlenecks. But I still wanted to teach you this important API. You should only use `createSelector` in your app in the future when you're experiencing performance problems due to too many re-renders, or if the derivation of the value in your selector is computationally expensive.
 
 You might want to watch "What Is Memoization (In JavaScript & TypeScript)" to get a better understanding when its worth to use memoization. The link is in the description.
 
@@ -909,20 +979,32 @@ Import the facades and various effects from Redux Saga.
 
 The first saga you're creating handles fetching the current user's profile.
 
-It first gets the authentication token from the store, then fetches the user. If the fetch is successful (meaning the user is authenticated), it dispatches the user to the store..
+It first gets the authentication token from the store, then fetches the user. If the fetch is successful (meaning the user is authenticated), it dispatches the user to the store.
 
-If you've watched the second video of this series, you should be familiar with `select`, `call` and `put`.
+If you've watched the second video of this series, you should be familiar with `select`, `call` and `put`. `select` returns values from the store, `call` invokes a function or another saga, and `put` dispatches an action to the store.
 
 What's new here is using `ReturnType` and `Awaited` to infer the types of `token` and `user`. TypeScript has a hard time inferring types automatically in generators, which is why you need to explicitly type your variables like this.
+
+If you've never seen `ReturnType`, here is how it works under the hood:
+
+```ts
+// typeof selectAuthenticationToken
+type SelectAuthenticationToken = (state: RootState) => string;
+// const selectAuthenticationToken = (state: RootState): string => '';
+type Token: ReturnType<SelectAuthenticationToken>; // string
+const token: string = '...'; // token: Token
+```
+
+It's a generic type that takes a function and returns the type of the value that function returns.
 
 The next saga handles the fetching of all user profiles. It also selects the token from the store, fetches a list of users, and finally dispatches that list.
 
 You'll use `handleFetchCurrentUserProfile` in other sagas. To trigger `handleFetchUserProfiles`, you need to create an action using `createAction`.
 
-Then you can create a watcher saga for it. This "watcher-handler pattern" is common in Redux Saga. The watcher saga usually uses `takeEvery`, `takeLeading`, or `takeLatest`, which are effects you're seeing for the first time in this series.
+Then you can create a watcher saga for it. This "watcher-handler pattern" is common in Redux Saga. The watcher saga usually uses `takeEvery`, `takeLeading`, or `takeLatest`, which are effects you're seeing for the first time in this series. Every one of these effects takes in an action and then a saga.
 
 - **`takeEvery`** listens for every dispatched action of a specific type and runs a saga each time. It handles concurrent tasks.
-- **`takeLeading`** listens for actions of a specific type and runs a saga for the first action. It ignores any further actions until the saga completes.
+- **`takeLeading`** listens for actions of a specific type and runs a saga for the first action. It ignores any further actions until the triggered saga completes.
 - **`takeLatest`** also listens for actions of a specific type but cancels any previously running saga and starts a new one with the latest action.
 
 Using `takeLeading`, you can create a saga that fetches the user profiles every time `fetchUserProfiles` is dispatched, blocking additional actions from triggering that fetch again. You want to block the saga here in case the action gets dispatched multiple times in rapid succession, so you only fetch once.
@@ -933,7 +1015,7 @@ Now it's time to handle the authentication sagas. Again, you first need to set u
 export const loginRequest = (email: string, password: string) => {
   return new Promise<string>((resolve, reject) => {
     setTimeout(() => {
-      resolve('token');
+      resolve('example-dummy-token');
     }, 2000);
   });
 };
@@ -947,9 +1029,9 @@ export const logoutRequest = () => {
 };
 ```
 
-For the same reasons as above - because writing a complete server with auth logic is beyond the scope of this video - you're going to "fake" both of these requests.
+For the same reasons as above - because writing a complete server with auth logic is beyond the scope of this video - you're going to "fake" both of these requests. In a real-world app, your server would generate the JWT token when the user logs in, and destroy it when the user logs out.
 
-`loginRequest` simulates an API request that returns a JWT token. And `logoutRequest` simulates clearing out the login state on the server, like destroying a session.
+`loginRequest` simulates an API request that returns a JWT token. And `logoutRequest` simulates clearing out the login state on the server, like invalidate a session. So `logoutRequest` is literally just a placeholder.
 
 Now, implement the sagas to handle these requests.
 
@@ -1000,15 +1082,15 @@ export function* watchLogout() {
 }
 ```
 
-For both login and logout, you're going to use the watcher-handler pattern.
+For both login and logout, you're going to use the watcher-handler pattern. Watchers are like conductors in an orchestra and the handlers are the musicians. The watcher listens for actions and triggers the handler, which handles the logic that should run when the action is dispatched.
 
-Create a saga that handles the login logic. The saga receives the `login()` action with its payload, so you can destructure the user's email and password from it. It gets a token by executing the login request. Then it dispatches the token to the store, and finally it fetches the current user's profile. Here, you pass the `handleFetchCurrentUsersProfile` saga as an argument to `call`, which works because `call` allows you to invoke a function or anathor saga and wait for its result. This is useful for managing sequential asynchronous operations within sagas. Finally, it stops authenticating by setting `isAuthenticating` to `false` in the user authentication slice.
+Create a saga that handles the login logic. The saga receives the `login()` action with its payload, so you can destructure the user's email and password from it. It gets a token by executing the login request. Then it dispatches the token to the store, and finally it fetches the current user's profile. Here, you pass the `handleFetchCurrentUsersProfile` saga as an argument to `call`, which works because `call` allows you to invoke a function or another saga and wait for its result. This is useful for managing sequential asynchronous operations within sagas. Finally, it stops authenticating by setting `isAuthenticating` to `false` in the user authentication slice.
 
-Next, set up the watcher for the login action. Remember that any take effect passes the action that triggered it to the saga, which is how `handleLogin` gets access to the action in its parameters.
+Next, set up the watcher for the login action. Remember that any take effect passes the action that triggered it to the saga in its second argument, which is how `handleLogin` gets access to the action in its parameters.
 
 Create a logout action and a saga that handles the logout. It dispatches the `clear` action, resetting the user authentication and user profile reducers to their initial state, and then calls the logout request.
 
-Finally, create a watcher that connects the logout action to the `handleLogout` saga.
+Finally, create a watcher that connects the logout action to the `handleLogout` saga. Remember, the job of any watcher saga is to trigger the handler saga and block any other action from triggering it again while it runs.
 
 #### `all` Effect
 
@@ -1020,6 +1102,8 @@ import { call, put, takeLeading } from 'redux-saga/effects';
 
 import { handleFetchCurrentUsersProfile } from '@/features/user-profiles/user-profiles-saga';
 
+// Since we only import from one reducer, there is no need to use `as` to
+// avoid naming conflicts.
 import { finishedAppLoading, name } from './app-loading-reducer';
 
 export const loadApp = createAction(`${name}/loadApp`);
@@ -1034,14 +1118,16 @@ export function* watchLoadApp() {
 }
 ```
 
-There is nothing new here. You define a `loadApp` action and a saga that fetches the current user's profile, then sets the `appIsLoading` boolean to `false` using the `finishedAppLoading` action. If your app needs to load more than just one resource, you can use the `all` effect in this saga to fetch multiple resources in parallel.
+There is nothing new here. You define a `loadApp` action and a saga that fetches the current user's profile, then sets the `appIsLoading` boolean to `false` using the `finishedAppLoading` action.
+
+If your app needs to load more than just one resource, you can use the `all` effect in this saga to fetch multiple resources in parallel.
 
 ```ts title="temp-all-effect-example.ts"
 function* handleLoadApp() {
   yield all([
     call(handleFetchCurrentUsersProfile),
-    call(handleFetchAccountBalance),
-    call(handleFetchUsageLimits),
+    call(handleFetchAccountBalance), // imaginary example
+    call(handleFetchUsageLimits), // imaginary example
   ]);
   yield put(finishedAppLoading());
 }
@@ -1157,7 +1243,7 @@ type AppLoadingPropsFromRedux = ConnectedProps<typeof connector>;
 
 function AppLoadingContainer({ loadApp }: AppLoadingPropsFromRedux) {
   useEffect(() => {
-    loadApp();
+    loadApp(); // triggers the `handleLoadApp` saga via `takeLeading` watcher
   }, [loadApp]);
 
   return <AppLoadingComponent />;
@@ -1175,7 +1261,7 @@ In this case, the container component dispatches the `loadApp` action using `use
 - Without caching or data management, data isn't saved across component re-mounts, leading to repeated network requests and performance issues.
 - Managing data fetching in `useEffect` adds code complexity and increases the chance of bugs through race conditions.
 
-I'm still showing you this because many Redux apps fetch data like this.
+I'm still showing you this because many Redux apps fetch data like this. You're going to learn how to do this right in another video.
 
 Next, create the display component for the login page by copying the code from the [`authentication-01` block](https://ui.shadcn.com/blocks) from Shadcn to `app/features/user-authentication/user-authentication-page-component.tsx`, and modifying it to handle props.
 
@@ -1193,7 +1279,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-import { UserAuthenticationPropsFromRedux } from './user-authentication-container';
+import type { UserAuthenticationPropsFromRedux } from './user-authentication-container';
 
 export function UserAuthenticationComponent({
   isLoading,
@@ -1264,7 +1350,7 @@ There's nothing particularly special going on here.
 
 Since this component will receive props from Redux, you import `UserAuthenticationPropsFromRedux` from the container component, which we're about to create next. Other than that, it's just a simple card that provides a form for users to log in. This form is disabled and shows a spinner while the login request is in progress.
 
-You can write the container component without any JSX.
+You can write the container component without any JSX because you're passing all the props to the display component and you're accessing none in the container component.
 
 ```ts title="src/features/user-authentication/user-authentication-container.tsx"
 'use client';
@@ -1390,7 +1476,7 @@ export type DashboardPagePropsFromRedux = ConnectedProps<typeof connector>;
 
 function DashboardContainer({
   fetchUserProfiles,
-  ...props
+  ...props // contains the rest of the state and dispatch props
 }: DashboardPagePropsFromRedux) {
   useEffect(() => {
     fetchUserProfiles();
@@ -1414,7 +1500,7 @@ Finally, export the connected container component.
 
 ### HOCs For Authentication And Loading
 
-You now have all the puzzles pieces in place to wire them up.
+You now have all the puzzles pieces in place to put them all together.
 
 You're going to learn the old-school way of connecting everything using higher-order components. This is a very opinionated approach, so I want to highlight a comment I recently received on my "Unleash JavaScript's Potential With Functional Programming" video by the user `@kairollmann`:
 
@@ -1422,14 +1508,14 @@ You're going to learn the old-school way of connecting everything using higher-o
 
 Code readability and maintainability should always be top priorities. It's a balancing act between writing efficient code and ensuring that everyone on the team can understand and maintain it long-term.
 
-1. 1. Sometimes, you want to use the best patterns **_and_** teach those who aren't familiar with them. (Especially in a mentorship culture.)
+1. Sometimes, you want to use the best patterns **_and_** teach those who aren't familiar with them. (Especially in a mentorship culture.)
 2. In other cases, you want to reach for the best tool that everyone knows. ("When in Rome, do as the Romans do.")
 
 My mentor taught me both.
 
 I bring this up because while I believe the patterns you're about to learn are clean and good code, you need to be careful when applying them in teams. Always get team buy-in on the techniques you use and make sure everyone understands them.
 
-Once you've implemented the code and before we jump into the second part of this video - where you'll learn how to use RTK Query, which is less controversial and more mainstream - I'll give you my reasons why I think the approach with HOCs and sagas is cleaner and scales better than using RTK Query.
+Later in this video you'll learn how to use RTK Query, which is less controversial and more mainstream. But before that, you're going to see how you can wire up the HOCs and sagas. And I'll give you my reasons why I think the approach with HOCs and sagas is cleaner and scales better than using RTK Query.
 
 With that disclaimer out of the way, you're going to create and compose half a dozen HOCs now. So, if you're unfamiliar with higher-order components, watch the video "Higher-Order Components Are Misunderstood In React" before resuming this video. The link is in the description.
 
@@ -1442,7 +1528,7 @@ interface Props<A, B> {
   isPermitted: boolean;
 }
 
-export const RequiresPermission = <A, B>(props: Props<A, B> & A & B) => {
+export const RequiresPermissionComponent = <A, B>(props: Props<A, B> & A & B) => {
   const { NotPermittedComponent, PermittedComponent, isPermitted } = props;
 
   return isPermitted ? (
@@ -1455,7 +1541,7 @@ export const RequiresPermission = <A, B>(props: Props<A, B> & A & B) => {
 
 This simple component takes in an object with two React components and a boolean.
 
-It then destructures all three and, based on whether `isPermitted` is `true` or `false`, it either renders the `PermittedComponent` or the `NotPermittedComponent`.
+It then destructures all three and, based on whether `isPermitted` is `true` or `false`, it either renders the `PermittedComponent` or the `NotPermittedComponent`. This `RequiresPermissionComponent` is basically just a fancy `if` statement disguised as a React component.
 
 Using this display component, you can create the HOC.
 
@@ -1466,28 +1552,32 @@ import { connect } from 'react-redux';
 
 import { RootState } from '@/redux/store';
 
-import { RequiresPermission } from './requires-permission-component';
+import { RequiresPermissionComponent } from './requires-permission-component';
 
-function requiresPermission(
+function requiresPermissionHoc(
   NotPermittedComponent: React.ComponentType,
   selector: (state: RootState) => boolean,
   PermittedComponent: React.ComponentType,
 ) {
   const mapStateToProps = (state: RootState) => ({
     NotPermittedComponent,
-    PermittedComponent,
     isPermitted: selector(state),
+    PermittedComponent,
   });
 
-  return connect(mapStateToProps)(RequiresPermission);
+  return connect(mapStateToProps)(RequiresPermissionComponent);
 }
 
-export default curry(requiresPermission);
+export default curry(requiresPersmissionHoc);
 ```
 
-This HOC is straightforward. It takes in a `NotPermittedComponent`, a selector based on which the `isPermitted` boolean is passed into the `RequiresPermission` component, and finally the `PermittedComponent`.
+TODO: explain that `connect` return a new component, not JSX.
 
-You can use this HOC to render either one component or the other based on a selector value.
+This HOC is straightforward. It takes in a `NotPermittedComponent`, a selector based on which the `isPermitted` boolean is passed into the `RequiresPermissionComponent`, and finally the `PermittedComponent`. It then connects the `RequiresPermissionComponent` to the Redux store. and you export it curried.
+
+The order of arguments is important because after you curry them you follow the "data-last" principle, which makes the HOC useful. You always want supply the "not permitted" component first, then the condition of when to hide it and finally the component that should be hidden or shown based on the condition.
+
+Therefore, you can use this HOC to render either one component or the other based on a selector value.
 
 Now, you can create two HOCs with the `requiresPermission` HOC.
 
@@ -1515,7 +1605,7 @@ export default requiresPermission(AppLoading, selectAppFinishedLoading);
 
 The second `withLoading` HOC works similarly but it shows the `AppLoading` container if the app has NOT finished loading yet.
 
-You can easily imagine how you can further use `requiresPermission` to create HOCs that guard certain pages to only be accessible by premium users or make certain settings pages to only viewable by admins.
+You can easily imagine how you can further use `requiresPermission` to create HOCs that guard certain pages to only be accessible by premium users or make certain settings pages only viewable by admins.
 
 Now you can compose both of these HOCs together to create a HOC for authenticated pages.
 
@@ -1527,6 +1617,8 @@ import withLoading from './with-loading';
 
 export default compose(withLoading, withAuth);
 ```
+
+You use the `compose` from `@reduxjs/toolkit` because it works better with React components, HOCs, and TypeScript than the `compose` from Ramda.
 
 Every authenticated page needs to load the basic app loading data, and users need to be authenticated.
 
@@ -1647,7 +1739,7 @@ Then you can enter your email and password to log in, which will redirect you to
 
 The dashboard will fetch the users list and lets you log out again.
 
-### Breaking Down The Senior Secrets
+### Breaking Down The Senior Dev Secrets
 
 Maybe it was hard to follow what you actually built here, so let's dissect it together.
 
@@ -1664,11 +1756,11 @@ Let's start with the flow for an anonymous user visiting the login page.
 7. After `handleFetchCurrentUsersProfile` finishes, `handleLoadApp` dispatches the `finishedAppLoading` action.
 8. `finishedAppLoading` sets `appIsLoading` to `false`, prompting the `withLoading` HOC to show its permitted component, the `UserAuthentication` container.
 9. The anonymous user enters their credentials and submits, dispatching the `login` action, which triggers the `handleLogin` saga.
-10. `handleLogin` executes `loginRequest`, dispatches `loginSucceeded` to store the token, and then calls handleFetchCurrentUsersProfile again.
-11. This time, `handleFetchCurrentUsersProfile` retrieves a user using the token and dispatches the user into the store.
+10. `handleLogin` executes `loginRequest`, dispatches `loginSucceeded` to store the token, and then calls `handleFetchCurrentUsersProfile` again.
+11. This time, `handleFetchCurrentUsersProfile` retrieves a user via the token and dispatches the user into the store.
 12. Since there's now a user in the store, `redirectIfLoggedIn('/dashboard')` redirects to the dashboard.
 13. `withAuthenticatedPage` shows the permitted component, which is the `Dashboard` container component because the app is loaded and the user is authenticated.
-14. The `Dashboard` container component dispatches `fetchUserProfiles`, which fetches and dispatches the user profiles with `usersListFetched`.
+14. The `Dashboard` container component dispatches `fetchUserProfiles`, which fetches and dispatches `usersListFetched`. This writes the users list to the store and sets the `isLoading` boolean for the user profiles to `false`.
 15. The app is fully loaded. The user can now click "Log Out," which dispatches the `clear` action, resetting the state of all slices to the initial state and calling the log-out endpoint.
 
 Let's also walk through the flow for an anonymous user visiting the dashboard page.
@@ -1696,9 +1788,9 @@ You can simulate the flows for a logged-in user by hardcoding a token in the sto
 6. `handleLoadApp` saga invokes `handleFetchCurrentUsersProfile` to fetch the user's profile.
 7. `handleFetchCurrentUsersProfile` executes the `getCurrentUserRequest` using the stored token. It successfully retrieves the user data.
 8. Once the user data is fetched, `handleLoadApp` dispatches the `finishedAppLoading` action.
-9. `finishedAppLoading` sets `appIsLoading` to `false`. The `withLoading` HOC now displays its permitted component, the `Dashboard` container, as the user is authenticated and the app is loaded.
+9. `finishedAppLoading` changes `appIsLoading` to `false`. Now, `withLoading` shows its permitted component: `RequiresPermissionComponent` from `withAuth`. This component then displays its permitted component, the `DashboardPageContainer`, as the user is authenticated and the app has fully loaded.
 10. The `Dashboard` container component might dispatch actions like `fetchUserProfiles` to fetch additional data needed for the dashboard.
-12. The user interacts with the dashboard. Clicking "Log Out" will dispatch the `clear` action, resetting all slices to their initial states and removing the token, effectively logging the user out.
+11. The user interacts with the dashboard. Clicking "Log Out" will dispatch the `clear` action, resetting all slices to their initial states and removing the token, effectively logging the user out.
 
 The flow for an authenticated user visiting `/dashboard` follows the same steps as the previous flow from point 4 onward.
 
@@ -1765,8 +1857,8 @@ export const {
   middleware,
   reducer,
   reducerPath,
-  useAddPostMutation,
-  useGetPostsQuery,
+  useGetPostsQuery, // created by addPost mutation
+  useAddPostMutation, // created by getPosts query
 } = createApi({
   reducerPath: 'postsApi',
   baseQuery: fetchBaseQuery({
@@ -1804,10 +1896,10 @@ However, I wanted to show you how you could use the token from your store here t
 ```ts title="temp-auth-create-api-example.ts" {3, 5, 14-20}
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-import { RootState } from '@/redux/store';
+import type { RootState } from '@/redux/store';
 
 import { selectAuthenticationToken } from '../user-authentication/user-authentication-reducer';
-import { Post } from './posts-types';
+import type { Post } from './posts-types';
 
 export const {
   // ...
@@ -1857,7 +1949,9 @@ export const {
 
 The `providesTags` property tells RTK Query that when data is fetched by this endpoint and is added to the cache, it's tagged with `'Posts'`. This helps RTK Query manage caching and invalidation properly.
 
-Add another endpoint for creating posts using `builder.mutation`. For this `query`function, you also need to specify the body of the fetch request as well as the method because the `.mutation` method handles all mutation HTTP methods (`POST`, `PUT`, `DELETE`, etc.). The `invalidatesTags` property specifies which tags to invalidate. Here, performing this mutation will invalidate the cache tagged as `'Posts'`, causing dependent queries to refetch if active.
+Add another endpoint for creating posts using `builder.mutation`. For this `query`function, you also need to specify the body of the fetch request as well as the method. `builder.mutation` handles all mutation HTTP methods (`POST`, `PUT`, `DELETE`, etc.). The `invalidatesTags` property specifies which tags to invalidate. Here, performing this mutation will invalidate the cache tagged as `'Posts'`, causing dependent queries to refetch if active.
+
+The hooks you can destrucure get their names from these two endpoints. The `getPosts` query endpoint will create the `useGetPostsQuery` hook, and the `addPost` mutation will create the `useAddPostMutation` hook.
 
 You can now destructure the middleware, the reducer and its path, as well as two hooks from this API slice.
 
@@ -1931,7 +2025,7 @@ There are several keys on this object. Without diving too deep into how RTK Quer
 - **queries**: This section contains the state of the `getPosts` query. It shows a `fulfilled` status indicating successful data retrieval. The data array contains example posts with their respective properties.
 - **mutations**: This section tracks the state of any mutations, like `addPost`. In this example, a new post has been successfully added (note the fictional ID "1" for tracking this particular mutation).
 - **provided**: Lists the tags provided by the endpoints, indicating which resources are currently available in the cache.
-- **subscriptions**: Keeps track of which components or entities are currently subscribing to which queries or mutations.
+- **subscriptions**: Keeps track of which components or entities are currently subscribing to which queries or mutations. TODO: add a little info about RTK subscriptions.
 - **config**: Contains global configuration states like network status and middleware registration status.
 
 RTK Query uses this to manage your state and loading states for you. Just like it's more important to understand how the pedals and steering wheel work when driving a car, it's more important here that you understand the RTK Query API rather than how it works internally.
@@ -1993,6 +2087,8 @@ export const makeStore = () => {
   const store = configureStore({
     reducer: rootReducer,
     middleware: getDefaultMiddleware =>
+      // The middleware are independent of each other, so their order does not
+      // matter.
       getDefaultMiddleware().concat(sagaMiddleware, postsMiddleware),
   });
   sagaMiddleware.run(rootSaga);
@@ -2085,7 +2181,7 @@ If something goes wrong, the `error` property will be set. An error usually look
 }
 ```
 
-But sometimes these properties aren't set. To make TypeScript happy, you ned to check which properties are present to craft and render your error message. You can also use the `refetch` function returned by `useGetPostsQuery` to refetch posts if something went wrong.
+But sometimes these properties aren't set. To make TypeScript happy, you need to check which properties are present to craft and render your error message. You can also use the `refetch` function returned by `useGetPostsQuery` to refetch posts if something went wrong.
 
 Finally, if you have posts, you can render a list of them by iterating over them using the `.map` method.
 
@@ -2212,7 +2308,7 @@ export function PostsPageComponent() {
 
 When you run your app and try to add a post, you'll find that it does **_not_** appear in your list of posts.
 
-The reason for this is RTK Query's caching behavior.
+The reason for this is RTK Query's caching behavior. RTK Query automatically refetches the latest data from the server. But since you're using a dummy API in this tutorial, no new entities have been created, so the list never changes.
 
 ### Understanding RTK Query's Cache Behavior
 
@@ -2230,6 +2326,8 @@ However, we can at least temporarily show something because there is one more im
 ### Optimistic Updates With RTK Query
 
 RTK Query supports optimistic updates, which can make your UI feel more responsive by updating the UI before the server confirms the change.
+
+Currently, when you add a post, you have to wait until the GET request resolves before you see the new post in the list. But with optimistic updates, you can temporarily show a temporary "fake" post with the data that you entered in the list while the GET request is still pending. And when the GET request resolves, the fake post is replaced by the real post. Here the difference between the fake post and the real post is only the `id` property, which is automatically generated by the server.
 
 Modify the `addPost` mutation to support optimistic updates.
 
@@ -2269,29 +2367,31 @@ export const {
 });
 ```
 
-Add the `onQueryStarted` function, which allows you to perform actions when the mutation starts.
+Add the `onQueryStarted` function, which allows you to perform actions when the mutation starts. It receives two parameters. The first is the mutation data, here called `argument`. The second is an object with a `dispatch` property, which you can use to dispatch actions. This `dispatch` provided by `onQueryStarted` is special because it returns a `patchResult` object, which you can use to undo the state change caused by the dispatch.
 
 The primary action within `onQueryStarted` is the optimistic update of the query data for retrieving posts (`getPosts`). This is accomplished using `util.updateQueryData`, a utility method provided by RTK Query for safely updating or modifying the cache of a given query. Basically, you put a fake post into your state that gets removed as soon as the real post result from the API query comes in.
 
 You wrap the fulfillment of the query in a `try...catch` block. If the API call for the mutation resolves successfully (i.e., the promise `queryFulfilled` is resolved), the optimistic update remains in place. This means the temporary post added to the cache is replaced by the real value coming from the API query. If the mutation fails (i.e., the promise is rejected), the `catch` block is executed. Inside this block, the `patchResult.undo()` function is called to revert the optimistic update. This removes the temporary post from the cache, thus preventing any discrepancies between the client and server states.
 
 When you run your app again and add a post, you'll see it popping up in the list of posts briefly, until the GET request resolves, which removes the optimistic update again.
+
 ### Comparing RTK Query To Sagas
 
 Now that you've seen how to use RTK Query to fetch data, let's compare it to the approach using Redux Sagas.
+
 #### RTK Query Advantages
 
-- **Simplified Data Fetching:** RTK Query abstracts away the complexities of data fetching, caching, and state management.
+- **Simplified Data Fetching:** RTK Query abstracts away the complexities of data fetching, caching, and state management related to that.
 - **Auto-Generated Hooks:** It generates hooks that you can directly use in your components.
 - **Built-in Caching and Refetching:** RTK Query handles caching, deduplication of requests, and re-fetching on focus or network reconnection.
 - **Less Boilerplate:** You write less code compared to setting up sagas and reducers for each data-fetching operation.
 
 #### When To Use Sagas Over RTK Query?
 
-- **Complex Side Effects:** If you need to handle more complex side effects, such as orchestrating multiple actions, conditional logic, or performing actions based on other actions.
-- **Non-Data-Fetching side effects:** Sagas are not limited to data fetching and can handle any side effects. For example, real-time data through web sockets or server-sent events.
-- **Complex Flows:** Sagas allow you to handle complex synchronous and asynchronous flows that need to be triggered, stopped, and continued based on various conditions.
-- **You Use TDD And Want To Unit Test Your side effects:** Because sagas isolate side effects, they're easily TDD-able with unit tests, which RTK Query is NOT. You can cover RTK Query's logic only through functional or E2E tests.
+- **Complex Flows and Side Effects:** Sagas allow you to handle complex synchronous and asynchronous flows that need to be triggered, stopped, and continued based on various conditions. You can easily orchestrate multiple actions, conditional logic, or perform actions based on other actions.
+- **Non-Data-Fetching Side Effects:** Sagas are not limited to data fetching and can handle any side effects. For example, real-time data through web sockets or server-sent events.
+- **You Use TDD And Want To Unit Test Your Side Effects:** Because sagas isolate side effects, they're easily TDD-able with unit tests, which RTK Query is NOT. You can cover RTK Query's logic only through functional or E2E tests.
+- **Learn Evergreen Software Principles:** Sagas show you how to reliably isolate side effects and solve any task. You will be able to transfer similar patterns to different domains and tech stacks.
 
 Pick the right tool for the job. To do that, you want to answer the following questions:
 

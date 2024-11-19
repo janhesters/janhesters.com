@@ -640,6 +640,7 @@ Now in your store, import each reducer's slice alongside the respective reducer.
 ```js title="src/app/store.js" {3-7, 9-16, 18-21, 23}
 import { legacy_createStore as createStore } from 'redux';
 
+// Use `as` to avoid naming conflicts.
 import { reducer as exampleReducer, slice as exampleSlice } from './example-reducer';
 import {
   reducer as userProfileReducer,
@@ -997,7 +998,7 @@ Now use it your `Home` component and replace your inlined function with the sele
 'use client';
 
 import { selectCurrentCount } from './example-reducer';
-import { useAppDispatch } from './hooks';
+import { useAppSelector } from './hooks';
 
 export default function Home() {
   const count = useAppSelector(selectCurrentCount);
@@ -1102,7 +1103,7 @@ First, modify your page component to accept the `count` and `increment` function
 
 The `connect` HOC from React Redux links the Redux store to the React component. It takes in two parameters:
 
-1. `mapStateToProps` is a function that defines how to transform the current Redux store state into component props. In this case, it maps the state to the props of the `Home` page component.
+1. `mapStateToProps` is a function that defines how to transform the current Redux store state into component props. In this case, it maps the state to the props of the `Home` page component. If the Redux state related to one of the selectors changes it triggers a re-render.
 2. `mapDispatchToProps` is an object that defines which action creators to pass to the component as props. Notice that you do NOT have to wrap `increment` with `dispatch` because `mapDispatchToProps` does that automatically for you. The `increment` function that your component gets passed in through its props is different from the `increment` action creator that you import. When two variables have the same name it is called "shadowing". In Redux, with the `connect` HOC, shadowing can happen. But don't let this confuse you. The `increment` in the props is wrapped with dispatch, so when you call it, the "increment" action is sent to your store.
 
 ```js title="temp-example.js"
