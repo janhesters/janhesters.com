@@ -1,0 +1,973 @@
+---
+title: "Senior Developer Answers The Most Asked Questions About React Testing"
+datePublished: "2024-12-11"
+description: "Learn how to implement a simple email-only sign up process using AWS Amplify in your React Native application."
+thumbnailUrl: ""
+isDraft: true
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+---
+
+**Notes to Cheta:** For each test, run the test file and also record the test run.
+
+For most of these tests, you can copy the code from SocialKit, e.g. `throwIfEntityIsMissing` etc.
+
+---
+
+"Hello, I'm Jan" and I'm going to answer the most Googled questions about React testing like "What is a unit test in React", "How do you test code with REST API calls?", "When should you use `act` with React Testing Library", and so much more.
+
+And to kick things of, we're going to start with:
+
+### What is unit testing in React?
+
+When people talk about "unit testing in React" they typically mean tests for some helper functions, reducers, hooks, or React components.
+
+We could move on to the next question, but here is the catch:
+
+You may not know there are different kinds of tests.
+
+#### 1.) Unit Tests
+
+**Unit tests** test something in isolation.
+
+I recommend three test frameworks to you: [Jest](https://jestjs.io/) and [Vitest](https://vitest.dev/) because they're the most popular, and [RITEway](https://github.com/paralleldrive/riteway) because it has an API that forces you to write good tests.
+
+For example, you can have a test for a pure function `add` that takes two numbers and returns their sum.
+
+```js title="unit-test-example.test.ts"
+import { describe, expect, test } from 'vitest';
+
+const add = (a: number, b: number) => a + b;
+
+describe('add()', () => {
+  test('given two numbers: returns the sum', () => {
+    const actual = add(1, 2);
+    const expected = 3;
+
+    expect(actual).toEqual(expected);
+  });
+});
+```
+
+If you've never seen a test before, they usually look similar to this. There is a `describe` function which tells you about the component you're testing.
+
+Then there is a `test` function contains prose that describes what behavior you're testing.
+
+And finally, there is an `expect` function which is responsible for asserting that the behavior you're testing is what you expect.
+
+Unit tests are ideal for pure functions that given the same input, always return the same output and lack any side effects.
+
+Usullay, functions with side effects are better tested with ...
+
+#### 2.) Integration Tests
+
+**Integration tests** test how different things work together.
+
+You can use the same test frameworks for integration tests as you do for unit tests.
+
+Assume you have a function `requireUserExists` that takes a user id and returns a user if it exists, otherwise it throws a 404 error.
+
+```ts title="features/user-account/user-account-helpers.server.ts"
+import { UserAccount } from '@prisma/client';
+import { throwIfEntityIsMissing } from '~/utils/throw-if-entity-is-missing.server';
+
+export async function requireUserExists(userId: UserAccount['id']) {
+  const user = await retrieveUserAccountFromDatabaseById(userId);
+  return throwIfEntityIsMissing(user);
+}
+```
+
+This function requires an integration test because `requireUserExists` consists of two functions: `retrieveUserAccountFromDatabaseById` and `throwIfEntityIsMissing`. Any test for `requireUserExists` will also test how these two functions work together. Additionally, `requireUserExists` has two side effects. It retrieves a user from the database and it throws an error if the user is not found.
+
+Here is how you can write tests for `requireUserExists`.
+
+```ts title="features/user-account/user-account-helpers.server.test.ts"
+import { describe, expect, onTestFinished, test } from 'vitest';
+
+import { createPopulatedUserAccount } from '~/features/user-account/user-account-factories.server';
+import { requireUserExists } from '~/features/user-account/user-account-helpers.server';
+import {
+  deleteUserAccountFromDatabaseById,
+  saveUserAccountToDatabase,
+} from '~/features/user-account/user-account-model.server';
+
+async function setup() {
+  const user = createPopulatedUserAccount();
+  await saveUserAccountToDatabase(user);
+
+  onTestFinished(() => {
+    deleteUserAccountFromDatabaseById(user.id);
+  });
+
+  return { user };
+}
+
+describe('requireUserExists()', () => {
+  test('given a user id for an existing user: returns the user', async () => {
+    const { user } = await setup();
+
+    const actual = await requireUserExists(user.id);
+    const expected = user;
+
+    expect(actual).toEqual(expected);
+  });
+
+  test('given a user id for a non-existing user: throws an error', async () => {
+    expect.assertions(1);
+
+    const userId = 'non-existing-user-id';
+
+    try {
+      await requireUserExists(userId);
+    } catch (error) {
+      if (error instanceof Response) {
+        expect(error.status).toEqual(404);
+      }
+    }
+  });
+});
+```
+
+When you write integration tests that modify a database, you either need to mock the database or you need to write setup and teardown code to clean up after the test.
+
+"Mocking Is A Code Smell", which is a topic for another video, so in this tutorial you're going to use a setup function.
+
+It uses a factory function `createPopulatedUserAccount` to create a user and thes saves it to the databse.
+
+It then uses the `onTestFinished` hook, which runs after the test has finished and deletes the user from the database.
+
+Using that function you can write two tests.
+
+The first test tests that the function returns the user if it exists. In this test, the setup function saves a user to the database and automatically deletes it after the test has finished.
+
+The second test tests that the function throws an error if the user does not exist.
+
+Since you're using `try` and `catch` to handle the error, you need to call `expect.assertions(1)` which tells the framework that you expect one assertion to occur. This is to make sure the test fails if the error is not thrown.
+
+And finally, there are also ...
+
+#### 3.) Functional Tests
+
+**Functional tests** test your app from your user's perspective.
+
+You can either write functional tests for React components with the previously mentioned frameworks by using [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/). Or you can use a framework like [Playwright](https://playwright.dev/docs/test-intro) that spins up an actual browser.
+
+Here is what a functional test using Playwright looks like.
+
+```ts title="functional-test-example.spec.ts"
+import { expect, test } from '@playwright/test';
+
+test.describe('example.com', () => {
+  test("given any user: can visit the page and read it's text", async ({
+    page,
+  }) => {
+    // Navigate to the page.
+    await page.goto('https://example.com');
+
+    // Verify the heading is present.
+    await expect(
+      page.getByRole('heading', { name: 'Example Domain', level: 1 }),
+    ).toBeVisible();
+
+    // Verify the page contains expected text.
+    await expect(
+      page.getByText('This domain is for use in illustrative examples'),
+    ).toBeVisible();
+
+    // Verify the link to more information.
+    await expect(
+      page.getByRole('link', { name: 'More information...' }),
+    ).toHaveAttribute('href', 'https://www.iana.org/domains/example');
+  });
+});
+```
+
+You visit a page and then you verify that the page contains the expected headings, texts and links. You can also interact with the page like clicking buttons or filling out forms, but more on that later.
+
+These definitions for the different types of tests are not always clear cut. The line between unit tests and integration tests and function tests is blurry.
+
+For example, notice how tests for a reducer usually tests actions, selectors and the reducer together, so it could also be called an integration test.
+
+```ts title="some-reducer.test.ts"
+describe('selectMondayIsActive() selector', () => {
+  test('given initial state: returns true', () => {
+    const state = rootReducer();
+
+    const actual = selectMondayIsActive(state);
+    const expected = true;
+
+    expect(actual).toEqual(expected);
+  });
+
+  test('given monday is deactivated: returns false', () => {
+    const state = rootReducer(undefined, toggleMondayIsActive());
+
+    const actual = selectMondayIsActive(state);
+    const expected = false;
+
+    expect(actual).toEqual(expected);
+  });
+
+  test('given monday is activated again: returns true', () => {
+    const actions = [toggleMondayIsActive(), toggleMondayIsActive()];
+    const state = actions.reduce(rootReducer, rootReducer());
+
+    const actual = selectMondayIsActive(state);
+    const expected = true;
+
+    expect(actual).toEqual(expected);
+  });
+});
+```
+
+And tests for React components usually interact with the component from the perspective of a user, so they could be called functional tests. But, if the React component renders another component, or uses a hook, it could also be called an integration test because it consists of multiple units. And still, if you only test that component in isolation, it could also be called a unit test.
+
+You will develop a feeling what to call a test based on the context over time. 
+
+Remember:
+
+> “When in Rome, do as the Romans do.” - [Julius Caesar](https://en.wikipedia.org/wiki/Julius_Caesar)
+
+In other words, if you're working in a team, you should follow the conventions of your team.
+
+Now let's move on to the next question:
+
+### How to do unit testing in React?
+
+---
+
+**Note to Cheta:** Create a blank Next.js project.
+
+---
+
+In your React project, install Vitest.
+
+```bash
+npm install --save-dev vitest
+```
+
+For the latest instructions on how to set up Vitest, [check out their docs](https://vitest.dev/guide/#getting-started).
+
+Add a test script to your `package.json`:
+
+```json title="package.json"
+{
+  "scripts": {
+    "test": "vitest --reporter=verbose"
+  }
+}
+```
+
+Create a quick sanity check test to make sure your configuration worked.  
+
+```ts title="sanity-check.test.ts"
+import { describe, expect, test } from "@jest/globals";  
+
+describe("sanity check", () => {
+  test("true is true", () => {
+    expect(true).toEqual(true);
+  });
+});
+```
+
+It simply asserts that `true` is `true`.
+
+Run your tests:
+
+```bash
+npm test
+```
+
+You should see the test pass.
+
+```bash
+ DEV  v2.1.5 /Users/jan/dev/senior-developer-answers-the-most-asked-questions-about-react-testing
+
+ ✓ app/sanity-check.test.ts (1)
+   ✓ sanity check (1)
+     ✓ true is true
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  23:27:28
+   Duration  333ms (transform 19ms, setup 59ms, collect 4ms, tests 1ms, environment 108ms, prepare 33ms)
+
+ PASS  Waiting for file changes...
+       press h to show help, press q to quit
+```
+
+Now add [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/).
+
+```bash
+npm install --save-dev @testing-library/react @testing-library/dom @testing-library/jest-dom @types/react @types/react-dom happy-dom @vitejs/plugin-react vite-tsconfig-paths
+```
+
+Create a `vitest.config.mts` file in the root of your project:
+
+```ts title="vitest.config.mts"
+import react from '@vitejs/plugin-react';
+import tsconfigPaths from 'vite-tsconfig-paths';
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  plugins: [react(), tsconfigPaths()],
+  server: {
+    port: 3000,
+  },
+  test: {
+    environment: 'happy-dom',
+    globals: true,
+    setupFiles: ['./src/tests/setup-test-environment.ts'],
+    include: ['./src/**/*.{spec,test}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    exclude: [
+      '**/node_modules/**',
+      '**/build/**',
+      '**/postgres-data/**',
+    ],
+    coverage: {
+      reporter: ['text', 'json', 'html'],
+    },
+  },
+});
+```
+
+And create a file called `src/tests/setup-test-environment.ts` to set up your test environment.
+
+```js title="src/tests/setup-test-environment.ts"
+import '@testing-library/jest-dom/vitest';
+ 
+// See https://reactjs.org/blog/2022/03/08/react-18-upgrade-guide.html#configuring-your-testing-environment.
+ 
+// @ts-expect-error globalThis is not defined in TypeScript.
+globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+```
+
+### What does testing a React app with Jest do?
+
+Jest is a test runner. It runs your tests. This tutorial uses Vitest because it has the same API as Jest, but runs faster. Everything you learn in this video is applicable to Jest.
+
+The main difference in usage is that Jest is frequently configured to expose its methods globally. This means that in any file with `.test.ts` or `.test.tsx`, you can use `describe`, `test`, `expect`, and so on without importing them.
+
+Vitest or Jest alone are a bad choice for testing React apps.
+
+You should use React Testing Library (RTL), too. 
+
+React Testing Library together with [Happy DOM](https://github.com/capricorn86/happy-dom) or [Jest DOM](https://github.com/testing-library/jest-dom) renders your React component in a mocked browser environment for you.
+
+Testing your React app with RTL and Jest or Vitest gives you confidence that your app works as expected.
+
+### How to run React Testing Library?  
+
+If you've set up React Testing Library with Vitest as described above, you can now run your React component tests.
+
+```tsx title="src/app/greeting.test.tsx"
+import { render, screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
+
+function Greeting() {
+  return (
+    <div>
+      <h1>Hello World</h1>
+
+      <p>Some description</p>
+    </div>
+  );
+}
+
+describe('Greeting component', () => {
+  test('renders a greeting', () => {
+    render(<Greeting />);
+
+    expect(
+      screen.getByRole('heading', { name: /hello world/i }),
+    ).toBeInTheDocument();
+
+    expect(screen.getByText(/some description/i)).toBeInTheDocument();
+  });
+});
+```
+
+This example shows you how to test a function component. You use React Testing Library's `render` function to render the component and then you use the `screen` object to query the DOM.
+
+The same works for class components because Testing Library abstracts away the implementation details for you.
+
+```tsx title="src/app/farewell.test.tsx"
+import { render, screen } from '@testing-library/react';
+import { Component } from 'react';
+import { describe, expect, test } from 'vitest';
+
+class Farewell extends Component {
+  render() {
+    return <h2>Bye World!</h2>;
+  }
+}
+
+describe('Farewell component', () => {
+  test('renders a farewell', () => {
+    render(<Farewell />);
+
+    expect(
+      screen.getByRole('heading', { name: /bye world/i }),
+    ).toBeInTheDocument();
+  });
+});
+```
+
+So everything that you learn about React testing going forward applies to class components as well.
+
+I want to point out the "bluriness" of test definitions here one more time. Notice how both of these tests test the component from the perspective of a user. Therefore, you can legitimately call them functional tests. But, they also test the component in isolation, so they could also be called unit tests.
+
+### How to test a function in React Testing Library?
+
+If you mean a function component, rewind to the part where you test the first React component, `Greeting`, because that's a function component.
+
+If you're talking about functions passed as props to your React components, you need to mock them.
+
+### How to mock function React Testing Library?
+
+You can create a mock function with `vi.fn()`. In Jest, you use `jest.fn()`.
+
+In other words, the ability to mock has nothing to do with React Testing Library. Your respective test runner or framework provides the mock functions.
+
+```tsx title="some-test.test.tsx"
+const onChange = vi.fn();
+
+render(<SomeComponent onChange={onChange} />);
+```
+
+Every time you call a mock function, it stores its call arguments, returns, and instances. You can then make assertions on the mock function.
+
+Let's use mocking and look at an example of a button to learn:
+
+### How to test a button with React Testing Library?
+
+Let's create a simple button component and write a test for it.
+
+```tsx title="src/app/button.test.tsx"
+import { render, screen } from '@testing-library/react';
+import type { MouseEventHandler } from 'react';
+import { describe, expect, test, vi } from 'vitest';
+
+function Button({
+  onClick,
+}: {
+  onClick: MouseEventHandler<HTMLButtonElement>;
+}) {
+  return <button onClick={onClick}>Click me</button>;
+}
+
+describe('Button', () => {
+  test('given an onClick function and the button is clicked: calls the onClick function', () => {
+    const onClick = vi.fn();
+    render(<Button onClick={onClick} />);
+
+    const button = screen.getByRole('button', { name: /click me/i });
+    button.click();
+
+    expect(onClick).toHaveBeenCalled();
+  });
+});
+```
+
+You mock the `onClick` function and then you fire a click event directly on the button element. This will call the mock and you can assert that it was called.
+
+Testing library also exposes the `fireEvent` function, which you can use to fire events on the component.
+
+```tsx title="src/app/button.test.tsx" {1, 19}
+import { fireEvent, render, screen } from '@testing-library/react';
+import type { MouseEventHandler } from 'react';
+import { describe, expect, test, vi } from 'vitest';
+
+function Button({
+  onClick,
+}: {
+  onClick: MouseEventHandler<HTMLButtonElement>;
+}) {
+  return <button onClick={onClick}>Click me</button>;
+}
+
+describe('Button', () => {
+  test('given an onClick function and the button is clicked: calls the onClick function', () => {
+    const onClick = vi.fn();
+    render(<Button onClick={onClick} />);
+
+    const button = screen.getByRole('button', { name: /click me/i });
+    fireEvent.click(button);
+
+    expect(onClick).toHaveBeenCalled();
+  });
+});
+```
+
+The difference between `button.click()` and `fireEvent.click()` lies in how they trigger the click event. `button.click()` directly calls the DOM element's click method, bypassing React's synthetic event system and only firing the click event. In contrast, `fireEvent.click()` simulates the click event using `dispatchEvent`, integrating with React's event system but still only triggering the click event without intermediate events like `mousedown` or `focus`.
+
+For more realistic user interactions, you want to use the [`userEvent` library](https://testing-library.com/docs/user-event/intro/) because it simulates full user interactions. So, install it.
+
+```bash
+npm install --save-dev @testing-library/user-event
+```
+
+Next, import it in your test and use the `setup` method to create a user.
+
+```tsx title="src/app/button.test.tsx" {2, 16, 22}
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import type { MouseEventHandler } from 'react';
+import { describe, expect, test, vi } from 'vitest';
+
+function Button({
+  onClick,
+}: {
+  onClick: MouseEventHandler<HTMLButtonElement>;
+}) {
+  return <button onClick={onClick}>Click me</button>;
+}
+
+describe('Button', () => {
+  test('given an onClick prop and the button is clicked: calls the onClick function', async () => {
+    const user = userEvent.setup();
+
+    const onClick = vi.fn();
+
+    render(<Button onClick={onClick} />);
+
+    await user.click(screen.getByRole('button', { name: /click me/i }));
+
+    expect(onClick).toHaveBeenCalled();
+  });
+});
+```
+
+You can then let the user click the button and assert that the mock was called. This mimics user actions by triggering the same browser events those actions would cause. The `user` object exposes many other interactions like typing, selecting options, and so on.
+
+### How to debug React Testing Library?
+
+If you want to debug your tests, call the `screen.debug()` method.
+
+```tsx title="src/app/debug.test.tsx"
+import { render, screen } from '@testing-library/react';
+import { describe, test } from 'vitest';
+
+describe('screen.debug example', () => {
+  test('demonstrates screen.debug usage', () => {
+    render(<div>Hello World</div>);
+
+    // Log the current state of the DOM.
+    screen.debug();
+
+    // Log a specific element.
+    screen.debug(screen.getByText('Hello World'));
+  });
+});
+```
+
+There are two ways to use `screen.debug()`. Calling it without arguments will print out the whole DOM tree to the console.
+
+```bash
+<body>
+  <div>
+    <div>
+      Hello World
+    </div>
+  </div>
+</body>
+```
+
+You can see here that `render` implicitly wraps the component in a `body` and a `div`.
+
+If you want to debug a specific element and its children, you can pass a selector to `screen.debug()`.
+
+```tsx
+screen.debug(screen.getByText('Hello world'));
+```
+
+This will print out the DOM tree around the element.
+
+```bash
+<div>
+  Hello World
+</div>
+```
+
+To debug the button test you saw before, you can also add `console.log`s wherever you want.
+
+```tsx title="src/app/button.test.tsx" {15}
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import type { MouseEventHandler } from 'react';
+import { describe, expect, test, vi } from 'vitest';
+
+function Button({
+  onClick,
+}: {
+  onClick: MouseEventHandler<HTMLButtonElement>;
+}) {
+  return (
+    <button
+      onClick={event => {
+        onClick(event);
+        console.log('after the button click');
+      }}
+    >
+      Click me
+    </button>
+  );
+}
+
+describe('Button', () => {
+  test('given an onClick prop and the button is clicked: calls the onClick function', async () => {
+    const user = userEvent.setup();
+
+    const onClick = vi.fn();
+
+    render(<Button onClick={onClick} />);
+
+    await user.click(screen.getByRole('button', { name: /click me/i }));
+
+    expect(onClick).toHaveBeenCalled();
+  });
+});
+```
+
+This will then show up in the output of your test.
+
+```bash {2}
+stdout | app/example.test.tsx > Button > given an onClick prop and the button is clicked: calls the onClick function
+after the button click
+
+ ✓ app/example.test.tsx (1)
+   ✓ Button (1)
+     ✓ given an onClick prop and the button is clicked: calls the onClick function
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  10:56:02
+   Duration  153ms
+
+ PASS  Waiting for file changes...
+       press h to show help, press q to quit
+```
+
+### How to mock API React Testing Library?
+
+The best way is to use MSW, which stands for Mock Service Worker.
+
+Install MSW in your project.
+
+```bash
+npm install msw --save-dev
+```
+
+Now you can write a test for a component called `Fetcher` that fetches a user from a placeholder API.
+
+```tsx title="src/app/fetcher.test.tsx"
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { http } from 'msw';
+import { setupServer } from 'msw/node';
+import { useState } from 'react';
+import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
+
+function Fetcher() {
+  const [user, setUser] = useState<{ name: string; id: string } | null>(null);
+
+  return (
+    <div>
+      <button
+        onClick={() => {
+          fetch('https://jsonplaceholder.typicode.com/users/1')
+            .then(response => response.json())
+            .then(setUser);
+        }}
+      >
+        Fetch
+      </button>
+
+      <div>{user ? `User name: ${user.name}` : 'Please fetch the user.'}</div>
+    </div>
+  );
+}
+
+const server = setupServer(
+  http.get(
+    'https://jsonplaceholder.typicode.com/users/1',
+    async () =>
+      new Response(JSON.stringify({ name: 'Jane Doe', id: '1' }), {
+        headers: { 'Content-Type': 'application/json' },
+      }),
+  ),
+);
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
+describe('Fetcher', () => {
+  test("given the fetch button is clicked: renders the user's name", async () => {
+    const user = userEvent.setup();
+
+    render(<Fetcher />);
+
+    await user.click(screen.getByRole('button', { name: /fetch/i }));
+
+    expect(await screen.findByText(/user name: jane doe/i)).toBeInTheDocument();
+  });
+});
+```
+
+The `Fetcher` component renders a button. When clicked, it fetches a user from a placeholder API.
+
+You use `setupServer` to create a mock server. The server intercepts the fetch request and returns a response you define.
+
+To integrate MSW with a test runner, follow these three steps:
+
+- Start mocking before tests begin using `server.listen()`.
+- Reset request handlers between tests with `server.resetHandlers()`.
+- Restore native request modules after tests finish using `server.close()`.
+
+Use the `beforeAll`, `afterEach`, and `afterAll` hooks to set up these steps.
+
+### How to test dropdown in React?
+
+Create a dropdown component, so you can write tests for it.
+
+```tsx title="src/app/dropdown.test.tsx"
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, test } from 'vitest';
+
+function Dropdown() {
+  return (
+    <div>
+      <label htmlFor="fruits">Pick a fruit:</label>
+
+      <select name="fruits" id="fruits">
+        <option value="banana">Banana</option>
+        <option value="apple">Apple</option>
+        <option value="orange">Orange</option>
+      </select>
+    </div>
+  );
+}
+
+describe('Dropdown', () => {
+  test('given the user picks values: renders the correct value', async () => {
+    const user = userEvent.setup();
+
+    render(<Dropdown />);
+
+    expect(screen.getByDisplayValue(/banana/i)).toBeInTheDocument();
+
+    expect(screen.queryByDisplayValue(/apple/i)).not.toBeInTheDocument();
+
+    const select = screen.getByLabelText(/pick a fruit/i);
+
+    await user.selectOptions(select, 'apple');
+
+    expect(screen.getByDisplayValue(/apple/i)).toBeInTheDocument();
+  });
+});
+```
+
+The `Dropdown` component renders a label and a `select` element. In this tutorial, you're going to create it using a `select` element, but it will work the same way with a custom component from some component library.
+
+Now you can use `userEvent` to select an option from the dropdown and assert that the correct value is rendered.
+
+### How to test useEffect in React Testing Library?
+
+Did you know that React 18 and up runs `useEffect` twice on mount in strict mode? Let me know in the comments if you want me to make a video to break down how many React developers are using `useEffect` wrong.
+
+Anyways, let's look at a correct usage of `useEffect` in an `OfflineIndicator` component.
+
+```tsx title="src/app/offline-indicator.test.tsx"
+import { act, render, screen } from '@testing-library/react';
+import { useEffect, useState } from 'react';
+import { describe, expect, test } from 'vitest';
+
+function OfflineIndicator() {
+  const [isOffline, setIsOffline] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      function handleOnline() {
+        setIsOffline(false);
+      }
+
+      function handleOffline() {
+        setIsOffline(true);
+      }
+
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+
+      return function cleanup() {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+      };
+    }
+  }, []);
+
+  return <div>{isOffline ? 'Offline' : 'Online'}</div>;
+}
+
+describe('OfflineIndicator', () => {
+  test('given the user switches between offline and online: renders the correct state', () => {
+    render(<OfflineIndicator />);
+
+    expect(screen.getByText(/online/i)).toBeInTheDocument();
+
+    act(() => {
+      window.dispatchEvent(new Event('offline'));
+    });
+
+    expect(screen.getByText(/offline/i)).toBeInTheDocument();
+
+    act(() => {
+      window.dispatchEvent(new Event('online'));
+    });
+
+    expect(screen.getByText(/online/i)).toBeInTheDocument();
+  });
+});
+```
+
+The `OfflineIndicator` component uses `useEffect` to detect when the user goes offline or online. It then renders a `div` element that shows whether the user is online or offline.
+
+You can write a test for the `OfflineIndicator` component that checks if the component renders the correct state when the user goes offline or online. To do this, you need to simulate the user going offline and online, which you do with `window.dispatchEvent`. You wrap this in `act` to ensure all updates have been processed and applied to the DOM before you make any assertions. You're going to learn more about `act` momentarily. But before that, I want to point out something important.
+
+When you test a `useEffect` hook inside of a component, you only test what the user sees as a result of the `useEffect` hook. This is what Kent C. Dodds, the creator of React Testing Library, means when he says:
+
+> “Avoid testing implementation details.” - [Kent C. Dodds](https://kentcdodds.com/blog/testing-implementation-details)
+
+Avoiding testing implementation details means to focus on what the user sees, instead of how the component works under the hood. Test behaviors and visible outputs, like rendered elements or text, instead of functions, hooks, or internal states. This keeps tests resilient to refactoring because they break only when functionality or user experience changes - NOT when internal code changes.
+
+### React Testing Library when to use `act`?
+
+In the example above you used `act` when simulating switching between online and offline.
+
+React handles updates asynchronously. When you change the state of a component, React will schedule a re-render of the component and then decides at some point to apply the changes to the DOM.
+
+`act()` makes sure all updates have been processed and applied to the DOM before you make any assertions.
+
+Testing Library wrapped its handlers - such as `fireEvent` or `userEvent` - in `act` for you. But since dispatching the online and offline events are custom, you need to wrap them in `act` yourself.
+
+### How to test hooks in React?
+
+You can test hooks without using them inside of a component.
+
+Extract the offline detection logic into a custom hook.
+
+```tsx title="src/app/use-is-offline.test.tsx"
+import { act, renderHook } from '@testing-library/react';
+import { useEffect, useState } from 'react';
+import { describe, expect, test } from 'vitest';
+
+export function useIsOffline() {
+  const [isOffline, setIsOffline] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      function handleOnline() {
+        setIsOffline(false);
+      }
+
+      function handleOffline() {
+        setIsOffline(true);
+      }
+
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+
+      return function cleanup() {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+      };
+    }
+  }, []);
+
+  return isOffline;
+}
+
+describe('useIsOffline()', () => {
+  test('detects whether the user is offline or not', () => {
+    const { result } = renderHook(() => useIsOffline());
+
+    expect(result.current).toEqual(false);
+
+    act(() => {
+      window.dispatchEvent(new Event('offline'));
+    });
+
+    expect(result.current).toEqual(true);
+
+    act(() => {
+      window.dispatchEvent(new Event('online'));
+    });
+
+    expect(result.current).toEqual(false);
+  });
+});
+```
+
+The custom `useIsOffline` hook is straightforward. You simply use the same `useEffect` hook to hook up the event listeners and return the `isOffline` state.
+
+To test custom hooks, you can use the `renderHook` function from `@testing-library/react`. `renderHook` exposes a `.current` property on its `result` object to provide access to the latest value returned by the hook being tested. You can think of `result` as a `ref` for the most recently comitted value.
+
+Apart from that, the test does exactly the same thing as the test for the `OfflineIndicator` component.
+
+### How to do E2E testing in React?
+
+End-to-end (E2E) testing is the practice of testing the entire application from start to finish. That means, running the application in a real browser, interacting with it as a user would and doing requests to a real database.
+
+E2E tests is a subset of functional tests. The more realistic your functional tests are, the more you can call them E2E tests.
+
+```tsx title="playwright/e2e/example/playwright.spec.ts"
+import { expect, test } from '@playwright/test';
+
+test.describe('Wikipedia Search', () => {
+  test('page should let you search for "Playwright" and render an article about it', async ({
+    page,
+  }) => {
+    // Navigate to Wikipedia's homepage.
+    await page.goto('https://www.wikipedia.org/');
+
+    // Select the search input field using its role and accessible name.
+    const searchInput = page.getByRole('searchbox', {
+      name: 'Search Wikipedia',
+    });
+    await searchInput.fill('Playwright');
+
+    // Click the search button using its role and accessible name
+    const searchButton = page.getByRole('button', { name: 'Search' });
+    await searchButton.click();
+
+    // Verify that the page title contains "Playwright"
+    await expect(page).toHaveTitle(/Playwright/);
+
+    // Optionally, verify that the first heading matches "Playwright"
+    const firstHeading = page.getByRole('heading', {
+      level: 1,
+      name: 'Playwright',
+    });
+    await expect(firstHeading).toHaveText('Playwright');
+  });
+});
+```
+
+You can write a test that spins up a real browser that visits the Wikipedia homepage, searches for "Playwright" and verifies that the page title contains "Playwright".
+
+It is an E2E test because it uses a real browser, does real network requests and Wikipedia's database is queried.
