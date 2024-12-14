@@ -1,0 +1,48 @@
+---
+title: "Display/Container Components"
+datePublished: "2024-12-11"
+description: "Learn how to implement a simple email-only sign up process using AWS Amplify in your React Native application."
+thumbnailUrl: ""
+isDraft: true
+---
+
+
+
+
+
+- Also called dumb- and smart-component pattern.
+- Display- / dumb- / presentational-component is responsible for the UI.
+	- "Given props: renders JSX"
+- Container- / smart- / stateful-component should handle all the logic
+	- hook
+	- HOCs
+	- derivation & aggregations
+- There is no container-component without a display-component. But display components can be standalone.
+- Pro-tip: Name all display-components ending in `Component`. Name all container components ending in `Container`. Same for files.
+- Why?
+	- Simplifies the code.
+	- Makes all display-components easily testable because they're just "pure functions".
+		- Mention definition.
+- Tips & Hints
+	- Any component that uses built-in JSX is a display-component.
+	- Hooks & docs etc. only go into the container component.
+- You can have display-components within display-components.
+- Show a display-component with mappings and ternaries, to show that they can contain a little bit of logic.
+- Display components can receive data, callbacks and refs via props.
+
+Trade-offs for the display/container-component pattern.  
+- Contra:
+	- **More code -** Introduces additional complexity through extra code layers.
+	- **More files -** Increases the project structure with numerous files.
+	- **Can be overkill -** For small apps, the pattern might be excessive. In certain full-stack frameworks (Next.js, Remix) there are also cases in which it introduces unnecessary complexity, e.g. for form actions in Next.js 14.
+	- **Learning curve -** There is a small learning curve when learning about the convention and when teaching new developers during onboarding to stick to it.
+	- **Hooks kinda do the same -** Hooks already give you some level of separation between UI and logic.
+- Pro:
+	- **[Easier testing](https://medium.com/javascript-scene/tdd-writing-testable-code-30ac7a3bf49c) -** As pure functions, display components are easy to test and to TDD.
+	- **Reusability -** By decoupling the rendering from the logic, you find more use cases for reusing the same display components throughout your app.
+	- **Easy PR splitting -** For any feature, it provides a clear breaking point to split up your work (first display components, then in follow-up PR container components), resulting in smaller PRs, which are generally easier to review.
+	- **Better collaboration -** It makes it easier for teams to work on different aspects of the application simultaneously. Also, display components tend to be straightforward, which is great when you have junior developers on your team.  
+	- **Avoids redundancy in tests -** We love [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/), but without the display/container-component pattern, you often write tests in Jest or Vitest that cover the same but less functionality than your E2E tests with Playwright and Cypress. (This assumes that you write E2E tests, of course.)
+
+
+> "If you find it natural in your codebase, this pattern can be handy. But I’ve seen it enforced without any necessity and with almost dogmatic fervor far too many times." - [Dan Abramov](https://medium.com/@dan_abramov/smart-and-dumb-components-7ca2f9a7c7d0)

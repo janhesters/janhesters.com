@@ -32,7 +32,7 @@ export default function Blog() {
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
       <div className="mx-auto flex max-w-4xl flex-col">
-        <article className="prose mx-auto max-w-2xl dark:prose-invert prose-p:before:hidden prose-p:after:hidden prose-code:before:hidden prose-code:after:hidden">
+        <article className="prose mx-auto w-full max-w-2xl dark:prose-invert prose-p:before:hidden prose-p:after:hidden prose-code:before:hidden prose-code:after:hidden">
           <Outlet />
         </article>
 

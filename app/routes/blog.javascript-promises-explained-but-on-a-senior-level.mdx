@@ -24,9 +24,7 @@ If you've been coding in JavaScript for a while, you've probably encountered pro
 
 But do you truly understand them at a senior-level? If not, you might encounter random bugs that take a long time to find the root cause, or you may not know how to compose promises with functional patterns.
 
-Hi, I'm Jan, the CTO of ReactSquad, and today, you're going to dive deep into JavaScript promises.
-
-Whether you're a beginner or an experienced developer eager to learn some senior secrets, this video is packed with code examples and best practices to help you master promises.
+Whether you're a beginner or an experienced developer eager to learn some senior secrets, this article is packed with code examples and best practices to help you master promises.
 
 So let's start with ...
 
@@ -386,7 +384,7 @@ Promise resolved
 
 Notice that "Inside promise" is logged right after "Before promise", even before we attach a then handler. This demonstrates the eager nature of Promises.
 
-If you want to see an example for lazy evaluation, check out ["JavaScript Generators Explained, But On A Senior-Level"](https://www.youtube.com/watch?v=FAK1YR4X-8I).
+If you want to see an example for lazy evaluation, check out ["JavaScript Generators Explained, But On A Senior-Level"](https://janhesters.com/blog/javascript-generators-explained-senior-level).
 
 ### Promise Methods
 
@@ -843,9 +841,9 @@ Then, use the `promisify` function to convert your callback-based functions into
 
 ### Promise Composition With `asyncPipe`
 
-If you've watched "Unleash JavaScript's Potential With Functional Programming", you know that you can compose functions together. If not, you want to watch that video before continuing with the rest of this video because it assumes you are familiar with function composition.
+If you've read ["Unleash JavaScript's Potential With Functional Programming"](https://janhesters.com/blog/unleash-javascripts-potential-with-functional-programming), you know that you can compose functions together. If not, you want to read that article before continuing with the rest of this article because it assumes you are familiar with function composition.
 
-In that video, you learn about the `pipe` function that composes functions in reverse mathematical order.
+In that article, you learn about the `pipe` function that composes functions in reverse mathematical order.
 
 ```js
 const pipe = (...fns) => x => fns.reduce((y, f) => f(y), x);
@@ -899,6 +897,13 @@ The reason for that is that because of `async` the accumulator `y` always return
 
 Composing promises allows you to chain asynchronous operations in a clean and maintainable way reaping all the benefits of functional programming.
 
-Now go watch the video on screen because the YouTube algorithm thinks it's the perfect video for you to watch next.
+import { ReadNext } from '../features/blog/read-next';
+import { frontmatter as unleashJavaScriptsPotential } from './blog.unleash-javascripts-potential-with-functional-programming.mdx';
+import { frontmatter as javascriptGeneratorsExplainedSeniorLevel } from './blog.javascript-generators-explained-senior-level.mdx';
 
-I love you very much. Thank you so much for watching. If you enjoyed this video, give it a thumbs up and subscribe to the channel for more advanced JavaScript videos.
+<ReadNext
+  posts={[
+    { ...unleashJavaScriptsPotential, slug: 'unleash-javascripts-potential-with-functional-programming' },
+    { ...javascriptGeneratorsExplainedSeniorLevel, slug: 'javascript-generators-explained-senior-level' },
+  ]}
+/>
