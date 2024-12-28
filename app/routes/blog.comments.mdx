@@ -1,0 +1,556 @@
+---
+title: "How To Write Good Comments In JavaScript & TypeScript"
+datePublished: "2024-12-12"
+description: "In this tutorial, you'll learn how to name and structure Redux actions to make debugging easier and your code more readable. Discover how to use descriptive names, leverage named parameters for clarity, apply data transformations, and hook up multiple reducers per action."
+thumbnailUrl: ""
+isDraft: true
+---
+
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+One of the most important principles in software design is that:
+
+> “Code is read more than written.” - [Raymond Chen](https://devblogs.microsoft.com/oldnewthing/20070406-00/?p=27343&utm_source=chatgpt.com)
+
+And comments are a great way to improve the readability and understandability of your code.
+
+So in this video, you're going to learn how to write good comments in JavaScript and TypeScript.
+
+This video starts with a deep dive into the syntax for writing comments. Here is a quick overview of the different types of comments.
+
+| **Comment Type**                | **Syntax**                     | **Description**                                              | **Scope**             |
+|---------------------------------|--------------------------------|--------------------------------------------------------------|-----------------------|
+| Single-Line Comment             | `// comment`                   | Brief comment or inline explanation                         | Single line           |
+| Multi-Line Comment              | `/* comment */`                | Block comment spanning multiple lines                        | Multiple lines        |
+| Documentation Comment (JSDoc & TSDoc)   | `/** comment */`               | Structured comments for documentation generation            | Functions, classes, etc. |
+| Triple-Slash Directive          | `/// <reference ... />`        | TypeScript-specific compiler directives                     | File-level            |
+| Compiler Directive (`@ts-ignore` etc.) | `// @ts-ignore`          | Instructs TypeScript compiler to alter behavior              | Next line or file     |
+| Tooling-Specific Comment        | `// eslint-disable` etc.       | Controls behavior of linters and formatters                 | Line or file           |
+
+If you're already familiar with all of these comment types, you can skip to the [Best Practices](#best-practices) section. The timestamp is on screen right now.
+
+JavaScript supports the following three types of comments:
+
+### 1. **Single-line Comments**
+
+You use `//` to start a **single-line comment**. Everything after `//` on that line is ignored by the JavaScript engine.
+
+```js
+// This is a single-line comment
+const x = 10; // This is an inline comment
+```
+
+When a comment appears on the same line as code, it's called an **inline comment**.
+
+You can put these comments anywhere in your code.
+
+---
+
+**Note to Cheta:** First write the `add` function without comments. Then add comments to the code.
+
+---
+
+```js
+// Outside of a function
+function add(a, b) {
+  // Inside a function
+  if (a > b) { // On the same line as a condition
+    // Inside an if statement
+    return a;
+  }
+
+  return b;
+}
+```
+
+Single-line comments can be nested. In other words, subsequent delimiters (`//`) are ignored.
+
+```js
+// // This is a single-line comment
+```
+
+This can for example happen if you use `cmd + /` to comment out a block of code that contains a single-line comment.
+
+#### Tooling-Specific Comments
+
+You control some tools by using **tooling-specific comments**. For example if you're using [ESLint](https://eslint.org/) or [Prettier](https://prettier.io/), you can use single-line comments to disable rules for a specific line of code.
+
+```js
+// eslint-disable-next-line no-console
+console.log('Hello, world!');
+```
+
+Tooling specific comments only passively impact the readability and understandability of your code by tweaking the behavior of your tools.
+
+But sometimes you want to use comments to clarify why you are modifying the behavior of your tools.
+
+```jsx
+import { useEffect, useState } from 'react';
+
+export function Timer({ interval }) {
+  const [time, setTime] = useState(0);
+
+  useEffect(() => {
+    const timerId = setInterval(() => {
+      setTime(previousTime => previousTime + interval);
+    }, interval);
+
+    return () => clearInterval(timerId);
+
+    // We intentionally omit `interval` from dependencies to prevent resetting
+    // the timer if `interval` changes. This is by design as changing `interval`
+    // mid-timer would break the timer's behavior.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return <div>Elapsed time: {time}ms</div>;
+}
+```
+
+Here is a `Timer` component that effectively acts as a simple stopwatch-like timer.
+
+You use a comment to explain future developers why you are intentionally omitting `interval` from the dependencies array. This can **avoid accidental rule re-enforcement** without understanding the intended behavior.
+
+### 2. **Multi-line Comments**
+
+Use `/*` to start and `*/` to end a **multi-line comment**. Everything between `/*` and `*/` is ignored by the JavaScript engine.
+
+```js
+/*
+  This is a multi-line comment.
+  It spans multiple lines.
+*/
+const y = 20;
+```
+
+The space at the beginning of the comment is optional. Some developers prefer it, others don't.
+
+```js
+/*
+This is a multi-line comment without a space at the beginning.
+It still spans multiple lines.
+*/
+const y = 20;
+```
+
+Multi-line comments can NOT be nested. So the following code will cause problems, which you can tell by the messed up syntax highlighting.
+
+```js
+/*
+  Outer comment
+  /*
+    Inner comment
+  */
+*/
+```
+
+But, you can nest single-line comments with multi-line comments and vice versa.
+```js
+/*
+  Outer comment
+  // Inner comment
+*/
+
+// /*
+//   Outer comment
+//   // Inner comment
+// */
+```
+
+If you try using a multi-line comment to modify the behavior of your tools, it will not work:
+
+```js
+/*
+  eslint-disable-next-line no-console
+*/
+console.log('This will still trigger an ESLint warning.');
+```
+
+Tools like ESLint are designed to parse specific single-line comments (`//`) for directives. Multi-line comments (`/* */`) are treated purely as descriptive text by these tools and are ignored.
+
+For disabling a rule for multiple lines, you can use `eslint-disable` with a block:
+
+```js
+/* eslint-disable no-console */
+console.log('No warning here.');
+console.log('Still no warning.');
+/* eslint-enable no-console */
+```
+
+#### 3. **Documentation Comments (JSDoc & TSDoc)**
+
+There is a specific type of multi-line comment used for documenting code called [**JSDoc**](https://jsdoc.app/). JSDoc comments start with `/**` and end with `*/`. Each line inside the comment block has a `*` at the beginning. They include tags like `@param` and `@returns` to describe code elements.
+
+---
+
+**Note to Cheta:** Again, first write the `add` function without comments. Then add comments to the code.
+
+--- 
+
+```js
+/**
+ * Adds two numbers.
+ *
+ * @param {number} a - The first number.
+ * @param {number} b - The second number.
+ * @returns {number} The sum of the two numbers.
+ */
+function add(a, b) {
+  return a + b;
+}
+```
+
+As you can probably guess, `@param` defines the type and name of a parameter. `@returns` defines the type of the return value.
+
+These documentation comments are recognized by your tooling. For example, IntelliSense in VSCode shows you your comments and the types of the parameters and return value when you hover over a function decorated with JSDoc.
+
+![JSDoc hover](https://i.magecdn.com/ada680/0ce588_jsdoc_hover?f=webp,q.30,p.f,l.f)
+
+JSDoc supports all primitive types as well as objects.
+
+Additionally, JSDoc allows you to define custom types.
+
+```js
+/**
+ * @typedef {Object} User
+ * @property {number} id - The unique identifier for the user.
+ * @property {string} name - The name of the user.
+ * @property {string} email - The email address of the user.
+ * @property {boolean} isActive - Whether the user is active.
+ */
+```
+
+You can now use this type, for example in the definition of a function.
+
+```js
+/**
+ * Processes a user object.
+ * @param {User} user - The user object to process.
+ * @returns {string} A message about the user's status.
+ */
+function processUser(user) {
+  return user.isActive
+    ? `User ${user.name} is active.`
+    : `User ${user.name} is not active.`;
+}
+```
+
+Again, IntelliSense works and will also show you the types of the variables inside of the function when you hover over the variables.
+
+![TSDoc hover](https://i.magecdn.com/ada680/6689d7_jsdoc_hover_2?f=webp,q.30,p.f,l.f)
+
+#### TSDoc
+
+[**TSDoc**](https://tsdoc.org/) is a documentation standard for TypeScript. It uses the JSDoc syntax. It allows TypeScript-specific types in tags and helps with rich IntelliSense in TypeScript.
+
+When you use TSDoc, you can usually leave out the type definitions in the comments because you add those via the native TypeScript types.
+
+```ts
+/**
+ * Adds two numbers.
+ *
+ * @param a - The first number.
+ * @param b - The second number.
+ * @returns The sum of the two numbers.
+ */
+function add(a: number, b: number) {
+  return a + b;
+}
+```
+
+Whether you write JSDoc or TSDoc only depends on the file ending. If it ends in `.js` or `.jsx`, you use JSDoc. If it ends in `.ts` or `.tsx`, you use TSDoc.
+
+TSDoc also allows you to describe keys of objects.
+
+```ts
+/**
+ * Represents a user in the system.
+ */
+type User = {
+  /**
+   * The unique identifier for the user.
+   */
+  id: string;
+
+  /**
+   * The user's full name.
+   */
+  name: string;
+
+  /**
+   * The user's age.
+   * Must be a positive integer.
+   */
+  age: number;
+
+  /**
+   * The user's email address.
+   */
+  email: string;
+
+  /**
+   * Indicates whether the user has verified their email.
+   */
+  isEmailVerified: boolean;
+};
+```
+
+It deosn't matter whether you use `type` or `interface`.
+
+Similar to multi-line comments, you can neither use JSDoc nor TSDoc to control directives for your formatting tools.
+
+### Quick Documentation Comment API Tips
+
+You can check out the tags reference of the TSDoc section learn about all the available tags.
+
+But I wanted to highlight 4 more tags that I find particularly useful and use frequently for you.
+
+- `@deprecated`: Indicates the function is outdated and provides a suggestion.
+- `@throws`: Documents the type of error thrown and under what conditions.
+- `@example`: Gives example usage of the function. It can include correct and incorrect cases.
+- `@see`: Links to a related resource or an improved version of the function. It can be combined with `@link` to link to a specific function.
+
+---
+
+**Note to Cheta:** After you've written the code below, hover over the `add` function. Show the deprecation message. Then click the `addNumbers` function to show that the link takes the user to that function. (You might want to define the `addNumbers` function in a seperate file to make it even clearer.)
+
+---
+
+```js
+/**
+ * Adds two numbers.
+ *
+ * @deprecated Use the `addNumbers` function instead for better performance.
+ * @param {number} a - The first number.
+ * @param {number} b - The second number.
+ * @returns {number} The sum of the two numbers.
+ *
+ * @throws {TypeError} Throws an error if either argument is not a number.
+ *
+ * @example
+ * // Correct usage:
+ * const result = add(5, 3);
+ * console.log(result); // 8
+ *
+ * // Incorrect usage:
+ * add("5", 3); // Throws TypeError
+ *
+ * @see {@link addNumbers} for the improved version.
+ */
+function add(a, b) {
+  if (typeof a !== 'number' || typeof b !== 'number') {
+    throw new TypeError('Both arguments must be numbers.');
+  }
+  return a + b;
+}
+
+add(1, 2);
+
+function addNumbers(a, b) {
+  return a + b;
+}
+
+addNumbers(1, 2);
+```
+
+Functions that are marked as deprecated will be crossed out in your IDE. And there will be a tooltip that shows you the deprecation message.
+
+![JSDoc hover](https://i.magecdn.com/ada680/04b687_jsdoc_hover_3?f=webp,q.30,p.f,l.f)
+
+Additionally, you can click on the `addNumbers` in the popup and your IDE will take you to that function.
+
+### TypeScript Specific Comments
+
+There are also two types of TypeScript specific comments.
+
+#### Triple-Slash Directives
+
+**Triple-slash directives** are special single-line comments that provide compiler directives or references. They must appear at the top of the file.
+
+```ts
+/// <reference path="path/to/file.ts" />
+/// <reference types="node" />
+```
+
+- `/// <reference path="..." />`: Includes an additional file in the compilation context.
+- `/// <reference types="..." />`: Includes type definitions from `@types`.
+
+You use triple-slash directives to manage dependencies and type references in TypeScript projects. And they can ensure that certain files are included before others during compilation.
+
+#### Compiler Directive Comments
+
+**Compiler directive comments** are special single-line comments that instruct the TypeScript compiler to alter its behavior for specific lines of code.
+
+The most popular is `@ts-ignore` that ignores TypeScript errors on the next line.
+
+```ts
+// @ts-ignore
+const z: number = "This is a string"; // Normally causes a type error
+```
+
+`@ts-ignore` suppresses any TypeScript errors on the next line, even if the code works and there is no error.
+
+Therefore, it's usually better to use `@ts-expect-error` instead of `@ts-ignore`. `@ts-expect-error` expects a TypeScript error on the next line. If no error occurs, the compiler will emit an error.
+
+```ts
+// @ts-expect-error
+const a: number = "Another string"; // Should cause a type error
+```
+
+### Best Practices
+
+Now I want to share with you some best practices for writing comments that I picked up troughout my career.
+
+#### Some Code Is Self-Explanatory
+
+First of all, **some code is self-explanatory** and doesn't need comments. If a function is so short and simple that every developer can understand what it does, you don't need to add comments to it.
+
+The `add` function that you saw earlier is a good example for a trivial function.
+
+```js
+function add(a, b) {
+  return a + b;
+}
+```
+
+Another good example are simple factory functions, such as action creators in Redux without Redux Toolkit.
+
+```js
+export const addTodo = ({ text }) => ({
+  type: 'ADD_TODO',
+  payload: { text },
+});
+```
+
+#### Redundancy Is Okay
+
+However, on the other hand, **redundancy is okay**, too. Sometimes you might think that a function is obvious, but other team members or your future self might disagree.
+
+For example, in many teams that I lead, we always add TSDoc to our database facades by convention.
+
+```ts
+import type { UserProfile } from '@prisma/client';
+
+import { prisma } from '~/database.server';
+
+/**
+ * Retrieves a user profile record from the database based on its id.
+ *
+ * @param id - The id of the user profile to retrieve.
+ * @returns The user profile with a given id or null if it wasn't found.
+ */
+export async function retrieveUserProfileFromDatabaseById(
+  id: UserProfile['id'],
+) {
+  return prisma.userProfile.findUnique({ where: { id } });
+}
+```
+
+Our reasoning is that it enforces a good habit because sometimes facades can get complex, especially if they contain custom SQL queries. And some new team members might be unfamiliar with Prisma, so the comments help to clarify the code.
+
+As a rule of thumb for beginners, if you're not sure if a comment is needed or not, just add it.
+
+#### Clarity Beats Brevity
+
+**Use full sentences.** And **avoid abbreviations.** Using complete words results in more readable code. When you write code, no one wants to guess whether `res` means `response` or `result` or `residue`, and whether `e` means `error` or `event` or `element` etc.
+
+#### Keep Comments Up-to-Date
+
+As you modify and refactor your code, always ensure the comments are updated as well. Pay special attention to this during code reviews. If the comments don't align with the actual behavior of the code, it can cause confusion about the source of truth. Did the developer forget to update the comments, or did they make a mistake in the implementation?
+
+I'll show you how you can use LLMs to update comments after you've refactored your code later in this video.
+
+#### **Directives Are NOT Fixes**
+
+Generally using directives is a code smell. **Use TypeScript compiler directives consciously.** Overuse can mask genuine type issues. As mentioned above, favor `@ts-expect-error` over `@ts-ignore`.
+
+You can always add a reason behind `@ts-expect-error` to clarify why you are expecting an error.
+
+```ts
+import { describe, expect, test } from 'vitest';
+
+function isState(value: string): value is 'active' | 'inactive' {
+  return value === 'active' || value === 'inactive';
+}
+
+describe('isState()', () => {
+  // ... other test cases
+
+  test('given invalid input type: handles type error', () => {
+    // @ts-expect-error - Testing with a number to ensure invalid input is handled
+    const actual = isState(123);
+    const expected = false;
+
+    expect(actual).toEqual(expected);
+  });
+});
+```
+
+For example, if you have a function where you want to test an invalid input type, you can use `@ts-expect-error` to ignore the error.
+
+**Use links to external resources.** For example, link to documentations, articles, GitHub issues, etc. that give context to your code.
+
+#### When To Use Which
+
+The most important metric to decide when to use which comment type is:
+
+> “When in Rome, do as the Romans do.” - [Julius Caesar](https://en.wikipedia.org/wiki/Julius_Caesar)
+
+In other words, if you're working in a team, you should follow the conventions of your team.
+
+That being said, in our teams we usually adhere to the following conventions:
+
+- `JSDoc` or `TSDoc` for all complex functions, types, objects, components, and hooks above their definitions.
+- Add single-line comments inside of functions to explain the immediate context.
+- Add multi-line comments as delimiters between different sections of code.
+
+### Use LLMs To Generate Comments
+
+- Create new comments
+- Update existing comments after you've written the code
+  - Example prompt with code prior to refactor and after refactoring.
+
+### You Still Need Real Documentation
+
+Even with great inline documentation, you still need proper documentation. Comments, JSDoc, TSDoc, and TypeScript add to your documentation options rather than replacing them.
+
+### You Still Need To Write Clean Code
+
+**IntelliSense is only in your IDE.** And it requires you to hover over the function, and to wait for the popup, before you can read the hints, which interrupts your flow.
+
+> “**Junior developers** think they have to write a lot of code to produce a lot of value.
+> 
+> **Senior developers** understand the value of the code that nobody needed to write.” - [Eric Elliott](https://medium.com/javascript-scene/the-secret-of-simple-code-a2cacd8004dd)
+
+### Read Code To Learn What Readable Code Is
+
+Ultimately, you will have to read a lot of code to learn what readable code is.
+
+---
+
+Leon points:
+
+- Add `README.md`.
+- Style doesn't matter. (e.g. `=========` comments.)
+- When onboarding to new comments, pay special attention to the code that lacks comments that you find incredebly hard to understand. As you figure out what it does, and as your coworkers answer your questions, start adding comments and leave the code cleaner than you found it.
+- If there is a one-liner, or short description of the function, that is different from the name, that might be a code smell that the function is misnamed.
+- If you can understand code without context, that is a good sign that the code is modular.
+- Complex description for code in documentation comments should go into the first part, instead of the `@return` value.
+- The goal of your comments should be to safe your reader brain capacity. Guide them through your code. What, why, and how.
+- Sometimes, it's fine to have a comment and its sister in different places (e.g. `loader` and `form`.)
+- `@link` needs unique name. It is used for FUNCTIONS and VARIABLES, not for URLs. (fact check this)
+- top of file comments that describe what's going on in a file (E.g. explanation of a script).
+- Sometimes people prefer multiple `//` for each line, instead of multiline comments.

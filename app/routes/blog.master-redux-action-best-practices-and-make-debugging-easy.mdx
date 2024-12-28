@@ -22,7 +22,7 @@ export const meta = ({ data }) => getSocialsMetaForBlogPost({
 
 So, I recently released the first videos on my [YouTube channel](https://www.youtube.com/@janhesters) of a series about Redux.
 
-When I talked to my mentees, many of them struggled to get their actions right.
+When I talked to my mentees, some of them struggled to get their actions right.
 
 I want to record this bonus micro-lesson for you to lay out the best practices for actions in detail.
 
@@ -770,3 +770,53 @@ const reducer = (state = initialState, { type, payload } = {}) => {
 Of course, you can avoid this, if you instead transform the data in the respective cases action handler instead.
 
 This difference is small and stylistic. It comes down to preference.
+
+### Redux Toolkit
+
+Everything you learned in this video also applies when you create your slices with `createSlice` from Redux Toolkit (RTK).
+
+My recent videos on Redux received some negative feedback because I'm showing you Redux without RTK and people prefer using RTK. But I believe lots of fundamentals are easier to understand with Vanilla Redux because using RTK then just becomes a matter of learning the new API syntax.
+
+Anyways, here is how the toast reducer would look like with RTK.
+
+```ts title="src/features/toast/toast-slice.ts"
+import type { PayloadAction } from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
+
+import {
+  loginSucceededWithEmail,
+  loginSucceededWithGoogle,
+} from './user-authentication-reducer';
+
+export const {
+  actions: { showToast },
+  reducer,
+} = createSlice({
+  name: 'auth',
+  initialState: {
+    message: '',
+  },
+  reducers: {
+    showToast(state, action: PayloadAction<string>) {
+      state.message = action.payload;
+    },
+  },
+  extraReducers: builder => {
+    builder
+      .addCase(loginSucceededWithEmail, state => {
+        state.message = 'Email login successful';
+      })
+      .addCase(loginSucceededWithGoogle, state => {
+        state.message = 'Google login successful';
+      });
+  },
+});
+```
+
+You can use the `createSlice` function to create your reducers.
+
+You define the `showToast` action creator in the `reducers` object.
+
+And you react to the `loginSucceededWithEmail` and `loginSucceededWithGoogle` actions in the `extraReducers` object.
+
+The syntax of Redux Toolkit is explained in depth in the third video of this series on Redux, so go watch that one next.
