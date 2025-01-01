@@ -1,5 +1,5 @@
 ---
-title: "How To Write Good Comments In JavaScript & TypeScript"
+title: "Your JavaScript Comments Are Secretly Holding You Back"
 datePublished: "2024-12-12"
 description: "In this tutorial, you'll learn how to name and structure Redux actions to make debugging easier and your code more readable. Discover how to use descriptive names, leverage named parameters for clarity, apply data transformations, and hook up multiple reducers per action."
 thumbnailUrl: ""
@@ -29,7 +29,7 @@ And comments are a great way to improve the readability and understandability of
 
 So in this video, you're going to learn how to write good comments in JavaScript and TypeScript.
 
-This video starts with a deep dive into the syntax for writing comments. Here is a quick overview of the different types of comments.
+This video starts with a deep dive into the syntax for writing comments. And here you can see a quick overview of the different types of comments.
 
 | **Comment Type**                | **Syntax**                     | **Description**                                              | **Scope**             |
 |---------------------------------|--------------------------------|--------------------------------------------------------------|-----------------------|
@@ -82,7 +82,7 @@ Single-line comments can be nested. In other words, subsequent delimiters (`//`)
 // // This is a single-line comment
 ```
 
-This can for example happen if you use `cmd + /` to comment out a block of code that contains a single-line comment.
+This can for example happen if you use `cmd + /` to comment out a block of code that already contains a single-line comment.
 
 #### Tooling-Specific Comments
 
@@ -96,6 +96,8 @@ console.log('Hello, world!');
 Tooling specific comments only passively impact the readability and understandability of your code by tweaking the behavior of your tools.
 
 But sometimes you want to use comments to clarify why you are modifying the behavior of your tools.
+
+Take a look at this `Timer` component that effectively acts as a simple stopwatch-like timer.
 
 ```jsx
 import { useEffect, useState } from 'react';
@@ -119,8 +121,6 @@ export function Timer({ interval }) {
   return <div>Elapsed time: {time}ms</div>;
 }
 ```
-
-Here is a `Timer` component that effectively acts as a simple stopwatch-like timer.
 
 You use a comment to explain future developers why you are intentionally omitting `interval` from the dependencies array. This can **avoid accidental rule re-enforcement** without understanding the intended behavior.
 
@@ -190,6 +190,16 @@ console.log('Still no warning.');
 /* eslint-enable no-console */
 ```
 
+Sometimes people prefer multiple `//` for each line, instead of multiline comments.
+
+```js
+// This is a multi-line comment by using multiple single-line comments.
+// It also still spans multiple lines.
+const y = 20;
+```
+
+I prefer this method because you can easily comment many lines with `cmd + /`. However, use what works best for you and your team.
+
 #### 3. **Documentation Comments (JSDoc & TSDoc)**
 
 There is a specific type of multi-line comment used for documenting code called [**JSDoc**](https://jsdoc.app/). JSDoc comments start with `/**` and end with `*/`. Each line inside the comment block has a `*` at the beginning. They include tags like `@param` and `@returns` to describe code elements.
@@ -219,17 +229,42 @@ These documentation comments are recognized by your tooling. For example, Intell
 
 ![JSDoc hover](https://i.magecdn.com/ada680/0ce588_jsdoc_hover?f=webp,q.30,p.f,l.f)
 
-JSDoc supports all primitive types as well as objects.
+JSDoc supports all primitive types as well as objects and arrays.
 
-Additionally, JSDoc allows you to define custom types.
+If a function takes in an object, you can define the type of each key in the object. For example, if a function takes in a `user` object, you can the type of each key and write a short description of what the key is for.
+
+```js
+/**
+ * Processes a user object.
+ * @param {Object} user - The user object to process.
+ * @param {number} user.id - The unique identifier for the user.
+ * @param {string} user.email - The email address of the user.
+ * @param {number} user.age - The age of the user. Must be a positive integer.
+ * @param {boolean} user.isActive - Indicates whether the user has verified
+ * their email.
+ * @returns {string} A message about the user's status.
+ */
+function processUser(user) {
+  return user.isActive
+    ? `User ${user.email} is active.`
+    : `User ${user.email} is not active.`;
+}
+```
+
+When refactors are too hard, **use comments to clarify unclear variable names**. If a code base is large enough, there is a high likelihood that you will encounter poorly named variables which can cause confusion.
+
+The example above illustrates how you can use JSDoc to clarify what properties stand for if the name of the property doesn't make it obvious. `isActive` could mean anything, but the comment makes it clear that it means whether the user has verified their email.
+
+But JSDoc also allows you to define custom types. This is useful if you want to reuse a type in multiple places.
 
 ```js
 /**
  * @typedef {Object} User
  * @property {number} id - The unique identifier for the user.
- * @property {string} name - The name of the user.
  * @property {string} email - The email address of the user.
- * @property {boolean} isActive - Whether the user is active.
+ * @property {number} age - The age of the user. Must be a positive integer.
+ * @property {boolean} isActive - Indicates whether the user has verified
+ * their email.
  */
 ```
 
@@ -243,8 +278,8 @@ You can now use this type, for example in the definition of a function.
  */
 function processUser(user) {
   return user.isActive
-    ? `User ${user.name} is active.`
-    : `User ${user.name} is not active.`;
+    ? `User ${user.email} is active.`
+    : `User ${user.email} is not active.`;
 }
 ```
 
@@ -273,7 +308,7 @@ function add(a: number, b: number) {
 
 Whether you write JSDoc or TSDoc only depends on the file ending. If it ends in `.js` or `.jsx`, you use JSDoc. If it ends in `.ts` or `.tsx`, you use TSDoc.
 
-TSDoc also allows you to describe keys of objects.
+TSDoc also allows you to describe keys of custom types.
 
 ```ts
 /**
@@ -286,9 +321,9 @@ type User = {
   id: string;
 
   /**
-   * The user's full name.
+   * The user's email address.
    */
-  name: string;
+  email: string;
 
   /**
    * The user's age.
@@ -297,31 +332,57 @@ type User = {
   age: number;
 
   /**
-   * The user's email address.
-   */
-  email: string;
-
-  /**
    * Indicates whether the user has verified their email.
    */
-  isEmailVerified: boolean;
+  isActive: boolean;
 };
 ```
 
-It deosn't matter whether you use `type` or `interface`.
+When you now create an object with the `User` type, it will show you the comments when hovering over the object's properties. This technique works for both `type` and `interface`.
 
 Similar to multi-line comments, you can neither use JSDoc nor TSDoc to control directives for your formatting tools.
 
 ### Quick Documentation Comment API Tips
 
-You can check out the tags reference of the TSDoc section learn about all the available tags.
+#### Keep Complex Descriptions in the Summary
 
-But I wanted to highlight 4 more tags that I find particularly useful and use frequently for you.
+Complex descriptions for code in your documentation comments should go into the first part, instead of the `@return` value. 
+
+```ts
+/**
+ * Gets the relevant date key (createdAt or updatedAt) based on the intent type.
+ * For create intents, returns createdAt. For all other intents, returns
+ * updatedAt.
+ *
+ * @param intent - The intent type to get the relevant date key for.
+ * @returns The date key to use for sorting cards with this intent.
+ * @throws Error if the intent is not a valid card-modifying intent.
+ */
+const getRelevantDateKeyByIntent = (
+  intent: IntentModifyingCardsOnTheBoard,
+): keyof Pick<PartialContentCard, 'createdAt' | 'updatedAt'> => {
+  if (!INTENTS_MODIFYING_CARDS_ON_THE_BOARD.includes(intent)) {
+    throw new Error(`Unhandled intent: ${intent}`);
+  }
+
+  if (intent === BOARD_INTENTS.createContentCard) {
+    return 'createdAt';
+  }
+
+  return 'updatedAt';
+};
+```
+
+#### Other Useful TSDoc Tags
+
+You can check out the [tags reference of the TSDoc documentation](https://tsdoc.org/pages/spec/tag_kinds/) to learn about all the available tags.
+
+But I wanted to highlight 4 more tags that I use frequently for you.
 
 - `@deprecated`: Indicates the function is outdated and provides a suggestion.
 - `@throws`: Documents the type of error thrown and under what conditions.
 - `@example`: Gives example usage of the function. It can include correct and incorrect cases.
-- `@see`: Links to a related resource or an improved version of the function. It can be combined with `@link` to link to a specific function.
+- `@see`: Links to a related resource or an improved version of the function. It can be combined with `@link` to link to a specific variable or function. It is not intended for URLs, although it can technically include them.
 
 ---
 
@@ -412,7 +473,9 @@ const a: number = "Another string"; // Should cause a type error
 
 ### Best Practices
 
-Now I want to share with you some best practices for writing comments that I picked up troughout my career.
+Now I want to share with you some best practices for writing comments that I picked up troughout my career together with some examples.
+
+I considered using real production code or creating simple examples. Production code often has extra details, while simple examples are more focused. To give you a feel for the real world, I chose to use actual code. I will make it concise by removing unnecessary parts with inline comments.
 
 #### Some Code Is Self-Explanatory
 
@@ -435,6 +498,8 @@ export const addTodo = ({ text }) => ({
 });
 ```
 
+If your comment is a one-liner or a short description of the function, and it differs from the function's name, that might be a code smell indicating the function is misnamed.
+
 #### Redundancy Is Okay
 
 However, on the other hand, **redundancy is okay**, too. Sometimes you might think that a function is obvious, but other team members or your future self might disagree.
@@ -447,15 +512,17 @@ import type { UserProfile } from '@prisma/client';
 import { prisma } from '~/database.server';
 
 /**
- * Retrieves a user profile record from the database based on its id.
+ * Retrieves the first user profile record from the database based on the
+ * user's name.
  *
- * @param id - The id of the user profile to retrieve.
- * @returns The user profile with a given id or null if it wasn't found.
+ * @param name - The name of the user profile to retrieve.
+ * @returns The first user profile with a given name or null if no such user
+ * was found.
  */
-export async function retrieveUserProfileFromDatabaseById(
-  id: UserProfile['id'],
+export async function retrieveUserProfileFromDatabaseByName(
+  name: UserProfile['name'],
 ) {
-  return prisma.userProfile.findUnique({ where: { id } });
+  return prisma.userProfile.findFirst({ where: { name } });
 }
 ```
 
@@ -465,19 +532,21 @@ As a rule of thumb for beginners, if you're not sure if a comment is needed or n
 
 #### Clarity Beats Brevity
 
-**Use full sentences.** And **avoid abbreviations.** Using complete words results in more readable code. When you write code, no one wants to guess whether `res` means `response` or `result` or `residue`, and whether `e` means `error` or `event` or `element` etc.
+**Use full sentences.** And **avoid abbreviations.** Using complete words results in more readable code. When you write code, no one wants to guess whether `res` means `response` or `result` or `residue`, and whether `e` means `error` or `event` or `element` etc. The same is true for your comments.
 
 #### Keep Comments Up-to-Date
 
-As you modify and refactor your code, always ensure the comments are updated as well. Pay special attention to this during code reviews. If the comments don't align with the actual behavior of the code, it can cause confusion about the source of truth. Did the developer forget to update the comments, or did they make a mistake in the implementation?
+When you modify and refactor your code, always **ensure your comments are updated** as well. Pay special attention to this during code reviews. If the comments don't align with the actual behavior of the code, it can cause confusion about the source of truth. Did the developer forget to update the comments? Or did they make a mistake in the implementation?
 
 I'll show you how you can use LLMs to update comments after you've refactored your code later in this video.
 
 #### **Directives Are NOT Fixes**
 
-Generally using directives is a code smell. **Use TypeScript compiler directives consciously.** Overuse can mask genuine type issues. As mentioned above, favor `@ts-expect-error` over `@ts-ignore`.
+**Use TypeScript compiler directives consciously.** Overuse can mask genuine type issues. As mentioned above, favor `@ts-expect-error` over `@ts-ignore`.
 
-You can always add a reason behind `@ts-expect-error` to clarify why you are expecting an error.
+Generally using directives is a code smell for code that is insufficiently typed. Of course, there are exceptions where you expect a type error. In those cases, you can always add a reason behind `@ts-expect-error` to clarify why you are expecting an error.
+
+For example, if you have a function where you want to test an invalid input type, you can use `@ts-expect-error` to ignore the error.
 
 ```ts
 import { describe, expect, test } from 'vitest';
@@ -499,9 +568,63 @@ describe('isState()', () => {
 });
 ```
 
-For example, if you have a function where you want to test an invalid input type, you can use `@ts-expect-error` to ignore the error.
+#### **Provide Context with Links**
 
-**Use links to external resources.** For example, link to documentations, articles, GitHub issues, etc. that give context to your code.
+**Use the `@see` tag to link to external resources** where appropriate. For example, link to documentations, articles, GitHub issues, etc. that give context to your code. Sometimes typing everything a developer needs to understand the code is too much for a comment. Or a develper can get the gist of your code from your comments, but for a full understanding they need to read the documentation.
+
+I recently helped to build a `KanbanBoard` component for a project. That board implement drag and drop via the `DataTransfer` API. Here is a trimmed down version of the code for the `KanbanBoardProvider` component.
+
+```tsx
+export const KanbanBoardProvider = ({
+  announcements,
+  screenReaderInstructions,
+  container,
+  children,
+}: KanbanBoardProviderProps) => {
+  const draggableDescribedById = useId();
+  const monitorsRef = useRef<DndMonitorEventHandler[]>([]);
+  // Store the activeId in a ref to avoid re-rendering when it changes.
+  // This is useful for announcing the drag start and end when you lack access
+  // to the active ID, e.g. because you're using `onDragOver` from the
+  // `DataTransfer` API. When trying to access data during the dragover event
+  // using getData(), it will always return an empty string. This is a security
+  // restriction in the HTML5 Drag and Drop API - you cannot access the data
+  // during the dragover event, only during the drop event.
+  // @see https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer
+  const activeIdRef = useRef<string>('');
+
+  // ... more code
+
+  const contextValue = useMemo(
+    () => ({
+      activeIdRef,
+      draggableDescribedById,
+      registerMonitor,
+      unregisterMonitor,
+      triggerEvent,
+    }),
+    [
+      activeIdRef,
+      draggableDescribedById,
+      registerMonitor,
+      unregisterMonitor,
+      triggerEvent,
+    ],
+  );
+
+  return (
+    // ... more code
+  );
+};
+```
+
+When you create an accessible kanban board, screen readers must announce certain details, such as the item being dragged. The native HTML API does NOT provide this information during a drag. Therefore, you must manually track the dragged item. In this example, you do it in the `activeIdRef`. The comment above this code explains why you can't access the item's ID during the drag and why it's stored in a ref. It also includes a link to the MDN documentation for the `DataTransfer` API for further reading.
+
+#### Split Comments When Needed
+
+Sometimes, it's fine to have a comment and its sibling in different places.
+
+For example, you might have comments for a form and a loader in Remix, or a helper function and a saga in Redux, etc. These comments don't need to be adjacent. They can reference each other's variables to help locating related code.
 
 #### When To Use Which
 
@@ -509,48 +632,351 @@ The most important metric to decide when to use which comment type is:
 
 > “When in Rome, do as the Romans do.” - [Julius Caesar](https://en.wikipedia.org/wiki/Julius_Caesar)
 
-In other words, if you're working in a team, you should follow the conventions of your team.
+In other words, if you're working in a team, you should follow the conventions of your team. If your team lacks a convention, bring it up with your team and start a discussion. Capture your team's preferences in your project's `README.md`.
 
 That being said, in our teams we usually adhere to the following conventions:
 
-- `JSDoc` or `TSDoc` for all complex functions, types, objects, components, and hooks above their definitions.
+- Add `JSDoc` or `TSDoc` to all complex functions, types, objects, components, and hooks above their definitions.
 - Add single-line comments inside of functions to explain the immediate context.
 - Add multi-line comments as delimiters between different sections of code.
 
+Here is some more of the kanban board code to show you how you can use this convention in practice.
+
+```tsx
+/* eslint-disable jsx-a11y/heading-has-content */
+import type {
+  ChangeEvent,
+  ComponentProps,
+  KeyboardEvent,
+  MutableRefObject,
+} from 'react';
+
+// ... more imports
+import { cn } from '~/utils/shadcn-ui';
+
+/*
+Accessibility
+*/
+
+type DndMonitorEventHandler = {
+  onDragStart?: (activeId: string) => void;
+  onDragMove?: (activeId: string, overId?: string) => void;
+  onDragOver?: (activeId: string, overId?: string) => void;
+  onDragEnd?: (activeId: string, overId?: string) => void;
+  onDragCancel?: (activeId: string) => void;
+};
+
+// ...more types and hooks and components
+
+/*
+Constants
+*/
+
+/**
+ * Event data transfer types
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer
+ */
+const DATA_TRANSFER_TYPES = {
+  CARD: 'kanban-board-card',
+};
+
+// ... more constants
+
+/*
+Board
+*/
+
+export const KanbanBoard = forwardRef<HTMLDivElement, ComponentProps<'div'>>(
+  ({ className, ...props }, ref) => {
+    return (
+      <div
+        className={cn(
+          'flex h-full flex-grow items-start gap-x-2 overflow-x-auto py-1',
+          className,
+        )}
+        ref={ref}
+        {...props}
+      />
+    );
+  },
+);
+KanbanBoard.displayName = 'KanbanBoard';
+
+/**
+ * Add some extra margin to the right of the container to allow for scrolling
+ * when adding a new column.
+ */
+export const KanbanBoardExtraMargin = forwardRef<
+  HTMLDivElement,
+  ComponentProps<'div'>
+>(({ className, ...props }, ref) => {
+  return (
+    <div
+      className={cn('h-1 w-8 flex-shrink-0', className)}
+      ref={ref}
+      {...props}
+    />
+  );
+});
+KanbanBoardExtraMargin.displayName = 'KanbanBoardExtraMargin';
+
+/*
+Column
+*/
+
+type KanbanBoardColumnProps = {
+  columnId: string;
+  onDropOverColumn?: (dataTransferData: string) => void;
+};
+
+// ... more types and components
+```
+
+At the top of the file, you can disable all tooling that might interfere with your code. Sometimes the top of the file also contains a large blob of context, for example to describe a script.
+
+Next we use multi-line comments to separate the code into different sections, e.g. `Accessibility`, `Constants`, `Board`, `Column`, etc. Why multiline comments? Because they are easy to find when you rapidly scroll through your code. Some people also like to add a bunch of markers like `=========` or `---` to further visually separate the sections.
+
+```js
+// ==============================
+// Constants
+// ==============================
+```
+
+Again, use the same style as your team uses.
+
+Lastly, if a components need some extra context, we add it as TSDoc. The `KanbanBoardExtraMargin` might seem unnecesssary, so we clarify when you should use it in a comment.
+
+#### Write Code Like A Tutorial
+
+My favorite guiding principle to keep code readable and easy to understand, and therefore also for comments, is to:
+
+> “Write code like a tutorial.” - [Jan Hesters](https://x.com/janhesters/status/1858098007134146839)
+
+
+**Save your reader's brain capacity with your comments.** Guide them through your code and answer the relevant questions:
+
+- **What? -** If the code is complex and hard to follow, or if it's unintuitive to read (e.g. Regex), clearly state the functionality or outcome of the code. You might also want to provide examples or edge cases.
+- **How? -** Show the steps, order and logic of your approach or algorithm. Make it easier for your readers to understand the implementation details.
+- **Why? -** Sometimes code is easy to understand, but it's unclear why or in what context you need it. Explain the trade-offs and reasons behind the code. You might also want to offer insights into alternative methods and why they were NOT selected.
+
+You don't always need to answer all of these questions. Focus only on the ones that matter for clarity.
+
+As an example, check out this `DragAndDrop` component.
+
+```tsx
+import { ImageIcon } from 'lucide-react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { cn } from '~/utils/shadcn-ui';
+
+export type DragAndDropProps = JSX.IntrinsicElements['input'] & {
+  dragAndDropLabel?: string;
+  fileTypesLabel?: string;
+  /** Fires with the chosen file as soon as the user choses a file. */
+  onFileChosen?: (file: File) => void;
+  /** Fires with the files cleaned name as soon as a user choses a file. */
+  onFilenameChosen?: (filename: string) => void;
+  uploadLabel?: string;
+};
+
+export const DragAndDrop = forwardRef<HTMLInputElement, DragAndDropProps>(
+  function DragAndDrop(
+    {
+      className,
+      dragAndDropLabel,
+      fileTypesLabel,
+      id,
+      name,
+      onFileChosen,
+      onFilenameChosen,
+      uploadLabel,
+      ...props
+    },
+    forwardedRef,
+  ) {
+    const { t } = useTranslation('drag-and-drop');
+
+    // Show the file name in the user interface.
+    const [filename, setFilename] = useState<string | undefined>();
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Update the forwarded ref when the new ref changes.
+    useEffect(() => {
+      if (forwardedRef) {
+        if (typeof forwardedRef === 'function') {
+          forwardedRef(fileInputRef.current);
+        } else {
+          forwardedRef.current = fileInputRef.current;
+        }
+      }
+    }, [forwardedRef]);
+
+    // Drag and drop handling.
+    const [dragIsActive, setDragIsActive] = useState(false);
+
+    return (
+      <div
+        className={cn(
+          'mt-2 flex justify-center rounded-lg border border-dashed border-border px-6 py-10',
+          className,
+          dragIsActive && 'relative',
+        )}
+        onDragEnter={event => {
+          // 1. Show the overlay.
+          event.preventDefault();
+          event.stopPropagation();
+          setDragIsActive(true);
+        }}
+        onDrop={event => {
+          // 4. Prevent file from opening in the browser when dropped and
+          // close the overlay.
+          event.preventDefault();
+          event.stopPropagation();
+          setDragIsActive(false);
+
+          // 5. Set the file as the input value and show its name in the
+          // user interface.
+          if (fileInputRef.current) {
+            fileInputRef.current.files = event.dataTransfer.files;
+            onFileChosen?.(event.dataTransfer.files[0]);
+            const newFilename = event.dataTransfer.files[0].name;
+            setFilename(newFilename);
+            onFilenameChosen?.(newFilename);
+          }
+        }}
+      >
+        <div className="flex flex-col items-center text-center">
+          {/* ... more code ... */}
+        </div>
+
+        {dragIsActive && (
+          <div
+            className="absolute top-0 h-full w-full bg-background opacity-50"
+            onDragOver={event => {
+              // 2. Prevent file from opening in the browser when dropped.
+              event.preventDefault();
+              event.stopPropagation();
+            }}
+            onDragLeave={event => {
+              // 3. Remove overlay when dragging outside the border.
+              event.preventDefault();
+              event.stopPropagation();
+              setDragIsActive(false);
+            }}
+          />
+        )}
+      </div>
+    );
+  },
+);
+```
+
+In it, you use TSDoc to explain **what** the two `on` handlers do. This makes them easy to use because when another developer sees the `DragAndDrop` component with those props and hovers over the them, the comments will show up and explain what the they do.
+
+![IntelliSense showing the `onFileChosen` prop](https://i.magecdn.com/ada680/3f7424_jsdoc_hover_4?f=webp,q.30,p.f,l.f)
+
+Inside of the component, comments clarify what the hooks track and do.
+
+And lastly, the numbered comments in the JSX guide the reader by giving context on the order in which the events fire, how they work and why they are needed.
+
 ### Use LLMs To Generate Comments
 
-- Create new comments
-- Update existing comments after you've written the code
-  - Example prompt with code prior to refactor and after refactoring.
+You can use LLMs to help you generate comments. You typically want to include existing code with comments in your prompt, so that the LLM can copy your style. You can use the same technique to update comments.
+
+Let's say you have a function that you refactored. You can include the previous function with its comments, as well as the new function and ask the LLM to update the comments.
+
+---
+
+**Note to Cheta:** Use our company ChatGPT account to record the following in the browser.
+
+---
+
+````md title="Prompt to update comments with LLM"
+I have rewritten my function to count the number of user profiles in the database. Previously it was this:
+
+```ts
+import type { UserProfile } from '@prisma/client';
+
+import { prisma } from '~/database.server';
+
+/**
+ * Retrieves the first user profile record from the database based on the
+ * user's name.
+ *
+ * @param name - The name of the user profile to retrieve.
+ * @returns The first user profile with a given name or null if no such user
+ * was found.
+ */
+export async function retrieveUserProfileFromDatabaseByName(
+  name: UserProfile['name'],
+) {
+  return prisma.userProfile.findFirst({ where: { name } });
+}
+```
+
+Now it looks like this:
+
+```ts
+export async function countUserProfilesInDatabaseByName(
+  name: UserProfile['name'],
+) {
+  return prisma.userProfile.count({ where: { name } });
+}
+```
+
+Please give me the updated TSDoc, so I can copy it.
+````
+
+It will answer something like this:
+
+````md title="Updated comments answer by LLM"
+Here's the updated TSDoc comment for your revised function:
+
+```ts
+/**
+ * Counts the number of user profiles in the database with a given name.
+ *
+ * @param name - The name of the user profiles to count.
+ * @returns The count of user profiles with the specified name.
+ */
+```
+
+You can copy this comment and place it above your `countUserProfilesInDatabaseByName` function.
+````
+
+When you use LLMs for comments, **always double-check the generated comments for accuracy.** Sometimes, you need to guide the LLM in your prompt to include or highlight specific behaviors of your code.
+
+### Read Code To Learn What Readable Code Is
+
+You will have to read a lot of code to understand what readable code looks like. Whenever you join a new codebase and feel frustrated because the code is difficult to follow, or when you revisit code you wrote months or years ago and curse your former self for its poor readability, take those moments as learning opportunities. Think about how you would have preferred the code to be written.
+
+### Leave Code Cleaner Than You Found It
+
+In such situations, pay special attention to code that lacks comments and is difficult or frustrating to understand. As you figure out what it does, and as your coworkers answer your questions, start adding comments to make it easier for future teammates to understand what the code does and where it is used.
 
 ### You Still Need Real Documentation
 
-Even with great inline documentation, you still need proper documentation. Comments, JSDoc, TSDoc, and TypeScript add to your documentation options rather than replacing them.
+Even if you have excellent inline documentation, you still need proper documentation. Comments, JSDoc, TSDoc, and TypeScript are additions to your documentation toolkit rather than replacements. Make sure to have a `README.md` file that makes it easy to onboard to your project. And consider adding more `README.md` files in the directories that need them.
 
 ### You Still Need To Write Clean Code
 
-**IntelliSense is only in your IDE.** And it requires you to hover over the function, and to wait for the popup, before you can read the hints, which interrupts your flow.
+**IntelliSense is only in your IDE.** But you'll often read code in places where you might lack IntelliSense.
+
+Additionally, **IntelliSense interrupts your flow**. It requires you to hover over a function and wait for a popup before you can read the hints.
+
+While it’s impossible for sufficiently complex codebases to be entirely understandable without context through comments or documentation, you should still strive to make your code as modular as possible.
+
+> “If you can understand your code without context, your code is modular.” - [Jan Hesters](https://x.com/janhesters/status/1874024446291566856)
+
+Furthermore, **code that follows established patterns is easy to pick up.** On one hand, "established" means patterns already in use by your team in the codebase. On the other hand, it refers to patterns that are well-documented and widely used in the broader community. For example, packages like React Query, Tailwind CSS, or Redux, and abstract data types such as tries, functors, monads, and transducers
+
+One of the main techniques in JavaScript to make your code more modular is to use pure functions and functional programming. I teach you how to do that in ["Unleash JavaScript's Potential with Functional Programming"](https://janhesters.com/blog/unleash-javascripts-potential-with-functional-programming), so go watch that next.
+
+I want leave you with a quote from Eric Elliott:
 
 > “**Junior developers** think they have to write a lot of code to produce a lot of value.
 > 
 > **Senior developers** understand the value of the code that nobody needed to write.” - [Eric Elliott](https://medium.com/javascript-scene/the-secret-of-simple-code-a2cacd8004dd)
 
-### Read Code To Learn What Readable Code Is
-
-Ultimately, you will have to read a lot of code to learn what readable code is.
-
----
-
-Leon points:
-
-- Add `README.md`.
-- Style doesn't matter. (e.g. `=========` comments.)
-- When onboarding to new comments, pay special attention to the code that lacks comments that you find incredebly hard to understand. As you figure out what it does, and as your coworkers answer your questions, start adding comments and leave the code cleaner than you found it.
-- If there is a one-liner, or short description of the function, that is different from the name, that might be a code smell that the function is misnamed.
-- If you can understand code without context, that is a good sign that the code is modular.
-- Complex description for code in documentation comments should go into the first part, instead of the `@return` value.
-- The goal of your comments should be to safe your reader brain capacity. Guide them through your code. What, why, and how.
-- Sometimes, it's fine to have a comment and its sister in different places (e.g. `loader` and `form`.)
-- `@link` needs unique name. It is used for FUNCTIONS and VARIABLES, not for URLs. (fact check this)
-- top of file comments that describe what's going on in a file (E.g. explanation of a script).
-- Sometimes people prefer multiple `//` for each line, instead of multiline comments.
+I love you very much. Thank you so much for watching. And subscribe to this channel for more advanced JavaScript tutorials. Peace.
