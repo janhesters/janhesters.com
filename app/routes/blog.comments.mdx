@@ -498,7 +498,24 @@ export const addTodo = ({ text }) => ({
 });
 ```
 
-If your comment is a one-liner or a short description of the function, and it differs from the function's name, that might be a code smell indicating the function is misnamed.
+If your comment is a one-liner or a short description of a function or variable and differs from its name, it might be a code smell suggesting it is misnamed.
+
+The following code was from a real code base. It contained a `NotificationPanelMetaData` model that contained the settings and notifications for the notification panel, which pops up if you click the bell in the top right corner.
+
+```prisma
+/// Contains the notifications and settings for the notification panel.
+model NotificationCenter {
+  // some properties
+}
+```
+
+The comment on the model clarified what it was for. But the comment was unneccesary because you can make clear what the model is for by giving it a more descriptive name.
+
+```prisma
+model NotificationPanelMetaData {
+  // some properties
+}
+```
 
 #### Redundancy Is Okay
 
@@ -526,9 +543,17 @@ export async function retrieveUserProfileFromDatabaseByName(
 }
 ```
 
-Our reasoning is that it enforces a good habit because sometimes facades can get complex, especially if they contain custom SQL queries. And some new team members might be unfamiliar with Prisma, so the comments help to clarify the code.
+Our reasoning is that it enforces a good habit since facades can sometimes get complex, especially when they include custom SQL queries. Additionally, new team members might be unfamiliar with Prisma, so comments help clarify the code.
 
-As a rule of thumb for beginners, if you're not sure if a comment is needed or not, just add it.
+As a rule of thumb for beginners: **if you're unsure whether a comment is needed, just add it**.
+
+For example, you might know that `8 * 1024 * 1024` is the number of bytes in 8MB. But someone else who didn't study computer science might NOT.
+
+```js
+const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8MB
+```
+
+Besides, **sometimes comments are just there to reduce the reader's cognitive load**, even if technically everyone could figure it out.
 
 #### Clarity Beats Brevity
 
@@ -878,7 +903,7 @@ In it, you use TSDoc to explain **what** the two `on` handlers do. This makes th
 
 Inside of the component, comments clarify what the hooks track and do.
 
-And lastly, the numbered comments in the JSX guide the reader by giving context on the order in which the events fire, how they work and why they are needed.
+And lastly, the numbered comments in the JSX guide the reader by giving context on the order in which the events fire, **how** they work and **why** they are needed.
 
 ### Use LLMs To Generate Comments
 
@@ -980,3 +1005,10 @@ I want leave you with a quote from Eric Elliott:
 > **Senior developers** understand the value of the code that nobody needed to write.” - [Eric Elliott](https://medium.com/javascript-scene/the-secret-of-simple-code-a2cacd8004dd)
 
 I love you very much. Thank you so much for watching. And subscribe to this channel for more advanced JavaScript tutorials. Peace.
+
+
+---
+
+Split stuff.
+
+The `add` function that you saw in the first video is a good emaple for a travial function. If you're already familiar with the different types of comments in JavaScript, don't worry about the first video. This video is the only one you want to watch.
