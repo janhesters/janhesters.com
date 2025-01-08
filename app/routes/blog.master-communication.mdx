@@ -1,0 +1,205 @@
+---
+title: 'The Ultimate Guide To Remote Work Communication As A Developer'
+datePublished: '2024-10-22'
+description: 'Learn how to isolate side effects and write clean, maintainable asynchronous code using Redux Saga. Create your own saga middleware and understand how it works.'
+thumbnailUrl: 'https://i.magecdn.com/ada680/eeb5ba_usecallback_vs_usememo?f=webp,q.20,p.f,l.f'
+isDraft: true
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+Remote work offers incredible freedom and can feel like a dream come true. But if done wrong, it can blur the lines between work and life, and create unnecessary stress. Even worse, I've seen amazing programmers lose their job simply because they lacked communication skills.
+
+I've been working remotely for over seven years. One of the companies I worked for, Hopin, at one point had over 1000 employees all working remotely. In this article, I'm going to share 20 lessons I've learned about remote work to help you stay visible, valuable, and thrive while working from home, in cafes, or even on the beach.
+
+### Trust & Transparency
+
+First of all, **trust and transparency are the foundation of remote work**. Because your boss or team can't see you face-to-face all the time, you have to be transparent about your work and your availability. When you lose trust, you'll probably lose your job very quickly, so focus on honesty, clarity, and consistent communication.
+
+### “When in Rome, do as the Romans do.”
+
+Every company has different communication practices. While I'm going to share many insights that I learned over the years with your going forward, you should always **stick to your company's communication guidelines** and Slack etiquette.
+
+So the first thing you should do when you start remote work is to **find the documentation** of your company. Most companies share guidelines during onboarding. If they don't, proactively ask or search for them.  
+
+If no guidelines exist talk to your manager or a senior engineer and learn from them. Possibly offer to help create some guidelines if that doesn't interfere with your main work and if your team encourages you to do so.
+
+### Get To Know Your Team
+
+One of the main problems some people have with remote work is the lack of human connection.
+
+To combat that, you want to hit the ground running from day one. During your onboarding, if it's acceptable at your company, **schedule short (30-minute) coffee chats with key people.** This should include your manager, as well as the other developers on your team and, if your team has them, your designer and product manager.
+
+Getting to know people on a personal level can help you collaborate better, build trust, and simply feel more connected to your team. Some companies even allow or encourage you to have coffee chats on a regular basis.
+
+### Make Your Work Visible
+
+In a remote environment, it's easy for your boss and teammates to miss your impact. Actively sharing your work is the secret to being seen and recognized.
+
+**Show the visual elements.** If you’ve created a new UI component, record a quick demo video or at least share screenshots. You can include them in your PRs, present them during standup meetings, or simply post them in your team's Slack channel.
+
+Additionally, if possible, **demonstrate the functional aspects.** For example, if you’ve built a new REST API endpoint, showcase how it works by recording a video using Postman or a similar tool.
+
+Try to **post every day**. In order to be able to do that, you need to keep your PRs small, which as a side effect makes code review easier and further increases the delivery speed of you and your team.
+
+#### Why Visibility Matters
+
+Sharing your work **builds hype**. Your manager, teammates, and CEO will see how you contribute to the product, which gets everyone excited. People will react to your work with emojis and congratulations, further boosting your motivation.
+
+Posting updates regularly also **reduces time pressure**. Estimating dev timelines is nearly impossible, and [most software projects are late](https://www.proquest.com/openview/6035cbc6ccae06dc0f692504eaf1226d/1?pq-origsite=gscholar&cbl=21418). Demos let everyone see progress without forcing you to overpromise on deadlines. In your updates, you can share how you implemented behaviors and what blockers you encountered, which helps manage your manager's expectations.
+
+Did you know that most workplaces have a bias towards [tall](https://en.wikipedia.org/wiki/Height_discrimination) and [handsome](https://phys.org/news/2021-08-field.html) people? In remote work, you can counter this by regularly demonstrating your progress. It ensures your manager sees your contributions clearly, making it easier to **assess your performance fairly**. If you feel you're being treated unfairly in performance evaluations, your updates can serve as clear proof of what you achieved and when.
+
+### Communicate Your Availability and Absences
+
+**Share your working hours and time zone** with your team to let them know when you're typically online. For example, on your first day, you could say: "I usually work from 9 AM to 6 PM UTC, with a 1-hour lunch break at noon." This lets your team know when it's okay to ping you which can avoid interruptions in your personal life.
+
+**Communicate any absences proactively.** If you need to step out for an errand or handle an emergency, inform your team how long you'll be offline and when you plan to catch up on missed time.
+
+### Announce Your Vacation Early
+
+If you're going on vacation, **give a heads-up**. Notify your team in a standup or via an async message a few days beforehand.
+
+Before you go on vacation, **close or delegate tasks**. Finish as many tasks as you can before you leave. Sort out with your manager or teammates who will take over any open work.
+
+And pay it forward and **pick up others' work.** If someone else is going on vacation, offer to help with their tasks while they're away.
+
+### Keep Your Slack Status Accurate
+
+The only way your team knows you're available is by seeing you as 'online' in Slack. Make sure you **stay online** during work hours by using the Slack client or, if you use Slack in a browser, by keeping the Slack tab open. If you fail to do so, it can give your team the impression that you're not actually working, which in the worst can get you fired.
+
+If you're sick, on vacation, or running an errand, **set your status** accordingly.
+
+### Use Your Calendar
+
+**Keep your calendar updated** so everyone knows your availability. If you can't attend a meeting, decline it. If you need to cancel at the last minute, notify the relevant people on Slack to avoid wasting their time. Proactively propose a new date and time to **reschedule any missed meetings**.
+
+Most calendar apps allow you to schedule meetings, enable others to edit the agenda, invite additional participants, and propose new times if there are conflicts.
+
+### Smart Profiles, Smart Impressions
+
+**Use a professional profile picture** and **think before you share** any leisure posts. Remote communication isn't your Instagram. Your colleagues and clients will see your profile picture and content in your channels. Keep it respectful - even in casual Slack channels, maintain a certain level of decorum.
+
+For example, I once worked at a company where a teammate set their profile picture to a woman with a dozen cigarettes in her mouth and their Slack status to "Now I have become Death, destroyer of worlds." While it was meant as a joke, it weirded out all their colleagues, and HR got involved quickly.
+
+### Balanced Tool Use
+
+**Avoid tool overload** (but use them wisely). With Slack, Notion, GitHub, Google Docs, and more, it's easy for people to miss messages. If you ping a teammate on a PR and they don't respond, send them a Slack message with the link to the PR. Don't assume they're ignoring you - they might just have missed it.
+
+### Send Links, Not Instructions to “Search”
+
+This is a minor point, but if someone asks you for information, don't just say, “It's in Notion.” Send the exact link. You already know where it is, and it'll save your teammates time. This is especially important when multiple people might need the same information, as sharing the direct link avoids having several people waste time searching for it.
+
+### Gear Up
+
+Make sure you have good equipment. Your computer is, of course, the most important. However, as a programmer, you spend a lot of time at your desk, so a proper chair, desk, and a stable internet connection are essential. Beyond that, invest in a good camera, microphone, and proper lighting. 
+
+Fortunately, many companies provide home office equipment. But even if you're a freelancer or your company can't cover the costs, it's worth investing in these items yourself over time.
+
+### Standup Best Practices
+
+Let's talk about meetings. The most common one is your standup. The rules for remote standups are the same as for in-person standups.
+
+During standup, give clear and concise updates. ***Always* answer** these questions:
+
+1. What did you work on before your current task?
+2. What is your current ticket?
+3. What do you plan to pick up next?
+
+### Take Meetings Seriously
+
+This mainly comes down to three key points:
+
+**Be prepared.** Put on an alarm in your phone 5-10 minutes before the meeting and write down your thoughts about the agenda. If the meeting is a standup, prepare your answers to the three questions above.
+
+**Be on time.** Punctuality shows respect for everyone's schedule.
+
+**Keep your camera on and pay attention.** The fastest way to fail horribly is to open another tab and only passively listen for your name. You will get called out, miss important details, and lack context for your next task. This can lead to mistakes, bugs, or incorrect implementations of requirements, wasting everyone's time and reflecting poorly on your performance.
+
+If you feel fatiqued from too many meetings ...
+
+### Move Your Body
+
+Take power walks in nature or go to the gym. Use the time you save from commuting for physical activity. It helps reset your focus and improves your health and mood. If your work schedule is flexible, you could work in the morning, hit the gym at noon, and then finish your tasks in the late afternoon and early evening.
+
+### Run Efficient Meetings
+
+While we're on the topic of meetings, here's my checklist for creating good meetings when you're in charge:
+
+- [ ] Have a **clear agenda** that you **share in advance**.
+- [ ] **Batch meetings together.** Fewer interruptions mean more focused coding time.
+- [ ] Keep meetings **as short as possible** to minimize the draining of brain power.
+- [ ] Hold **as few as possible** meetings. For example, consider replacing synchronous standups with async updates in Slack.
+- [ ] Have a **clear plan & action items** and **share them with the team** after the meeting. *Accountability hack:* the person that creates the meeting must be the one who takes meeting minutes. This makes people think twice before scheduling a meeting.
+- [ ] **Only invite the relevant people** that need to be there. The rest can catch up async.
+- [ ] **Record the meeting** so that others can catch up async at 2x speed.
+- [ ] **Allow people to drop out of meetings** with a quick message in the chat or even without warning if they feel it's irrelevant. This rule often feels rude, which is why it needs to be actively encouraged by the manager. Once people are comfortable with it, it becomes an honest signal of which meetings are productive for whom and whose time is being wasted.
+
+### Keep Slack Clean
+
+When responding in Slack, **use threads.** If everyone posts their answers and new messages directly in the main channel feed, it creates chaos. Keep related messages organized by using threads. You can also use `>` to **quote specific points when replying to the same message.**
+
+**Use Slack reactions to confirm you've read messages.** Since Slack doesn't have read receipts, a quick thumbs-up or relevant emoji lets the sender know you've acknowledged their message. For example, use ✅ on a message about a PR to show you've approved it or 💬 to indicate you've left comments.
+
+### Do Proper Time Tracking
+
+If your company requires time tracking, keep a notepad or open a DM with yourself to **log your tasks throughout the day**. It's easy to forget, so **set a daily alarm on your phone** to remind you to fill out your time entries before signing off each day.
+
+And remember, no one works **8 hours** straight without a break. If you track your time by hours, log it in the actual blocks you worked, such as two 3-hour slots and one 2-hour slot.
+
+### Craft Effective EOD Messages
+
+Some remote companies have mandatory end of day (EOD) messages. These messages are a summary of your work, shared with stakeholders or teammates before you log off.
+
+Make sure that each of your EOD messages answers ***all*** of the following questions.
+
+1. **How long will your work take?** Provide estimates for your tasks and notify your team if you're exceeding them.  
+2. **Is your message clear and easy to understand?** For example, your manager or client might not be as technical, so explain things in simple terms. Avoid poor spelling, grammar, or missing details.  
+3. **Do you need anything from your team or stakeholders?** If yes, clearly state what you need.  
+4. **What’s the current state of your work?** Share progress, wins, or even cool screen recordings if applicable.  
+5. **How good is the result?** Ensure the implementation is correct and meets the ticket's acceptance criteria.
+
+### Balance Timely Replies & Deep Work
+
+Find the balance between replying promptly and taking time to focus. On one hand, you want to minimize interruptions like notifications, emails, and meetings. On the other hand, timely responses are crucial in a remote work environment to ensure smooth collaboration and progress.
+
+To strike this balance, **schedule focused work blocks where you turn off notifications** and set specific times to check and respond to messages. For certain critical channels, configure your notifications to always appear, even during focused work blocks. You can mark your focus bloc
+
+**Use natural breaks**, like waiting for the CI/CD pipeline to finish or package installations to complete, to quickly check and respond to messages.
+
+### Ask Questions in Public Channels
+
+Remote work is prone to knowledge silos because too much communication can happen in private messages. **Avoid asking questions in DMs**. Whenever possible, ask questions in a public channel. This way, the entire team benefits from the knowledge shared, and everyone stays in the loop.
+
+Don't shy away from asking questions in public. In fact, having worked with hundreds of managers, I can tell you that one of the top traits they use to identify senior developers is their willingness to ask questions - and, over time, to ask increasingly deeper and more thoughtful questions. The latter will happen automatically the more familiar you become with a code base.
+
+### Be High-Agency
+
+Taking responsibility requires you to be high-agency, and asking questions is a key part of this. When you work on a feature, you need to understand the requirements and the code base. For each task **ask more questions, until you feel you're clear**.
+
+During the task, **when new questions arise, ask fast**. Escalate blockers fast. As a rule of thumb, **if you're stuck for 20 minutes, ask for help to avoid wasting time**.
+
+I created a full article on what it means to be high-agency. It teaches you how you can ["Become the Most Valuable Member in Any Team"](https://janhesters.com/blog/become-the-most-valuable-member-in-any-team).
+
+import { ReadNext } from '../features/blog/read-next';
+import { frontmatter as becomeTheMostValuableMemberInAnyTeam } from './blog.become-the-most-valuable-member-in-any-team.mdx';
+
+<ReadNext
+  posts={[
+    { ...becomeTheMostValuableMemberInAnyTeam, slug: 'become-the-most-valuable-member-in-any-team' },
+  ]}
+/>
+
+

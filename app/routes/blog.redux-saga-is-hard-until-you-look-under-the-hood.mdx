@@ -1,9 +1,8 @@
 ---
 title: 'Redux Saga Is Hard Until You Look Under The Hood'
-datePublished: '2024-10-22'
+datePublished: '2025-01-08'
 description: 'Learn how to isolate side effects and write clean, maintainable asynchronous code using Redux Saga. Create your own saga middleware and understand how it works.'
-thumbnailUrl: 'https://i.magecdn.com/ada680/eeb5ba_usecallback_vs_usememo?f=webp,q.20,p.f,l.f'
-isDraft: true
+thumbnailUrl: 'https://i.magecdn.com/ada680/b5f02d_redux_saga_yt_thumbnail_v2?f=webp,q.20,p.f,l.f'
 ---
 
 import { getUrl } from '../lib/misc';
@@ -31,6 +30,16 @@ I wanted to write this article about sagas for you because:
 1. Sagas are still used in many old projects and can help you land more jobs,
 2. the philosophy of isolating side effects that sagas teach you will change how you think about your code and help you to write cleaner code, and
 3. I love sagas.
+
+<iframe
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  allowFullScreen
+  className="aspect-video w-full"
+  frameBorder="0"
+  referrerPolicy="strict-origin-when-cross-origin"
+  src="https://www.youtube.com/embed/-OIpMjXALsg?si=MISP-QWofgqyL8LO"
+  title="Redux Saga Is Hard Until You Look Under The Hood"
+></iframe>
 
 This article is part 2 of a 5-part series on Redux that will elevate your understanding to the highest level, preparing you for any interview question involving Redux and enabling you to contribute to any Redux-based codebase. By the way, the third article in this series also covers how to use RTK Query.
 
@@ -1167,3 +1176,15 @@ In the beginning of this article, you learned that Redux Saga is great for:
 So far, you've only seen the first point in this article. You're going to learn how to use sagas for deterministic testing in the fourth article of this series, where you build a real-world app with Redux.
 
 But before that, you need to learn how to set up Redux for production, which is what the third article covers. So, go read that one next.
+
+
+import { ReadNext } from '../features/blog/read-next';
+import { frontmatter as whatIsHigherOrderComponentsAreMisunderstoodInReact } from './blog.what-is-redux-get-a-senior-understanding-of-how-redux-works.mdx';
+import { frontmatter as unleashJavascriptsPotentialWithFunctionalProgramming } from './blog.unleash-javascripts-potential-with-functional-programming.mdx';
+
+<ReadNext
+  posts={[
+    { ...whatIsHigherOrderComponentsAreMisunderstoodInReact, slug: 'what-is-redux-get-a-senior-understanding-of-how-redux-works' },
+    { ...unleashJavascriptsPotentialWithFunctionalProgramming, slug: 'unleash-javascripts-potential-with-functional-programming' },
+  ]}
+/>
