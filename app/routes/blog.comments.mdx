@@ -225,7 +225,7 @@ function add(a, b) {
 
 As you can probably guess, `@param` defines the type and name of a parameter. `@returns` defines the type of the return value.
 
-These documentation comments are recognized by your tooling. For example, IntelliSense in VSCode shows you your comments and the types of the parameters and return value when you hover over a function decorated with JSDoc.
+These documentation comments are recognized by your tooling. For example, IntelliSense in VSCode shows you your comments and the types of the parameters and return value when you hover over a function decorated with JSDoc. Everywhere where you use the function, you can simply hover over it to see your JSDoc comments and description. This is only possible with JSDoc and TSDoc.
 
 ![JSDoc hover](https://i.magecdn.com/ada680/0ce588_jsdoc_hover?f=webp,q.30,p.f,l.f)
 
@@ -498,7 +498,7 @@ export const addTodo = ({ text }) => ({
 });
 ```
 
-If your comment is a one-liner or a short description of a function or variable and differs from its name, it might be a code smell suggesting it is misnamed.
+If your comment is a one-liner or a short description of a function or variable *and differs from its name*, it might be a code smell suggesting it is misnamed.
 
 The following code was from a real code base. It contained a `NotificationCenter` model that contained the settings and notifications for the notification panel, which pops up if you click the bell in the top right corner.
 
@@ -597,7 +597,7 @@ describe('isState()', () => {
 
 **Use the `@see` tag to link to external resources** where appropriate. For example, link to documentations, articles, GitHub issues, etc. that give context to your code. Sometimes typing everything a developer needs to understand the code is too much for a comment. Or a develper can get the gist of your code from your comments, but for a full understanding they need to read the documentation.
 
-I recently helped to build a `KanbanBoard` component for a project. That board implement drag and drop via the `DataTransfer` API. Here is a trimmed down version of the code for the `KanbanBoardProvider` component.
+I recently helped to build a `KanbanBoard` component for a project. That board implements drag and drop via the `DataTransfer` API. Here is a trimmed down version of the code for the `KanbanBoardProvider` component.
 
 ```tsx
 export const KanbanBoardProvider = ({
@@ -651,11 +651,19 @@ Sometimes, it's fine to have a comment and its sibling in different places.
 
 For example, you might have comments for a form and a loader in Remix, or a helper function and a saga in Redux, etc. These comments don't need to be adjacent. They can reference each other's variables to help locating related code.
 
+---
+
+**Note to Cheta:** Show two example files here. If you need help creating the example, ping me and we create one together.
+
+**Note to editors:** Show the two files side by side.
+
+---
+
 #### When To Use Which
 
 The most important metric to decide when to use which comment type is:
 
-> “When in Rome, do as the Romans do.” - [Julius Caesar](https://en.wikipedia.org/wiki/Julius_Caesar)
+> “When in Rome, do as the Romans do.” - Julius Caesar
 
 In other words, if you're working in a team, you should follow the conventions of your team. If your team lacks a convention, bring it up with your team and start a discussion. Capture your team's preferences in your project's `README.md`.
 
@@ -664,6 +672,10 @@ That being said, in our teams we usually adhere to the following conventions:
 - Add `JSDoc` or `TSDoc` to all complex functions, types, objects, components, and hooks above their definitions.
 - Add single-line comments inside of functions to explain the immediate context.
 - Add multi-line comments as delimiters between different sections of code.
+- Add tool specific comments at the top of the file or at their corresponding lines / codeblocks.
+- Add larger blobs of context at the top of a file - for example in a script file - if the file has an overarching purpose that is worth explaining.
+- In complex sequences, add numbers to your comments in the corresponding scope to clarify the order of operations.
+- If necessary, add feature specific READMEs in feature folders to document the bigger picture architecture of a feature.
 
 Here is some more of the kanban board code to show you how you can use this convention in practice.
 
@@ -757,7 +769,7 @@ type KanbanBoardColumnProps = {
 // ... more types and components
 ```
 
-At the top of the file, you can disable all tooling that might interfere with your code. Sometimes the top of the file also contains a large blob of context, for example to describe a script.
+At the top of the file, you can disable all tooling that might interfere with your code.
 
 Next we use multi-line comments to separate the code into different sections, e.g. `Accessibility`, `Constants`, `Board`, `Column`, etc. Why multiline comments? Because they are easy to find when you rapidly scroll through your code. Some people also like to add a bunch of markers like `=========` or `---` to further visually separate the sections.
 
@@ -786,7 +798,7 @@ My favorite guiding principle to keep code readable and easy to understand, and 
 
 You don't always need to answer all of these questions. Focus only on the ones that matter for clarity.
 
-As an example, check out this `DragAndDrop` component.
+As an example, check out this `DragAndDrop` component for file uploads.
 
 ```tsx
 import { ImageIcon } from 'lucide-react';
@@ -822,7 +834,7 @@ export const DragAndDrop = forwardRef<HTMLInputElement, DragAndDropProps>(
   ) {
     const { t } = useTranslation('drag-and-drop');
 
-    // Show the file name in the user interface.
+    // Show the name of the file you want to upload in the user interface.
     const [filename, setFilename] = useState<string | undefined>();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -897,13 +909,13 @@ export const DragAndDrop = forwardRef<HTMLInputElement, DragAndDropProps>(
 );
 ```
 
-In it, you use TSDoc to explain **what** the two `on` handlers do. This makes them easy to use because when another developer sees the `DragAndDrop` component with those props and hovers over the them, the comments will show up and explain what the they do.
+In it, you use TSDoc on the type of the `DragAndDropComponentProps` to explain **what** the two `on` handlers do. This makes them easy to use because when another developer sees the `DragAndDrop` component with those props and hovers over the them, the comments will show up and explain what the they do.
 
 ![IntelliSense showing the `onFileChosen` prop](https://i.magecdn.com/ada680/3f7424_jsdoc_hover_4?f=webp,q.30,p.f,l.f)
 
-Inside of the component, comments clarify what the hooks track and do.
+You can clarify what the hooks track and do with comments inside of the component.
 
-And lastly, the numbered comments in the JSX guide the reader by giving context on the order in which the events fire, **how** they work and **why** they are needed.
+And lastly, you can guide the reader with numbered comments in the JSX by giving context on the order in which the events fire, **how** they work and **why** they are needed.
 
 ### Use LLMs To Generate Comments
 
@@ -982,7 +994,7 @@ In such situations, pay special attention to code that lacks comments and is dif
 
 ### You Still Need Real Documentation
 
-Even if you have excellent inline documentation, you still need proper documentation. Comments, JSDoc, TSDoc, and TypeScript are additions to your documentation toolkit rather than replacements. Make sure to have a `README.md` file that makes it easy to onboard to your project. And consider adding more `README.md` files in the directories that need them.
+Even if you have excellent inline documentation, you still need guide documentation. Comments, JSDoc, TSDoc, and TypeScript are additions to your documentation toolkit rather than replacements. Make sure to have a `README.md` file that makes it easy to onboard to your project. And consider adding more `README.md` files in the directories that need them.
 
 ### You Still Need To Write Clean Code
 

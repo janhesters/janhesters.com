@@ -1,0 +1,210 @@
+---
+title: "The Different Types Of Mocks"
+datePublished: "2024-12-12"
+description: "In this tutorial, you'll learn how to name and structure Redux actions to make debugging easier and your code more readable. Discover how to use descriptive names, leverage named parameters for clarity, apply data transformations, and hook up multiple reducers per action."
+thumbnailUrl: ""
+isDraft: true
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+Mocks can be confusing because there are so many differnt types. Let's clear things up.
+
+### What is a Mock?
+
+A mock is like a **pretend version** of something; a **test double**.
+
+### Test Doubles
+
+| Type            | Definition                                                 |
+|-----------------|------------------------------------------------------------|
+| **Mock**        | Verifies interactions & behavior (calls, arguments, etc.). |
+| **Fake**        | Simplified working implementation.                         |
+| **Stub**        | Provides predefined responses.                             |
+| **Dummy**       | Placeholder with no real usage.                            |
+| **Spy**         | Wraps or replaces a function.                              |
+| **Module Mock** | Replaces entire modules with a test double.                |
+
+Use each type to isolate dependencies and verify code under test.
+
+### Why Mock?
+
+- **Speed up tests -** Mocks can speed up your tests by not having to hit the real API or database.
+- **Reduce costs -** Mocks can save you money by avoiding to execute real transactions when money is involved or on the block chain.
+- **Make tests more reliable -** If an external API changes or is down, your tests will still pass. Or mocks can eliminate randomness to make your tests more deterministic.
+- **Increase test coverage -** Mocks can be used to increase your test coverage. Mock things that are unavailable in your test environment. Mocks allow you to reduce complexity so you can test things, that otherwise you wouldn't be able to test. Mock or fake an end of the conversation to have full control and set up conditions, e.g. timing differences, timing mismatches and network failures.
+- **Make tests more conscise -** Avoid complicated setup with setup and teardown functions.
+
+### What is a Mock?
+
+A mock verifies behavior. It checks how your code calls it. You expect it to be called in specific ways. A mock often extends a stub by adding interaction checks. You can make assertions on how the mock was used. `vi.fn()` is a **mock function**.
+
+```js
+import { describe, test, expect, vi } from 'vitest'
+
+function greetUser(logger) {
+  logger.log('Hello User')
+}
+
+describe('given: greetUser', () => {
+  test('given: should verify logger call', () => {
+    const mockLogger = { log: vi.fn() }
+    greetUser(mockLogger)
+    expect(mockLogger.log).toHaveBeenCalledWith('Hello User')
+  })
+})
+```
+
+### What is a Fake?
+
+A fake provides simple, working logic. It behaves like the real thing but is lighter or faster. Use it when you need real behavior but want to avoid heavy setup (like a database).
+
+```js
+import { describe, test, expect } from 'vitest'
+
+class FakeDatabase {
+  constructor() {
+    this.storage = {}
+  }
+  save(key, value) {
+    this.storage[key] = value
+  }
+  get(key) {
+    return this.storage[key]
+  }
+}
+
+function registerUser(db, userId, userData) {
+  db.save(userId, userData)
+  return db.get(userId)
+}
+
+describe('given: registerUser with FakeDatabase', () => {
+  test('given: should store and retrieve user', () => {
+    const fakeDb = new FakeDatabase()
+    registerUser(fakeDb, '123', { name: 'Alice' })
+    expect(fakeDb.get('123')).toEqual({ name: 'Alice' })
+  })
+})
+```
+
+### What is a Stub?
+
+A **stub** replaces the original function with a fixed (dummy) implementation. In other words, a stub returns fixed responses. You do not verify how it is used. You only care about the data it returns.
+
+```js
+import { describe, test, expect } from 'vitest'
+
+function getGreeting(timeService) {
+  const hour = timeService.getHour()
+  if (hour < 12) return 'Good morning'
+  return 'Good afternoon'
+}
+
+describe('given: getGreeting', () => {
+  test('given: should return Good morning if hour < 12', () => {
+    const morningStub = { getHour: () => 9 }
+    const result = getGreeting(morningStub)
+    expect(result).toEqual('Good morning')
+  })
+
+  test('given: should return Good afternoon if hour >= 12', () => {
+    const afternoonStub = { getHour: () => 13 }
+    const result = getGreeting(afternoonStub)
+    expect(result).toEqual('Good afternoon')
+  })
+})
+```
+
+### What are Dummies?
+
+Dummies fill required parameters but are not used. They keep your function calls valid without adding logic.
+
+```js
+import { describe, test, expect } from 'vitest'
+
+function sendMessage(sender, receiver, message) {
+  if (!message) return 'No message'
+  return `${sender} -> ${receiver}: ${message}`
+}
+
+describe('given: sendMessage', () => {
+  test('given: should work with a dummy receiver', () => {
+    const dummyReceiver = null
+    const result = sendMessage('Alice', dummyReceiver, 'Hello')
+    expect(result).toEqual('Alice -> null: Hello')
+  })
+})
+```
+
+### What are Spies?
+
+A **spy** can wrap or replace the function. It tracks usage (call counts, arguments), while either preserving original behavior or you can decide to override it partially or completely.
+
+```js
+import { describe, test, expect, vi } from 'vitest'
+
+function calculateTotal(pricingService, items) {
+  const costs = items.map(item => pricingService.getPrice(item))
+  return costs.reduce((a, b) => a + b, 0)
+}
+
+describe('given: calculateTotal', () => {
+  test('given: should use spy to track calls', () => {
+    const spyService = { getPrice: vi.fn().mockReturnValue(10) }
+    calculateTotal(spyService, ['apple', 'banana', 'cherry'])
+    expect(spyService.getPrice).toHaveBeenCalledTimes(3)
+    expect(spyService.getPrice).toHaveBeenCalledWith('apple')
+  })
+})
+```
+
+### What is Module Mocking?
+
+Module mocking intercepts the import call. Testing frameworks like Vitest or Jest can replace an entire module with a test double. This can act as a stub or mock.
+
+```js
+// math.js
+export function add(a, b) {
+  return a + b
+}
+
+// math.test.js
+import { describe, test, expect, vi } from 'vitest'
+import * as math from './math'
+
+vi.mock('./math', () => {
+  return {
+    add: vi.fn().mockReturnValue(42)
+  }
+})
+
+describe('given: add function', () => {
+  test('given: should mock module', () => {
+    const result = math.add(1, 1)
+    expect(result).toEqual(42)
+    expect(math.add).toHaveBeenCalled()
+  })
+})
+```
+
+### How They Relate
+
+- **Stub** is basic with predefined responses.
+- **Spy** wraps or replaces a function.
+- **Mock** extends a stub by verifying behavior.
+- **Fake** is separate. It runs simpler logic.
+- **Dummy** has no logic.
+- **Module Mock** can act as a stub or mock.
