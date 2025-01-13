@@ -1,0 +1,29 @@
+---
+title: "How To Build a Component Library That Your Coworkers Will Love You For"
+datePublished: '2024-10-01'
+description: ""
+thumbnailUrl: 'https://i.magecdn.com/ada680/766252_unleash_javascripts_potential_with_functional_programming?f=webp,q.25,p.f,l.f'
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+- **Never use outdated presentational tags** like `<big>` and `<font>`; they are deprecated. 
+- Some tags, like `<i>` and `<b>`, now have semantic purposes.
+- **Favor structural elements** like `<main>`, `<section>`, `<article>`, `<header>`, `<nav>`, and `<footer>` where applicable. These improve accessibility and provide clear meaning to your content. `<div>` is a common choice for block-level containers, but lacks semantic meaning.
+- **Use heading levels logically.** Don’t skip levels or choose them just to get a specific font size—that’s what CSS is for.
+- **Logical headings also improve SEO.** Keywords in headings get a boost in search rankings.
+- **Accessibility benefits:** Assistive technologies like screen readers rely on headings and landmarks to navigate content. Without proper headings, HTML documents become hard to use for AT users.
+- **Ensure HTML is correctly nested.** If it’s not, browsers will guess your structure, and the result may differ from your intent.
+- **Validate your markup using tools** like the HTML validator. In Firefox, for example, you can view source to spot validation errors, highlighted with a dotted red underline.

@@ -1,0 +1,99 @@
+---
+title: "How To Build a Component Library That Your Coworkers Will Love You For"
+datePublished: '2024-10-01'
+description: ""
+thumbnailUrl: 'https://i.magecdn.com/ada680/766252_unleash_javascripts_potential_with_functional_programming?f=webp,q.25,p.f,l.f'
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+##{frontmatter.title}
+
+So you've been tasked with creating a component for your design system. 
+
+### Why a Design System Matters
+
+A design system ensures consistency. Users see the same patterns again and again.  
+It reduces confusion. It also increases productivity for developers and designers.  
+
+### Gather Requirements
+
+Ask if the component is essential. (YAGNI - You Ain't Gonna Need It). Resist creating a component nobody will use.  
+Decide what the API should look like. Keep it small. Ensure it’s flexible enough for future use.  
+Check if you need one component or a composition of many smaller components. A single component can be quick to build. Multiple smaller components can be more reusable.
+
+### Steal from the Great
+
+Look at the source code in [Shadcn](https://github.com/shadcn-ui/ui) and [Material UI](https://github.com/mui/material-ui).  
+See how they structure components. Notice how they use design tokens and accessibility.  
+Learn from them. Adapt their patterns to your use case.
+
+### Accessibility
+
+Many regions require compliance with standards like [WCAG 2.1](https://eye-able.com/blog/accessibility-laws-worldwide). Laws like the [European Accessibility Act](https://www.expertlawfirm.com/accessibility-laws-around-the-world-a-global-overview/) or similar acts in the [United States](https://www.levelaccess.com/blog/navigating-international-accessibility-laws/) and [Canada](https://www.forbes.com/councils/forbesbusinesscouncil/2024/04/11/a-guide-to-accessibility-statement-requirements-across-countries/) can lead to legal trouble if you fail to comply.  
+
+Use semantic HTML. This ensures screen readers can parse your interface.  
+Build on native elements first. They already include validation, accessibility hooks, and more. If you need special components, try [Radix UI primitives](https://www.radix-ui.com/primitives/docs/overview/introduction).
+
+### Monorepo
+
+Put each component in its own package. If you update a dependency for one component, you avoid accidentally updating all others.  
+You manage versioning more clearly. It also makes it easier to release updates for a single component.
+
+### Trend of Copying Components Instead of Installing Them
+
+[Shadcn](https://github.com/shadcn-ui/ui) helped popularize copying source code directly. You have total control of the code. You can adjust styles and behavior without waiting for a library update. 
+
+The tradeoff? You must maintain it yourself. If the original library updates, you might miss out. But you gain complete ownership.
+
+### Private NPM Registry
+
+You might store your packages on a private registry. This helps you control releases and limit access.  
+It also ensures your internal tools remain internal.
+
+### Tests
+
+Write tests for every component with Vitest and React Testing Library. Test all props and behaviors.
+
+Consider using visual regression tests with [Percy](https://percy.io/). It detects style regressions.
+
+### Playground
+
+Use a playground for your components. [Storybook](https://storybook.js.org/) is the most popular option.  
+A playground helps you test props, styles, and states. It allows designers and developers to collaborate.
+
+### Documentation
+
+Consider starting with [RDD (Readme-Driven Development)](https://janhesters.com/blog/the-secret-to-better-apis-youre-not-using-it).
+
+Then build the component to match the docs. This keeps your API consistent with your documentation.
+
+Whew you use a monorepo where every component is its own package, you give each component its own README.
+
+### Versioning
+
+Keep a clear versioning strategy. Use semantic versioning if possible.
+
+Use tools like commitlint with conventional commits to auto generate changelog entries.
+
+### Performance
+
+Watch for bundle size. Use tree-shaking.  
+
+### Theming
+
+Use tokens for color, typography, and spacing. This makes theming easier. Pick your tokens wisely. (In my opinion, Shadcn kinda nailed it.)
+
+### Conclusion
+
+Build great components. Keep them simple. Ensure they serve a real purpose.  
