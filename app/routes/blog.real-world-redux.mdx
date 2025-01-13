@@ -5825,7 +5825,7 @@ import {
 
 describe('handleScheduleReminders saga', () => {
   it('logs a message to the console', () => {
-    const mockNotificationSchedule = [
+    const dummyNotificationSchedule = [
       {
         content: { title: 'Random Reminder App', body: 'You got this! 💪' },
         trigger: { repeats: true, weekday: 1, hour: 12, minute: 30 },
@@ -5838,10 +5838,12 @@ describe('handleScheduleReminders saga', () => {
 
     testSaga(handleScheduleReminders)
       .next()
+      // This is an expectation. You can read this as `.expect(call(Notifications.cancelAllScheduledNotificationsAsync))`.
       .call(Notifications.cancelAllScheduledNotificationsAsync)
       .next()
+      // Same here and for all the other effects - these are expectations.
       .select(selectReminderNotificationSchedule)
-      .next(mockNotificationSchedule)
+      .next(dummyNotificationSchedule)
       .all([
         call(
           Notifications.scheduleNotificationAsync,

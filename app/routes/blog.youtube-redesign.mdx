@@ -1,0 +1,536 @@
+---
+title: "I Implemented the ENTIRE YouTube Redesign from Scratch"
+datePublished: '2024-10-01'
+description: ""
+thumbnailUrl: 'https://i.magecdn.com/ada680/766252_unleash_javascripts_potential_with_functional_programming?f=webp,q.25,p.f,l.f'
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+### Initialize New Remix Project
+
+```bash
+npx create-remix@latest
+ remix   v2.15.2 💿 Let's build a better website...
+
+   dir   Where should we create your new project?
+         ./youtube-redesign
+
+      ◼  Using basic template See https://remix.run/guides/templates for more
+      ✔  Template copied
+
+   git   Initialize a new git repository?
+         Yes
+
+  deps   Install dependencies with npm?
+         Yes
+
+      ✔  Dependencies installed
+
+      ✔  Git initialized
+
+  done   That's it!
+
+         Enter your project directory using cd ./youtube-redesign
+         Check out README.md for development and deploy instructions.
+
+         Join the community at https://rmx.as/discord
+```
+
+#### Code Formatting
+
+// eslint-plugin-jest eslint-plugin-jest-dom
+
+```bash
+npm install --save-dev eslint-config-prettier eslint-plugin-playwright eslint-plugin-prettier eslint-plugin-simple-import-sort eslint-plugin-testing-library eslint-plugin-unicorn prettier prettier-plugin-tailwindcss
+```
+
+```js title="prettier.config.cjs"
+module.exports = {
+  arrowParens: 'avoid',
+  bracketSameLine: false,
+  bracketSpacing: true,
+  htmlWhitespaceSensitivity: 'css',
+  insertPragma: false,
+  jsxSingleQuote: false,
+  plugins: ['prettier-plugin-tailwindcss'],
+  printWidth: 80,
+  proseWrap: 'always',
+  quoteProps: 'as-needed',
+  requirePragma: false,
+  semi: true,
+  singleQuote: true,
+  tabWidth: 2,
+  trailingComma: 'all',
+  useTabs: false,
+};
+```
+
+```js title=".eslintrc.cjs"
+/** @type {import('eslint').Linter.Config} */
+module.exports = {
+  root: true,
+  parserOptions: {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+    ecmaFeatures: {
+      jsx: true,
+    },
+  },
+  env: {
+    browser: true,
+    commonjs: true,
+    es6: true,
+  },
+  ignorePatterns: ['!**/.server', '!**/.client'],
+
+  // Base config
+  extends: [
+    'eslint:recommended',
+    'plugin:prettier/recommended',
+    'plugin:unicorn/recommended',
+  ],
+  plugins: ['simple-import-sort'],
+  rules: {
+    'simple-import-sort/imports': 'error',
+    'simple-import-sort/exports': 'error',
+  },
+
+  overrides: [
+    // React
+    {
+      files: ['**/*.{js,jsx,ts,tsx}'],
+      plugins: ['react', 'jsx-a11y'],
+      extends: [
+        'plugin:react/recommended',
+        'plugin:react/jsx-runtime',
+        'plugin:react-hooks/recommended',
+        'plugin:jsx-a11y/recommended',
+      ],
+      settings: {
+        react: {
+          version: 'detect',
+        },
+        formComponents: ['Form'],
+        linkComponents: [
+          { name: 'Link', linkAttribute: 'to' },
+          { name: 'NavLink', linkAttribute: 'to' },
+        ],
+        'import/resolver': {
+          typescript: {},
+        },
+      },
+    },
+
+    // Typescript
+    {
+      files: ['**/*.{ts,tsx}'],
+      plugins: ['@typescript-eslint', 'import'],
+      parser: '@typescript-eslint/parser',
+      settings: {
+        'import/internal-regex': '^~/',
+        'import/resolver': {
+          node: {
+            extensions: ['.ts', '.tsx'],
+          },
+          typescript: {
+            alwaysTryTypes: true,
+          },
+        },
+      },
+      extends: [
+        'plugin:@typescript-eslint/recommended',
+        'plugin:import/recommended',
+        'plugin:import/typescript',
+      ],
+    },
+
+    // Node
+    {
+      files: ['.eslintrc.cjs'],
+      env: {
+        node: true,
+      },
+    },
+
+    // End-to-End & Playwright
+    {
+      files: ['**/*.spec.ts'],
+      plugins: ['playwright'],
+      extends: ['plugin:playwright/recommended'],
+      rules: {
+        'playwright/require-top-level-describe': 'error',
+      },
+    },
+
+    // Testing Libraries (e.g., React Testing Library)
+    {
+      files: ['**/*.test.ts', '**/*.test.tsx'],
+      extends: ['plugin:testing-library/react'],
+    },
+  ],
+};
+```
+
+Add a format script to your `package.json` file.
+
+```json title="package.json"
+{
+  "scripts": {
+    "format": "prettier --write ."
+  }
+}
+```
+
+```bash
+npm run lint -- --fix
+
+> lint
+> eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint . --fix
+```
+
+#### Tests
+
+```bash
+npm install -D vitest @testing-library/react @testing-library/dom @testing-library/jest-dom @testing-library/user-event happy-dom @faker-js/faker
+```
+
+```json title="package.json"
+{
+  "scripts": {
+    "test": "vitest --reporter=verbose",
+  }
+}
+```
+
+```ts title="app/test/setup-test-environment.ts"
+import '@testing-library/jest-dom/vitest';
+```
+
+```ts title="app/test/vitest-cleanup-after-each.ts"
+import { cleanup } from '@testing-library/react';
+import { afterEach } from 'vitest';
+
+afterEach(() => {
+  cleanup();
+});
+```
+
+```ts title="vite.config.ts"
+// ...
+
+export default defineConfig({
+  // ...
+  test: {
+    setupFiles: [
+      'app/test/setup-test-environment.ts',
+      'app/test/vitest-cleanup-after-each.ts',
+    ],
+    environmentMatchGlobs: [['**/*.test.tsx', 'happy-dom']],
+  },
+});
+```
+
+```tsx title="app/sanity-check.test.tsx"
+import { render, screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
+
+describe('React component sanity check', () => {
+  test('renders a basic component', () => {
+    render(<div>Hello World</div>);
+    expect(screen.getByText('Hello World')).toBeInTheDocument();
+  });
+});
+```
+
+```bash
+npm test
+
+> test
+> vitest --reporter=verbose
+
+
+ DEV  v2.1.8 /Users/jan/dev/youtube-redesign
+
+ ✓ app/sanity-check.test.tsx (1)
+   ✓ React component sanity check (1)
+     ✓ renders a basic component
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  18:14:15
+   Duration  485ms (transform 39ms, setup 161ms, collect 30ms, tests 8ms, environment 128ms, prepare 37ms)
+
+ PASS  Waiting for file changes...
+       press h to show help, press q to quit
+```
+
+```bash
+npm init playwright@latest
+
+> npx
+> create-playwright
+
+Getting started with writing end-to-end tests with Playwright:
+Initializing project in '.'
+✔ Where to put your end-to-end tests? · e2e
+✔ Add a GitHub Actions workflow? (y/N) · false
+✔ Install Playwright browsers (can be done manually via 'npx playwright install')? (Y/n) · true
+Installing Playwright Test (npm install --save-dev @playwright/test)…
+
+up to date, audited 920 packages in 1s
+
+289 packages are looking for funding
+  run `npm fund` for details
+
+9 low severity vulnerabilities
+
+Some issues need review, and may require choosing
+a different dependency.
+
+Run `npm audit` for details.
+Writing playwright.config.ts.
+Writing e2e/example.spec.ts.
+Writing tests-examples/demo-todo-app.spec.ts.
+Writing package.json.
+Downloading browsers (npx playwright install)…
+✔ Success! Created a Playwright Test project at /Users/jan/dev/youtube-redesign
+
+Inside that directory, you can run several commands:
+
+  npx playwright test
+    Runs the end-to-end tests.
+
+  npx playwright test --ui
+    Starts the interactive UI mode.
+
+  npx playwright test --project=chromium
+    Runs the tests only on Desktop Chrome.
+
+  npx playwright test example
+    Runs the tests in a specific file.
+
+  npx playwright test --debug
+    Runs the tests in debug mode.
+
+  npx playwright codegen
+    Auto generate tests with Codegen.
+
+We suggest that you begin by typing:
+
+    npx playwright test
+
+And check out the following files:
+  - ./e2e/example.spec.ts - Example end-to-end test
+  - ./tests-examples/demo-todo-app.spec.ts - Demo Todo App end-to-end tests
+  - ./playwright.config.ts - Playwright Test configuration
+
+Visit https://playwright.dev/docs/intro for more information. ✨
+
+Happy hacking! 🎭
+```
+
+Delete the demo test file.
+
+```bash
+rm -rf ./tests-examples
+```
+
+Configure the `baseURL` in your `playwright.config.ts` file.
+
+```ts title="playwright.config.ts"
+export default defineConfig({
+  // ...
+  use: {
+    /* Base URL to use in actions like `await page.goto('/')`. */
+    baseURL: process.env.BASE_URL || 'http://localhost:5173',
+    // ...
+  },
+  // ...
+});
+```
+
+Add two tests to your `package.json` file.
+
+```json title="package.json"
+{
+  "scripts": {
+    "test:e2e": "npx playwright test",
+    "test:e2e:ui": "npx playwright test --ui",
+  }
+}
+```
+
+Create a quick sanity check test.
+
+```ts title="e2e/example.spec.ts"
+import { expect, test } from '@playwright/test';
+
+test.describe('Playwright sanity check', () => {
+  test('has the correct title', async ({ page }) => {
+    await page.goto('/');
+    await expect(page).toHaveTitle(/YouTube Redesign/i);
+  });
+});
+```
+
+Make it pass by modifying your `app/_index.tsx` file.
+
+```tsx title="app/_index.tsx" {5}
+import type { MetaFunction } from '@remix-run/node';
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: 'YouTube Redesign' },
+    { name: 'description', content: 'Welcome to Remix!' },
+  ];
+};
+
+// ...
+```
+
+```bash
+npm run test:e2e                      
+
+> test:e2e
+> npx playwright test
+
+
+Running 3 tests using 3 workers
+  3 passed (2.1s)
+
+To open last HTML report run:
+
+  npx playwright show-report
+```
+
+#### Styling
+
+1. Go through the Figma document and **grab all colors listed under "Local variables".**
+2. Then click through some of the designs and see if you can **find any colors that your designers forgot to add**. Let your designers know that you're going to be using these colors in the codebase and ask them to add them to the Figma document.
+3. Create a `styles/` folder in the `app/` directory. Move the `tailwind.css` file to the `styles/` folder. Additionally, create a `styles/dark.css` file.
+
+```css title="app/styles/dark.css"
+:root {
+  /* Solid Colors */
+  --red: #FF0033;
+  --red-light: #FFAABB;
+  --white: #FFFFFF;
+
+  /* Transparent Backgrounds */
+  --red-background: rgba(255, 0, 51, 0.06);
+  --background-selected: rgba(255, 170, 187, 0.14);
+
+  /* Gradients */
+  --gradient-color: linear-gradient(90deg, #FF0033 0%, #F50057 100%);
+  --pink-gradient: linear-gradient(90deg, rgba(255, 0, 51, 0.3) 0%, #F50057 100%);
+  --red-button: linear-gradient(
+    rgba(255, 255, 255, 0.2), 
+    rgba(0, 0, 0, 0.2)
+  ), 
+  #FF325B;
+
+  /* Variables */
+  --foreground: #FFFFFF;
+  --background: #111111;
+}
+```
+
+The Figma design by Juxtopposed lacks light mode colors. If that happens in the real world, raise it with your team and clarify whether this is intentional. Depending on the situation, you might want to freestyle the light mode colors. In this case, we can simply grab them from the real-world YouTube design.
+
+#### Routing
+
+```bash
+npm install -D @remix-run/route-config
+```
+
+```bash
+touch app/routes.ts
+```
+
+```ts title="app/routes.ts"
+import type { RouteConfig } from "@remix-run/route-config";
+
+export default [] satisfies RouteConfig;
+```
+
+```bash
+npm install -D @remix-run/fs-routes
+```
+
+```ts title="app/routes.ts"
+import { flatRoutes } from "@remix-run/fs-routes";
+
+export default flatRoutes();
+```
+
+#### Miscellaneous Utilities
+
+```ts title="app/utils/types.ts"
+/**
+ * Arbitrary factory function for object of shape `Shape`.
+ */
+export type Factory<Shape> = (object?: Partial<Shape>) => Shape;
+```
+
+### Icon
+
+Let's first start with the YouTube logo.
+
+Here is how I recommend you should handle all your SVGs.
+
+1. Export the logo from Figma (or whatever design tool your team is using).
+2. Then open it in your editor and copy the SVG code.
+3. Paste the code into [SVGOMG](https://jakearchibald.github.io/svgomg/). SVGOMG is a web-based tool that optimizes and minifies SVG (Scalable Vector Graphics) files. By using SVGOMG, you can reduce the file size of your SVG images without compromising quality. This leads to faster loading times and improved performance for your websites and applications that utilize SVG graphics.
+4. Create a React component for your SVG file in the `app/components/svgs/` folder. Since this is the first icon, you'll need to create it.
+
+```tsx title="app/components/svgs/youtube-logo.tsx"
+import type { ComponentPropsWithoutRef } from 'react';
+
+export function YoutubeLogo(properties: ComponentPropsWithoutRef<'svg'>) {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      height="284"
+      width="1312"
+      xmlns="http://www.w3.org/2000/svg"
+      {...properties}
+    >
+      <path
+        fill="#F03"
+        d="M205.108 283.216s128.642.001 160.55-8.496c17.967-4.815 31.478-18.692 36.221-35.827 8.768-31.437 8.768-97.568 8.768-97.568s0-65.706-8.768-96.86c-4.743-17.56-18.254-31.154-36.221-35.827C333.75 0 205.108 0 205.108 0S76.754 0 44.988 8.638C27.31 13.311 13.512 26.906 8.48 44.465 0 75.619 0 141.325 0 141.325s0 66.131 8.48 97.568c5.031 17.135 18.83 31.012 36.509 35.827 31.765 8.497 160.119 8.496 160.119 8.496Z"
+      />
+
+      <path
+        fill="#fff"
+        d="M269.006 141.613 162.805 81.43v120.367l106.201-60.184ZM525.911 267.653v-77.318l49.136-160.583h-36.675l-18.691 72.928c-4.248 16.71-8.071 34.128-10.904 50.27h-2.265c-1.558-14.16-6.089-32.71-10.62-50.553l-18.125-72.645h-36.675l48.428 160.583v77.318h36.391ZM624.532 89.227c-42.905 0-57.632 24.781-57.632 78.167v25.348c0 47.863 9.205 77.884 56.783 77.884 46.87 0 56.924-28.605 56.924-77.884v-25.348c0-47.722-9.629-78.167-56.075-78.167Zm18.267 119.233c0 23.224-4.106 37.809-18.975 37.809-14.585 0-18.691-14.727-18.691-37.809v-57.21c0-19.824 2.832-37.525 18.691-37.525 16.709 0 18.975 18.692 18.975 37.525v57.21ZM740.235 270.347c20.674 0 33.559-8.638 44.18-24.215h1.557l1.558 21.524h28.177V92.629h-37.381v140.616c-3.966 6.939-13.171 12.037-21.808 12.037-10.904 0-14.301-8.638-14.301-23.082V92.629h-37.242v131.27c0 28.463 8.214 46.448 35.26 46.448ZM889.556 267.653V58.782h43.047v-29.03H809.551v29.03h43.047v208.871h36.958ZM961.189 270.345c20.673 0 33.559-8.638 44.181-24.215h1.56l1.55 21.524h28.18V92.627h-37.38v140.616c-3.965 6.939-13.17 12.037-21.807 12.037-10.904 0-14.302-8.638-14.302-23.082V92.627H925.93v131.27c0 28.463 8.213 46.448 35.259 46.448ZM1142.43 88.793c-18.13 0-31.15 7.93-39.79 20.817h-1.84c1.13-16.993 1.98-31.437 1.98-42.908V20.397h-36.11l-.14 152.086.14 95.161h31.44l2.69-16.993h.99c8.35 11.47 21.24 18.692 38.37 18.692 28.47 0 40.64-24.498 40.64-76.61v-27.047c0-48.713-5.52-76.893-38.37-76.893Zm1.27 103.94c0 32.57-4.81 51.97-19.96 51.97-7.08 0-16.85-3.398-21.24-9.771V130.851c3.82-9.913 12.32-17.135 21.8-17.135 15.3 0 19.4 18.551 19.4 52.395v26.622ZM1312 162.853c0-42.198-4.25-73.494-52.82-73.494-45.73 0-55.93 30.446-55.93 75.194v30.729c0 43.615 9.35 75.335 54.8 75.335 35.97 0 54.52-17.984 52.39-52.819l-31.86-1.7c-.42 21.525-5.38 30.304-19.68 30.304-17.98 0-18.83-17.134-18.83-42.624v-11.895H1312v-29.03Zm-53.67-49.987c17.28 0 18.55 16.285 18.55 43.898v14.303h-36.81v-14.303c0-27.329 1.13-43.898 18.26-43.898Z"
+      />
+    </svg>
+  );
+}
+```
+
+You can type the props of the component by using the `ComponentPropsWithoutRef` type.
+
+Additionally, you want to set `aria-hidden="true"` on the SVG element. This is a good practice for accessibility because it tells the browser that the SVG is decorative and should not be read by screen readers.
+
+*Now comes the bad part:* You'll need to do this for ALL icons. [I curse the Figma team at night](https://x.com/janhesters/status/1878426135274426413) for lacking a way to export components in general, but especially for icons.
+
+### Mobile First
+
+Whenever you implement features where you have both mobile and larger screen designs, you want to work your way up from the smallest to the largest screen size.
+
+In this case, you would let your designer know that many of the mobile components are missing from the component section in Figma, such as the tab bar.

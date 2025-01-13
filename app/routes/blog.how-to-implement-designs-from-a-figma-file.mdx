@@ -1,0 +1,24 @@
+---
+title: "How to Implement Designs from a Figma File"
+datePublished: '2024-10-01'
+description: ""
+thumbnailUrl: 'https://i.magecdn.com/ada680/766252_unleash_javascripts_potential_with_functional_programming?f=webp,q.25,p.f,l.f'
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+1. (Optionally) create a new project. If you're onboarding to an existing team that already has a code base, you can obviously skip this step.
+  - In case you're a fullstack web developer, [I have a tutorial](https://janhesters.com/blog/how-to-set-up-nextjs-15-for-production-in-2025) how you can set up Next.js 15 for production with static analysis checks, testing, styling, and more. Link is in the description.
+2. Get the colors from the Figma file. They're usually saved under "Local styles" or "Local variables". Other styles that are sometimes there 

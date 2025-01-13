@@ -133,6 +133,9 @@ export function typographyStyles({ theme }: PluginUtils) {
         'ul > li::marker': {
           color: 'hsl(var(--foreground))',
         },
+        '& input[type="checkbox"]': {
+          accentColor: theme('colors.primary.DEFAULT'),
+        },
 
         // Code blocks
         pre: {
