@@ -1,0 +1,618 @@
+---
+title: "Grafana Authentication"
+datePublished: '2025-01-17'
+description: "How to authenticate with Grafana using a custom OAuth provider."
+thumbnailUrl: ''
+isArchived: true
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+### Set up Grafana
+
+#### Install Grafana
+
+Follow the instructions on [Grafana's installation page](https://grafana.com/docs/grafana/latest/setup-grafana/installation/). For simplicity, you can use the Docker image:
+
+```bash
+docker run -d -p 3000:3000 --name=grafana grafana/grafana
+```
+
+#### Log in to Grafana
+
+Open a browser and go to `http://localhost:3000`. Use the default credentials:
+- Username: `admin`
+- Password: `admin` (you'll be prompted to change it)
+
+#### Create a new dashboard
+
+- Go to **Create** > **Dashboard**.
+- Add a panel. Select a data source. Configure the visualization. (You can pick `grafana-testdata-datasource` for testing.)
+- Import the Dashboard "Simple Streaming Example".
+- Go back to your dashboards.
+- Note the dashboard ID or UID.
+  - E.g. url: `http://localhost:3000/d/TXSTREZ/simple-streaming-example?orgId=1&from=now-1m&to=now&timezone=browser` => `TXSTREZ`
+
+### Set Up Grafana Authentication
+
+#### Configure Grafana Authentication
+
+You configure authentication in the `grafana.ini` file.
+
+If you haven't mounted a volume or provided a custom configuration file when starting the container, the `grafana.ini` file lives at:
+
+```
+/etc/grafana/grafana.ini
+```
+
+To edit it in the container:
+
+1. Start a shell session:
+   ```bash
+   docker exec -it grafana sh
+   ```
+2. View or edit the file:
+   ```bash
+   cat /etc/grafana/grafana.ini
+   ```
+   ```bash
+   vi /etc/grafana/grafana.ini
+   ```
+
+For persistent changes, create `grafana.ini` on your host machine and mount it:
+
+```bash
+docker run -d -p 3000:3000 --name=grafana \
+  -v /path/to/your/grafana.ini:/etc/grafana/grafana.ini \
+  grafana/grafana
+```
+
+You need persistent changes to be sure that Grafana will keep using your custom authentication. So do this last step.
+
+#### Verify Grafana's Authentication Is Enabled
+
+1. **Remove any `auth.anonymous` configuration.**  
+   Don't set `auth.anonymous` to `true`.
+
+2. **Ensure `allow_embedding = true`.**  
+   In the `[security]` section:
+   ```ini
+   [security]
+    allow_embedding = true
+    cookie_samesite = none
+
+    [server]
+    protocol = http
+    http_addr = 0.0.0.0
+    http_port = 3000
+    domain = localhost
+    enforce_domain = false
+   ```
+
+3. **Restart Grafana.**  
+   ```bash
+   docker restart grafana
+   ```
+
+#### Obtain the Grafana Service Account Token
+
+A service account token is an API key that you create under a Grafana service account. Follow these steps:
+
+1. **Create or open a service account.**
+   - Go to **Configuration > Service Accounts > New Service Account**.
+   - Name the account. Click **Create**.
+
+2. **Generate an API key.**
+   - After creating the service account, click **Add service account token**.
+   - Enter a name. Choose a role (Admin, Editor, or Viewer).
+   - Click **Add**.
+
+3. **Copy the key.**
+   - You will see the token once. Copy it and keep it secure.
+
+4. **Set it as an environment variable.**
+   - For example, in `.env.local`:
+     ```bash
+     GRAFANA_SERVICE_TOKEN=your-grafana-service-token
+     ```
+   - This is the `GRAFANA_SERVICE_TOKEN` you will use in your Next.js API route.
+
+### Set Up NGINX Reverse Proxy
+
+To securely embed Grafana and prevent direct access, set up an NGINX reverse proxy with token-based authentication.
+
+#### a. Set Up a Docker Network
+
+Create a Docker network to allow communication between Grafana and NGINX containers.
+
+```bash
+docker network create grafana_network
+```
+
+#### b. Run Grafana Within the Docker Network
+
+Start Grafana and connect it to the newly created network.
+
+```bash
+docker run -d --network grafana_network --name=grafana \
+  -v /path/to/your/grafana.ini:/etc/grafana/grafana.ini \
+  grafana/grafana
+```
+
+#### c. Run NGINX as a Reverse Proxy
+
+1. **Create an NGINX Configuration File**
+
+   Create a file named `nginx.conf` with the following content:
+
+   ```nginx
+   events {}
+
+   http {
+       server {
+           listen 8080; # Use a non-standard port or bind to localhost
+
+           server_name localhost;
+
+           location /grafana/ {
+               proxy_pass http://grafana:3000/;
+               proxy_set_header Host $host;
+               proxy_set_header X-Real-IP $remote_addr;
+               proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+               proxy_set_header X-Forwarded-Proto $scheme;
+
+               # Token-Based Authentication
+               if ($http_authorization != "Bearer YOUR_SECURE_TOKEN") {
+                   return 403;
+               }
+           }
+       }
+   }
+   ```
+
+   **Notes:**
+   - Replace `YOUR_SECURE_TOKEN` with a secure token you generate.
+   - Ensure that the port `8080` does not conflict with other services.
+
+2. **Run the NGINX Container**
+
+   ```bash
+   docker run -d --network grafana_network --name=nginx-proxy \
+     -p 8080:8080 \
+     -v /path/to/nginx.conf:/etc/nginx/nginx.conf:ro \
+     nginx
+   ```
+
+   **Explanation:**
+   - The NGINX server listens on port `8080` and proxies requests to the Grafana container.
+   - It enforces token-based authentication by checking the `Authorization` header.
+
+#### d. Generate a Secure Token
+
+Generate a secure token to be used for authenticating requests between your Next.js application and the NGINX proxy.
+
+```bash
+openssl rand -base64 32
+```
+
+Copy the generated token and replace `YOUR_SECURE_TOKEN` in the `nginx.conf` file with this token.
+
+#### e. Update Environment Variables
+
+Update your `.env.local` file to include the new Grafana base URL and the secure token.
+
+```env
+GRAFANA_BASE_URL=http://localhost:8080/grafana/
+GRAFANA_SERVICE_TOKEN=your-grafana-service-token
+GRAFANA_PROXY_TOKEN=your-secure-token
+```
+
+### Set Up Next.js
+
+#### Create a new Next.js app
+
+```bash
+npx create-next-app my-next-app
+cd my-next-app
+```
+
+Install `node-fetch` to fetch the Grafana dashboard:
+
+```bash
+npm install node-fetch
+```
+
+#### Run the development server
+
+```bash
+npm run dev
+```
+
+Your app will run at `http://localhost:3000` (Grafana is on port 3000 by default, but since we've changed Grafana to port `8080` via NGINX, ensure no port conflicts).
+
+### Embed Grafana Securely in Next.js
+
+If the dashboard should only be visible to certain users, use a secure embedding mechanism. Combine Grafana's access controls with your app's authentication.
+
+#### Provide Credentials from the React Frontend
+
+Your React code must send the user's credentials to your serverless API route. One common approach is storing the user’s token (like a JWT) in an HttpOnly cookie. This helps protect against XSS. When the user logs in, set the cookie:
+
+```js
+// Example login code
+function loginUser(username, password) {
+  // Validate credentials. Then set a cookie on success.
+  document.cookie = `auth_token=valid-user-token; HttpOnly; path=/; secure`;
+}
+```
+
+The browser will send this cookie automatically on any request to your Next.js API routes.
+
+So you need to create a Login API route:
+
+```js title="pages/api/login.js"
+// pages/api/login.js
+export default function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const { username, password } = req.body;
+
+  // Simple validation logic (replace with real authentication)
+  if (username === 'admin' && password === 'password') {
+    // Set the HttpOnly cookie
+    res.setHeader('Set-Cookie', `auth_token=valid-user-token; HttpOnly; Path=/; Secure; SameSite=Strict; Max-Age=3600`);
+
+    return res.status(200).json({ message: 'Login successful' });
+  } else {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+}
+```
+
+#### Create a Secure Proxy in Next.js
+
+**Create `pages/api/grafana-proxy.js`:**
+
+```js
+import fetch from 'node-fetch';
+import { parse } from 'cookie';
+
+export default async function handler(req, res) {
+  // 1. Check user authentication (e.g., cookies or headers)
+  // For example, read the cookie named auth_token
+  const cookies = req.headers.cookie ? parse(req.headers.cookie) : {};
+  const userToken = cookies.auth_token;
+  if (!userToken || !isValidUser(userToken)) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  // 2. If user is valid, build the Grafana URL with secure token
+  const grafanaBaseUrl = process.env.GRAFANA_BASE_URL || 'http://localhost:8080/grafana/';
+  const dashboardUid = 'TXSTREZ'; // e.g. TXSTREZ
+  const serviceAccountToken = process.env.GRAFANA_SERVICE_TOKEN;
+  const proxyToken = process.env.GRAFANA_PROXY_TOKEN;
+
+  const grafanaUrl = `${grafanaBaseUrl}/d/${dashboardUid}?orgId=1`;
+
+  // 3. Fetch from Grafana using the service account token and proxy token
+  const response = await fetch(grafanaUrl, {
+    headers: {
+      'Authorization': `Bearer ${serviceAccountToken}`,
+      'Authorization': `Bearer ${proxyToken}`,
+    }
+  });
+
+  if (response.ok) {
+    // Return the URL or an iframe-embeddable response
+    res.status(200).json({ grafanaUrl });
+  } else {
+    res.status(500).json({ error: 'Could not fetch Grafana dashboard' });
+  }
+}
+
+function isValidUser(token) {
+  // Validate the token (JWT or session check).
+  return token === 'valid-user-token'; // Replace with real logic
+}
+```
+
+**Important Updates:**
+- **Authorization Headers:** The proxy now includes both the Grafana service token and the NGINX proxy token to ensure secure communication.
+- **Grafana Base URL:** Updated to `http://localhost:8080/grafana/` to route through NGINX.
+
+#### Create a Login Form
+
+```js title="components/LoginForm.js"
+// components/LoginForm.js
+"use client";
+import { useState } from 'react';
+
+export default function LoginForm({ onLogin }) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+        credentials: 'include', // Important to include cookies
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+
+      // Call the onLogin callback to update parent component state
+      onLogin();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div>
+        <label>Username:</label>
+        <input
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+        />
+      </div>
+      <div>
+        <label>Password:</label>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+      </div>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <button type="submit">Login</button>
+    </form>
+  );
+}
+```
+
+#### Create a Next.js Page for the Dashboard
+
+**Create `pages/dashboard.js`:**
+
+```js
+import { useEffect, useState } from 'react';
+
+export default function Dashboard() {
+  const [grafanaUrl, setGrafanaUrl] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetch('/api/grafana-proxy', {
+      credentials: 'include', // Ensure cookies are sent
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Unauthorized');
+        return res.json();
+      })
+      .then((data) => setGrafanaUrl(data.grafanaUrl))
+      .catch((err) => setError(err.message));
+  }, []);
+
+  if (error) return <p>{error}</p>;
+  if (!grafanaUrl) return <p>Loading...</p>;
+
+  return (
+    <iframe
+      src={grafanaUrl}
+      width="100%"
+      height="600"
+      frameBorder="0"
+      allowFullScreen
+    ></iframe>
+  );
+}
+```
+
+Users will see the embedded Grafana dashboard only if they have a valid token. Otherwise, the serverless route returns `401 Unauthorized`.
+
+#### Secure Environment Variables
+
+Store secrets in `.env.local`:
+
+```
+GRAFANA_BASE_URL=http://localhost:8080/grafana/
+GRAFANA_SERVICE_TOKEN=your-grafana-service-token
+GRAFANA_PROXY_TOKEN=your-secure-token
+JWT_SECRET=your_jwt_secret_key
+```
+
+Next.js automatically makes them available as `process.env.GRAFANA_BASE_URL`, `process.env.GRAFANA_SERVICE_TOKEN`, and `process.env.GRAFANA_PROXY_TOKEN` only on the server side.
+
+### Enhance Security with Tokens and Short-Lived URLs
+
+To further secure the embedding and prevent URL sharing, implement token-based access with short-lived tokens.
+
+#### a. Implement JWT for Session Management
+
+1. **Generate JWTs Upon Authentication:**
+
+   Modify your login API to generate JWTs upon successful authentication.
+
+   ```javascript
+   // pages/api/login.js
+   import jwt from 'jsonwebtoken';
+
+   export default function handler(req, res) {
+     if (req.method !== 'POST') {
+       return res.status(405).json({ error: 'Method not allowed' });
+     }
+
+     const { username, password } = req.body;
+
+     // Replace with real authentication logic
+     if (username === 'admin' && password === 'password') {
+       const token = jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+       res.setHeader('Set-Cookie', [
+         `auth_token=${token}; HttpOnly; Path=/; Secure; SameSite=Strict; Max-Age=3600`,
+       ]);
+       return res.status(200).json({ message: 'Login successful' });
+     } else {
+       return res.status(401).json({ error: 'Invalid credentials' });
+     }
+   }
+   ```
+
+2. **Validate JWTs in the Proxy:**
+
+   Update the proxy to validate JWTs.
+
+   ```javascript
+   // pages/api/grafana-proxy.js
+   import fetch from 'node-fetch';
+   import { parse } from 'cookie';
+   import jwt from 'jsonwebtoken';
+
+   export default async function handler(req, res) {
+     // Parse cookies
+     const cookies = req.headers.cookie ? parse(req.headers.cookie) : {};
+     const userToken = cookies.auth_token;
+
+     if (!userToken) {
+       return res.status(401).json({ error: 'Unauthorized' });
+     }
+
+     try {
+       const decoded = jwt.verify(userToken, process.env.JWT_SECRET);
+       // Optionally, perform additional checks on decoded token
+     } catch (err) {
+       return res.status(401).json({ error: 'Invalid token' });
+     }
+
+     const grafanaBaseUrl = process.env.GRAFANA_BASE_URL || 'http://localhost:8080/grafana/';
+     const dashboardUid = 'TXSTREZ'; // Replace with your actual UID
+
+     const grafanaUrl = `${grafanaBaseUrl}/d/${dashboardUid}?orgId=1`;
+
+     try {
+       const response = await fetch(grafanaUrl, {
+         headers: {
+           'Authorization': `Bearer ${process.env.GRAFANA_SERVICE_TOKEN}`,
+           'Authorization': `Bearer ${process.env.GRAFANA_PROXY_TOKEN}`,
+         },
+       });
+
+       if (response.ok) {
+         res.status(200).json({ grafanaUrl });
+       } else {
+         res.status(500).json({ error: 'Could not fetch Grafana dashboard' });
+       }
+     } catch (error) {
+       res.status(500).json({ error: 'Internal Server Error' });
+     }
+   }
+
+   function isValidUser(token) {
+     // This function is now obsolete due to JWT validation
+     return true;
+   }
+   ```
+
+   **Notes:**
+   - **JWT Validation:** Ensures that only users with valid tokens can access the proxy.
+   - **Authorization Headers:** Both Grafana service token and NGINX proxy token are included for secure communication.
+
+#### b. Implement Short-Lived URLs (Optional)
+
+For enhanced security, consider generating URLs that are only valid for a short period.
+
+1. **Generate Signed URLs:**
+
+   Modify the proxy to generate signed URLs with expiration.
+
+   ```javascript
+   // Example using JWT to create a signed Grafana URL
+   const signedUrl = jwt.sign(
+     { url: grafanaUrl },
+     process.env.URL_SIGNING_SECRET,
+     { expiresIn: '15m' }
+   );
+
+   res.status(200).json({ signedUrl });
+   ```
+
+2. **Validate Signed URLs:**
+
+   Adjust the reverse proxy to validate the signed URL before proxying the request.
+
+   **Note:** This approach requires custom handling and is more complex. Ensure that signed URLs are validated securely.
+
+### Test Access Control
+
+1. **Log in with a valid token.**  
+   The cookie or header will be sent to `/api/grafana-proxy`.
+
+2. **Access the dashboard page.**  
+   The proxy returns the dashboard URL. You see an embedded Grafana dashboard.
+
+3. **Use an invalid token.**  
+   The proxy sends `401 Unauthorized`.
+
+4. **Test security.**  
+   Ensure no direct link to Grafana bypasses your app’s security.
+
+#### Secure Cookies Properly
+
+Ensure that cookies used for authentication are secured:
+- **HttpOnly:** Prevents JavaScript from accessing the cookie, mitigating XSS attacks.
+- **Secure:** Ensures cookies are only sent over HTTPS.
+- **SameSite:** Controls whether cookies are sent with cross-site requests, mitigating CSRF attacks.
+
+**Example:**
+
+```javascript
+res.setHeader('Set-Cookie', [
+  `auth_token=${token}; HttpOnly; Path=/; Secure; SameSite=Strict; Max-Age=3600`,
+]);
+```
+
+**Note:** For local development, you might need to adjust the `Secure` flag if not using HTTPS.
+
+### Secure Environment Variables
+
+Store secrets in `.env.local`:
+
+```
+GRAFANA_BASE_URL=http://localhost:8080/grafana/
+GRAFANA_SERVICE_TOKEN=your-grafana-service-token
+GRAFANA_PROXY_TOKEN=your-secure-token
+JWT_SECRET=your_jwt_secret_key
+URL_SIGNING_SECRET=your_url_signing_secret_key
+```
+
+Next.js automatically makes them available as `process.env.GRAFANA_BASE_URL`, `process.env.GRAFANA_SERVICE_TOKEN`, `process.env.GRAFANA_PROXY_TOKEN`, `process.env.JWT_SECRET`, and `process.env.URL_SIGNING_SECRET` only on the server side.

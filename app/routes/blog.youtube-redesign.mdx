@@ -232,13 +232,27 @@ afterEach(() => {
 // ...
 
 export default defineConfig({
-  // ...
+  plugins: [
+    !process.env.VITEST &&
+      remix({
+        future: {
+          v3_fetcherPersist: true,
+          v3_lazyRouteDiscovery: true,
+          v3_relativeSplatPath: true,
+          v3_routeConfig: true,
+          v3_singleFetch: true,
+          v3_throwAbortReason: true,
+        },
+      }),
+    tsconfigPaths(),
+  ],
   test: {
+    environmentMatchGlobs: [['**/*.test.tsx', 'happy-dom']],
+    include: ['./app/**/*.{spec,test}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     setupFiles: [
       'app/test/setup-test-environment.ts',
       'app/test/vitest-cleanup-after-each.ts',
     ],
-    environmentMatchGlobs: [['**/*.test.tsx', 'happy-dom']],
   },
 });
 ```
@@ -428,6 +442,8 @@ To open last HTML report run:
   --red: #FF0033;
   --red-light: #FFAABB;
   --white: #FFFFFF;
+  --dark-gray: #111111;
+  --gray: #1A1A1A;
 
   /* Transparent Backgrounds */
   --red-background: rgba(255, 0, 51, 0.06);
@@ -442,11 +458,57 @@ To open last HTML report run:
   ), 
   #FF325B;
 
+  /* Colors by usage */
+  --arrow-background: #3F3F3F;
+
+  --badge-background-secondary: rgba(255, 255, 255, 0.60);
+  --badge-background: rgba(255, 255, 255, 0.14);
+
+  --border: rgba(255, 255, 255, 0.2);
+
+  --navbar-divider: rgba(255, 255, 255, 0.15);
+  --navbar-foreground: #F1F1F1;
+
+  --reactions-background: rgba(255, 255, 255, 0.5);
+  --reactions-divider: rgba(255, 255, 255, 0.1);
+
+  --tab-bar-background: #1A1A1A;
+  --tab-bar-text: rgba(255, 255, 255, 0.7);
+
+  --time-background: rgba(0, 0, 0, 0.6);
+  --time-foreground: #F1F1F1;
+
+  --timeline-background: rgba(255, 255, 255, 0.15);
+
+  --video-channel-checkmark-background: #AAAAAA;
+
+  --video-comments-count: rgba(255, 255, 255, 0.6);
+
+  --video-description-border: rgba(255, 255, 255, 0.1);
+  --video-description-show-more: rgba(255, 255, 255, 0.47);
+  --video-description-icon: rgba(255, 255, 255, 0.3);
+
+  --video-list-item-description: #AAAAAA;
+
+  /* Distances */
+  --radius-xl: 20px;
+  --radius-lg: 14px;
+  --radius-md: 10px;
+  --radius-sm: 8px;
+
   /* Variables */
   --foreground: #FFFFFF;
   --background: #111111;
+
+  --muted-foreground: #AAAAAA;
+
+  --card-background: #1A1A1A;
 }
 ```
+
+Some of the colors where inconsistent. There are too many different shades of gray (and I'm not talking about the movie).
+
+So, I simplified it and tokenized it in the best way that I know: [the way that Shadcn does it](https://x.com/shadcn/status/1877057603961790975).
 
 The Figma design by Juxtopposed lacks light mode colors. If that happens in the real world, raise it with your team and clarify whether this is intentional. Depending on the situation, you might want to freestyle the light mode colors. In this case, we can simply grab them from the real-world YouTube design.
 
@@ -534,3 +596,9 @@ Additionally, you want to set `aria-hidden="true"` on the SVG element. This is a
 Whenever you implement features where you have both mobile and larger screen designs, you want to work your way up from the smallest to the largest screen size.
 
 In this case, you would let your designer know that many of the mobile components are missing from the component section in Figma, such as the tab bar.
+
+---
+
+Inconsistencies:
+- Missing settings icon on mobile.
+- Colors can't be used with `/80` from Tailwind (Shadcn style) because there were too many and they all had some opacity mixed in.

@@ -61,7 +61,10 @@ I want to give you a real example that came up with one of my mentees. He wanted
 In the beginning, he designed his state with a single `setInputString` action.
 
 ```js title="src/features/type-trainer/type-trainer-reducer.js"
-export const setInputString = payload => ({ type: 'SET_INPUT_STRING', payload });
+export const setInputString = payload => ({
+  type: 'SET_INPUT_STRING',
+  payload,
+});
 
 export const sliceName = 'typeTrainer';
 

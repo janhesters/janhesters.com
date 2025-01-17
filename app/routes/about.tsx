@@ -70,6 +70,13 @@ export default function About() {
               href="https://www.reactsquad.io/jan"
             >
               ReactSquad
+            </a>{' '}
+            and{' '}
+            <a
+              className="underline hover:text-primary"
+              href="https://www.getsocialkit.com/?utm_source=jan-website&utm_medium=referral"
+            >
+              SocialKit
             </a>
             . By night, I create content to help you become a better programmer
             and manager.
