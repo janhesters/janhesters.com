@@ -909,6 +909,10 @@ export function CounterComponent({
 
 This tutorial is going to use [Postgres](https://www.postgresql.org/) for its database because it is well battle-tested, but you're going to use the [Prisma ORM](https://www.prisma.io/) to abstract away the database layer. This gives you the flexibility to use a variety of databases, and simplifies the API that you use to interact with it.
 
+First, install the [Postgres app](https://postgresapp.com/) on your Mac. Just follow the instructions on the website.
+
+Then, install the Prisma CLI.
+
 ```sh
 npm install prisma --save-dev
 ```
@@ -1015,11 +1019,15 @@ Here’s an explanation of each Prisma command:
 npm run prisma:setup
 ```
 
-If your Prisma doesn't recognize your `.env.local` file, set your environment variable manually in your terminal. On Mac, this can be done using the `export` command.
+If your Prisma doesn't recognize your `.env.local` file, set your environment variable manually **in your terminal** (NOT the `.env.local` file). On Mac, this can be done using the `export` command.
 
 ```sh title=".env.local"
 export DATABASE_URL="postgresql://johndoe:randompassword@localhost:5432/mydb?schema=public"
 ```
+
+You need to replace `johndoe` and `randompassword` with your own credentials.
+
+Now you should be able to run the Prisma commands.
 
 Create a `prisma/seed.ts` file. You can use it to seed your database with data for development.
 

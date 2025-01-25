@@ -117,9 +117,9 @@ const redirectMapping: RedirectMapping = {
     '/unit-testing-reducers',
     '/unit-testing-reducers/',
   ],
-  '/blog/how-to-set-up-nextjs-15-for-production-in-2024': [
-    '/how-to-set-up-nextjs-15-for-production-in-2025',
-    '/how-to-set-up-nextjs-15-for-production-in-2025/',
+  '/blog/how-to-set-up-nextjs-15-for-production-in-2025': [
+    '/blog/how-to-set-up-nextjs-15-for-production-in-2024',
+    '/blog/how-to-set-up-nextjs-15-for-production-in-2024/',
   ],
   '/archive': ['/bonus', '/bonus/'],
 };
