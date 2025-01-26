@@ -14,7 +14,7 @@ import {
 } from '@remix-run/react';
 import type { LinksFunction, MetaFunction } from '@vercel/remix';
 import { Menu, MoveLeft } from 'lucide-react';
-import { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 
 import { Button, buttonVariants } from '~/components/button';
 import { Sheet, SheetContent, SheetTrigger } from '~/components/sheet';
@@ -71,7 +71,7 @@ const navLinks = [
   { to: '/about', label: 'About' },
 ];
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export function Layout({ children }: { children: ReactNode }) {
   const location = useLocation();
 
   const showImprintLink =

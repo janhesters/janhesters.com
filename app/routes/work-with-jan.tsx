@@ -1,6 +1,7 @@
 import Cal from '@calcom/embed-react';
 import type { MetaFunction } from '@vercel/remix';
 import { ArrowRight, Code, Lightbulb, Users } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 import { Button } from '~/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/card';
@@ -15,7 +16,7 @@ export const meta: MetaFunction = () =>
   });
 
 type ServiceItem = {
-  icon: React.ReactNode;
+  icon: ReactNode;
   title: string;
   description: string;
   cta: string;

@@ -1,3 +1,4 @@
+/* eslint-disable no-undef, @typescript-eslint/no-explicit-any */
 /// <reference types="@vercel/remix" />
 /// <reference types="vite/client" />
 

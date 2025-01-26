@@ -1,0 +1,197 @@
+---
+title: "What Is Redux? (Get A Senior Understanding Of How Redux Works)"
+datePublished: '2024-12-17'
+description: "This blog post teaches you Redux inside-out. You’ll learn Redux from scratch, fill knowledge gaps if you’re already experienced, and discover secret tricks to write clean, scalable code. Create your own middleware and learn advanced selector composition."
+thumbnailUrl: 'https://i.magecdn.com/ada680/c7d1f2_what_is_redux_yt_thumbnail_v1?f=webp,q.25,p.f,l.f'
+isDraft: true
+---
+
+```bash
+npx create-react-router@latest my-react-router-app
+```
+
+```bash
+npm install --save-dev eslint
+```
+
+---
+
+Next.js
+
+```bash
+npx create-next-app@latest
+```
+
+Add lint fix script to your `package.json`.
+
+```json
+"lint:fix": "next lint --fix",
+```
+
+Add prettier to your project.
+
+```bash
+npm install --save-dev --save-exact prettier
+```
+
+```json
+"format": "prettier --write .",
+```
+
+Make Eslint & Prettier get along.
+
+```bash
+npm install --save-dev eslint-plugin-prettier eslint-config-prettier eslint-plugin-unicorn eslint-plugin-simple-import-sort
+```
+
+```js
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import { FlatCompat } from "@eslint/eslintrc";
+import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
+import eslintPluginUnicorn from "eslint-plugin-unicorn";
+import simpleImportSort from "eslint-plugin-simple-import-sort";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+});
+
+/** @type {import('eslint').Linter.Config[]} */
+const eslintConfig = [
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  eslintPluginUnicorn.configs["flat/recommended"],
+  {
+    plugins: {
+      "simple-import-sort": simpleImportSort,
+    },
+    rules: {
+      "unicorn/better-regex": "warn",
+      "simple-import-sort/imports": "error",
+      "simple-import-sort/exports": "error",
+    },
+  },
+  eslintPluginPrettierRecommended,
+];
+
+export default eslintConfig;
+```
+
+
+---
+
+Install Vitest.
+
+
+```bash
+npm install @vitest/eslint-plugin --save-dev
+```
+
+```js
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { FlatCompat } from "@eslint/eslintrc";
+import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
+import simpleImportSort from "eslint-plugin-simple-import-sort";
+import eslintPluginUnicorn from "eslint-plugin-unicorn";
+import vitest from "@vitest/eslint-plugin";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+});
+
+/** @type {import('eslint').Linter.Config[]} */
+const eslintConfig = [
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  eslintPluginUnicorn.configs["flat/recommended"],
+  {
+    files: ["**/*.test.{ts,tsx}"],
+    ...vitest.configs.recommended,
+  },
+  {
+    plugins: {
+      "simple-import-sort": simpleImportSort,
+    },
+    rules: {
+      "unicorn/better-regex": "warn",
+      "simple-import-sort/imports": "error",
+      "simple-import-sort/exports": "error",
+    },
+  },
+  eslintPluginPrettierRecommended,
+];
+
+export default eslintConfig;
+```
+
+```bash
+npm install --save-dev eslint-plugin-testing-library
+
+
+```bash
+npm install -D eslint-plugin-playwright
+```
+
+```js
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { FlatCompat } from "@eslint/eslintrc";
+import vitest from "@vitest/eslint-plugin";
+import playwright from "eslint-plugin-playwright";
+import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
+import simpleImportSort from "eslint-plugin-simple-import-sort";
+import testingLibrary from "eslint-plugin-testing-library";
+import eslintPluginUnicorn from "eslint-plugin-unicorn";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+});
+
+/** @type {import('eslint').Linter.Config[]} */
+const eslintConfig = [
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  eslintPluginUnicorn.configs["flat/recommended"],
+  {
+    ...playwright.configs["flat/recommended"],
+    files: ["**/*.spec.ts"],
+    rules: {
+      ...playwright.configs["flat/recommended"].rules,
+    },
+  },
+  {
+    files: ["**/*.test.{ts,tsx}"],
+    ...vitest.configs.recommended,
+  },
+  {
+    files: ["**/*.test.tsx"],
+    ...testingLibrary.configs["flat/dom"],
+  },
+  {
+    files: ["**/*.test.tsx"],
+    ...testingLibrary.configs["flat/react"],
+  },
+  {
+    plugins: {
+      "simple-import-sort": simpleImportSort,
+    },
+    rules: {
+      "unicorn/better-regex": "warn",
+      "simple-import-sort/imports": "error",
+      "simple-import-sort/exports": "error",
+    },
+  },
+  eslintPluginPrettierRecommended,
+];
+
+export default eslintConfig;
+```

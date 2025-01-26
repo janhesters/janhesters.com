@@ -1092,7 +1092,7 @@ $ npm run prisma:seed
 
 In your server components, you can use `prisma` to fetch any data.
 
-```tsx title="src/app/[lang]/dashboard.tsx"
+```tsx title="src/app/[lang]/dashboard/page.tsx"
 import prisma from '@/lib/prisma';
 import {
   Card,
@@ -1259,9 +1259,9 @@ The first one runs your Playwright test in headless mode, while the second one r
 ```ts title="playwright/example.spec.ts"
 import { expect, test } from '@playwright/test';
 
-test.describe('landing page', () => {
+test.describe('dashboard page', () => {
   test('given any user: shows the test user', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/dashboard');
 
     await expect(page.getByText('Jan Hesters')).toBeVisible();
     await expect(page.getByText('jan@reactsquad.io')).toBeVisible();
