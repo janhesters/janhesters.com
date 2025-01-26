@@ -1433,14 +1433,3 @@ jobs:
 ```
 
 Now every time you make a pull request to your app, it automatically runs your tests to ensure it works, runs TypeScript type checks and lints it, so that everyone contributes code with the same formatting.
-
-import { ReadNext } from '../features/blog/read-next';
-import { frontmatter as unleashJavaScriptsPotentialWithFunctionalProgramming } from './blog.unleash-javascripts-potential-with-functional-programming.mdx';
-import { frontmatter as higherOrderComponentsAreMisunderstoodInReact } from './blog.higher-order-components-are-misunderstood-in-react.mdx';
-
-<ReadNext
-  posts={[
-    { ...unleashJavaScriptsPotentialWithFunctionalProgramming, slug: 'unleash-javascripts-potential-with-functional-programming' },
-    { ...higherOrderComponentsAreMisunderstoodInReact, slug: 'higher-order-components-are-misunderstood-in-react' },
-  ]}
-/>

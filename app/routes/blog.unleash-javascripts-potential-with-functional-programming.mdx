@@ -1371,16 +1371,3 @@ mozart([1, 2, 3, 4, 5]); // 12
 Yes, absolutely! You should always use the simplest implementation for your requirements, also known as KISS (Keep It Simple, Stupid), or YAGNI (You Ain't Going To Need It).
 
 Functional programming shines as your app grows and you need to generalize and specialize your code so it scales well and stays maintainable. This way your code is more modular, and way easier to test, to reuse and to refactor. Future articles will show you real-world examples how to use these techniques.
-
-You now know the 20% of functional programming that gives you 80% of the result.
-
-import { ReadNext } from '../features/blog/read-next';
-import { frontmatter as whatIsHigherOrderComponentsAreMisunderstoodInReact } from './blog.what-is-redux-get-a-senior-understanding-of-how-redux-works.mdx';
-import { frontmatter as whatIsMemoization } from './blog.what-is-memoization-in-javascript-typescript.mdx';
-
-<ReadNext
-  posts={[
-    { ...whatIsHigherOrderComponentsAreMisunderstoodInReact, slug: 'what-is-redux-get-a-senior-understanding-of-how-redux-works' },
-    { ...whatIsMemoization, slug: 'what-is-memoization-in-javascript-typescript' },
-  ]}
-/>

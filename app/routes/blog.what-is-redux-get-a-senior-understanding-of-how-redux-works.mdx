@@ -1,12 +1,16 @@
 ---
 title: "What Is Redux? (Get A Senior Understanding Of How Redux Works)"
 datePublished: '2024-12-17'
-description: "This blog post teaches you Redux inside-out. You’ll learn Redux from scratch, fill knowledge gaps if you’re already experienced, and discover secret tricks to write clean, scalable code. Create your own middleware and learn advanced selector composition."
+description: "This blog post teaches you Redux inside-out. You'll learn Redux from scratch, fill knowledge gaps if you're already experienced, and discover secret tricks to write clean, scalable code. Create your own middleware and learn advanced selector composition."
 thumbnailUrl: 'https://i.magecdn.com/ada680/c7d1f2_what_is_redux_yt_thumbnail_v1?f=webp,q.25,p.f,l.f'
 ---
 
 import { getUrl } from '../lib/misc';
 import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export const config = {
+  runtime: 'nodejs'
+};
 
 export function loader({ request }) {
   return getUrl(request);
@@ -61,7 +65,7 @@ Redux is a JavaScript library for managing application state. Redux makes it eas
 
 The name "Redux" derives from the array method "reduce" mixed with the "Flux" architecture.
 
-The `reduce` part refers to the reducer functions in Redux that manage changes to your application’s state.
+The `reduce` part refers to the reducer functions in Redux that manage changes to your application's state.
 
 Redux design is [influenced heavily by many technologies](https://redux.js.org/understanding/history-and-design/prior-art), but the main one is the Elm architecture:
 
@@ -931,7 +935,7 @@ const notFound = selectFullNameById(store.getState(), 'user789');
 console.log('notFound', notFound); // User not found
 ```
 
-If no user is found, it returns `'User not found'`, providing a meaningful default value. If you try to render a non-existent user’s email, it will display "User not found" instead, which offers a better user experience than showing nothing or causing your app to crash.
+If no user is found, it returns `'User not found'`, providing a meaningful default value. If you try to render a non-existent user's email, it will display "User not found" instead, which offers a better user experience than showing nothing or causing your app to crash.
 
 There is more to learn about selectors, but the best way to understand them is in context. To do that, you need to see how React components connect to Redux.
 
@@ -1087,7 +1091,7 @@ function Home({ count, increment }) {
         <p className="text-2xl">Count: {count}</p>
 
         <button
-          className="bg-white text-black hover:bg-white/90 inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium shadow transition-colors"
+          className="bg-white text-black hover:bg-white/90 inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md bg-white px-4 py-2 text-sm font-medium text-black shadow transition-colors hover:bg-white/90"
           onClick={() => {
             // No need to wrap increment in dispatch like this:
             // dispatch(increment());
@@ -1293,88 +1297,6 @@ You need to update your code like this **everywhere** you're using users directl
 
 This also applies when you save selectors as functions. You'd need to refactor them like this. (No need to code along here. You're not actually going to refactor your state shape. This is still a hypothetical example.)
 
-```js title="src/app/user-profile-reducer.js" {6, 9, 12-14}
-export const selectCurrentUsersId = state => state[slice].currentUsersId;
-
-export const selectUsers = state => state[slice].users;
-
-export const selectCurrentUser = state =>
-  state[slice].users.find(user => user.id === state[slice].currentUsersId);
-
-export const selectCurrentUsersEmail = state =>
-  state[slice].users.find(user => user.id === state[slice].currentUsersId)?.email ?? '';
-
-export const selectCurrentUsersFullName = state => {
-  const currentUser = state[slice].users.find(
-    user => user.id === state[slice].currentUsersId
-  );
-  return `${currentUser?.firstName ?? ''} ${currentUser?.lastName ?? ''}`;
-};
-
-export const selectIsLoggedIn = state => Boolean(state[slice].currentUsersId);
-```
-
-After this state change you'd need to update the three selectors that access the current user:
-
-- `selectCurrentUser`,
-- `selectCurrentUsersEmail`, and
-- `selectCurrentUsersFullName`.
-
-All of these selectors now need to be changed to use `find`.
-
-There was also a hidden change. `selectUsers` now returns an array instead of an object. But, arguably this was the only intentional change. All other selectors should still return the same but had to be refactored to so.
-
-This shows you that the code of the selectors violates one of the most important software design principles:
-
-> “A small change in requirements should necessitate a correspondingly small change in the software.” — N. D. Birrell, M. A. Ould, "A Practical Handbook for Software Development"
-
-Luckily, selectors have another key property.
-
-Your selectors ***compose***, which is their key feature that allows them to abstract away state shape dependencies.
-
-Assume you're back to your old state shape where you normalized your users. Then you could write your selectors using function composition like this. (You want to code along with this refactor.)
-
-```js title="src/app/user-profile-reducer.js"
-// ... existing code
-
-const selectUserProfileSlice = state => state[slice];
-
-const selectCurrentUsersId = state =>
-  selectUserProfileSlice(state).currentUserId;
-
-const selectUsers = state => selectUserProfileSlice(state).users;
-
-export const selectCurrentUser = state => {
-  const currentUserId = selectCurrentUsersId(state);
-  const users = selectUsers(state);
-
-  return users[currentUserId];
-};
-
-export const selectCurrentUsersEmail = state =>
-  selectCurrentUser(state)?.email ?? '';
-  
-export const selectCurrentUsersFullName = state => {
-  const currentUser = selectCurrentUser(state);
-  return `${currentUser?.firstName ?? ''} ${currentUser?.lastName ?? ''}`;
-};
-
-export const selectIsLoggedIn = state => Boolean(selectCurrentUsersId(state));
-```
-
-  
-`selectCurrentUsersId` and `selectUsers` can both use `selectUserProfileSlice`.
-
-`selectCurrentUser` can use `selectUsers` and `selectCurrentUsersId` to easily return the current user.
-
-Now, `selectCurrentUsersEmail` and `selectCurrentUsersFullName` can both use `selectCurrentUser` under the hood.
-
-Finally, your `selectIsLoggedIn` selector can also use `selectCurrentUsersId`.
-
-As you can see, this way all of your selectors are cleanly abstracted away. They only add what's unique about accessing their part of the state, which is specialization. And simultaneously, they hide what is obvious about accessing their state using other selectors, which is generalization.
-
-Again imagine, you'd need to refactor your users from being normalized to being in an array. (Again, skip this refactor.)
-
 ```js title="src/app/user-profile-reducer.js" {12}
 const selectUserProfileSlice = state => state[slice];
 
@@ -1387,7 +1309,7 @@ export const selectCurrentUser = state => {
   const currentUserId = selectCurrentUsersId(state);
   const users = selectUsers(state);
 
-  return users.find(user => user.id === currentUserId);
+  return users[currentUserId];
 };
 
 export const selectCurrentUsersEmail = state =>
@@ -1663,7 +1585,7 @@ const getTruth = () => 21 + 21;
 
 The term "thunk" was coined after its inventors realized during a late-night discussion that some computational aspects could be precomputed, or "already [have] been thought of." They humorously named it "thunk", joking it was the past tense of "think" at two in the morning.
 
-You’ve learned that actions are objects. But with middleware, actions can become more. Using thunk middleware, actions can also be functions. Instead of dispatching an action object directly, you dispatch a function - the thunk - that can perform asynchronous tasks and then dispatch further actions based on the outcome.
+You've learned that actions are objects. But with middleware, actions can become more. Using thunk middleware, actions can also be functions. Instead of dispatching an action object directly, you dispatch a function - the thunk - that can perform asynchronous tasks and then dispatch further actions based on the outcome.
 
 ```js title="src/app/temp-thunk-example.js"
 function fetchDataThunk() {
@@ -1805,7 +1727,7 @@ const logger = store => next => action => {
 
 But there are many more middleware.
 
-To understand the logger middleware and others, you first need to learn about Redux’s `applyMiddleware` function. `applyMiddleware` is essential for running middleware. When you provide the middleware to your store, there has to be one `applyMiddleware` function wrapped around all of your middleware. The best way to understand `applyMiddleware` is by coding your own version from scratch.
+To understand the logger middleware and others, you first need to learn about Redux's `applyMiddleware` function. `applyMiddleware` is essential for running middleware. When you provide the middleware to your store, there has to be one `applyMiddleware` function wrapped around all of your middleware. The best way to understand `applyMiddleware` is by coding your own version from scratch.
 
 Create a function called `applyMiddleware`, then update your custom `createStore` function to work with middleware.
 
@@ -1908,7 +1830,7 @@ Then, it creates a `middlewareAPI` object that exposes a `getState` method and a
 
 Following that, it maps over all middleware and calls them with the `middlewareAPI`. Now you have an array of partially applied middleware called `chain`. They all have access to the middlewareAPI because it has been supplied as the `store` argument. Assuming you call `chain` with the `logger` and `thunk` middleware, then chain looks like this.
 
-```js
+```js title="temp-chain-explanation.js"
 const chain = [
   // This IIFE is just there to visualize the partial application for you.
   (store => (next => action => {
@@ -1959,11 +1881,11 @@ const dispatch = store.dispatch;
 const dispatch = store.dispatch;
 
 const middleware = next => action => {
-  if (typeof action === 'function') {
-    return action(store.dispatch, store.getState);
-  }
+  if (typeof action === 'function') {
+    return action(store.dispatch, store.getState);
+  }
 
-  return next(action);
+  return next(action);
 };
 ```
 
@@ -1971,18 +1893,18 @@ const middleware = next => action => {
 
 ```js title="temp-chain-explanation.js"
 const dispatch = action => {
-  if (typeof action === 'function') {
-    return action(store.dispatch, store.getState);
-  }
+  if (typeof action === 'function') {
+    return action(store.dispatch, store.getState);
+  }
 
-  return store.dispatch(action);
+  return store.dispatch(action);
 };
 
 const middleware = next => action => {
-  console.log('dispatching', action);
-  let result = next(action);
-  console.log('next state', store.getState());
-  return result;
+  console.log('dispatching', action);
+  let result = next(action);
+  console.log('next state', store.getState());
+  return result;
 };
 ```
 
@@ -2010,7 +1932,9 @@ const enhancedDispatch = action => {
 
 Your `createStore` function should now accept a third parameter called `enhancer`. If the `enhancer` is provided, it returns and calls the enhancer first with the `createStore` function itself, then with the `reducer` and `initialState`. This returns an enhanced version of the store where the `dispatch` function has been replaced with the `enhancedDispatch` which contains the middleware logic. The rest of `createStore` remains unchanged.
 
-Now, let's jump ahead and see how to use your updated `createStore` function. You pass `applyMiddleware` as the third argument, and `applyMiddleware` is called with your middleware. Since `applyMiddleware` returns a function with the same signature as `createStore` - taking in a `reducer` and `initialState`, and returning the store - this preserves the original behavior when middleware is applied. If you call the `createStore` function inside `applyMiddleware` without an `enhancer`, it functions normally.
+Now, let's jump ahead and see how to use your updated `createStore` function. You pass `applyMiddleware` as the third argument, and `applyMiddleware` is called with your middleware.
+
+Since `applyMiddleware` returns a function with the same signature as `createStore` - taking in a `reducer` and `initialState`, and returning the store - this preserves the original behavior when middleware is applied. If you call the `createStore` function inside `applyMiddleware` without an `enhancer`, it functions normally.
 
 Middleware makes solving the logging problem simple. The `logger` middleware logs the current action and calls the next middleware in the chain. After all middleware has processed the action, it logs the store's state and returns the result.
 
@@ -2103,12 +2027,3 @@ To address these issues, **server-state libraries** like React Query or useSWR b
 But as stated in the beginning of this article, Redux is still used heavily in many applications, so it's tremendously valuable for you to know it.
 
 This article was very theory heavy and in this series, you're going to code two real-world apps using Redux so that you get some hands-on practice.
-
-import { ReadNext } from '../features/blog/read-next';
-import { frontmatter as reduxSagaIsHardUntilYouLookUnderTheHood } from './blog.redux-saga-is-hard-until-you-look-under-the-hood.mdx';
-
-<ReadNext
-  posts={[
-    { ...reduxSagaIsHardUntilYouLookUnderTheHood, slug: 'redux-saga-is-hard-until-you-look-under-the-hood' },
-  ]}
-/>
