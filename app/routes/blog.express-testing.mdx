@@ -1,0 +1,248 @@
+---
+title: "TDD a Modern TypeScript Rest API with Fastify"
+datePublished: '2024-12-17'
+description: "This blog post teaches you Redux inside-out. You'll learn Redux from scratch, fill knowledge gaps if you're already experienced, and discover secret tricks to write clean, scalable code. Create your own middleware and learn advanced selector composition."
+thumbnailUrl: 'https://i.magecdn.com/ada680/c7d1f2_what_is_redux_yt_thumbnail_v1?f=webp,q.25,p.f,l.f'
+isDraft: true
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+### Initialize Your Project
+
+```md
+Start by creating a new directory for your Fastify project.
+
+```bash
+mkdir fastify-ts-app
+cd fastify-ts-app
+```
+
+Then, initialize your project with `npm`:
+
+```bash
+npm init -y
+```
+
+This will create a `package.json` file in your project directory.
+
+Add `"type": "module"` to the `package.json` file.
+
+```json title="package.json"
+{
+  // ...other properties
+  "type": "module"
+  // ...other properties
+}
+```
+
+Install the necessary dependencies for Fastify.
+
+```bash
+npm install fastify
+```
+
+Then, install TypeScript and the required type definitions as development dependencies.
+
+```bash
+npm install -D fastify-cli typescript @types/node
+```
+
+Run the following command to initialize a TypeScript configuration file:
+
+```bash
+npx tsc --init
+```
+
+This will create a `tsconfig.json` file. Update it to set the output directory for compiled files:
+
+```json title="tsconfig.json"
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "target": "es2022",
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "moduleDetection": "force",
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+
+    "module": "NodeNext",
+    "outDir": "dist",
+    "sourceMap": true,
+
+    "lib": ["es2022"]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
+```
+
+Create a `src` directory for your TypeScript files:
+
+```bash
+mkdir src
+```
+
+Inside the `src` directory, create an `index.ts` file with the following content:
+
+```typescript title="src/index.ts"
+import fastify from 'fastify';
+
+const app = fastify();
+const port = process.env.PORT || 3000;
+
+app.get('/', async () => {
+  return 'Fastify + TypeScript Server';
+});
+
+const start = async () => {
+  try {
+    await app.listen({ port: Number(port), host: '0.0.0.0' });
+    console.log(`Server is running at http://localhost:${port}`);
+  } catch (error) {
+    app.log.error(error);
+    process.exit(1);
+  }
+};
+
+start();
+```
+
+Update your `package.json` to include build and run scripts:
+
+```json title="package.json"
+"scripts": {
+  "build": "tsc",
+  "start": "node dist/index.js",
+  "dev": "fastify start -w src/index.ts",
+}
+```
+
+- `build`: Compiles TypeScript files to JavaScript.
+- `start`: Runs the compiled JavaScript file.
+- `dev`: Runs the TypeScript file directly with live reload.
+
+For development, use the following command to start the server with live reload:
+
+```bash
+npm run dev
+```
+
+Visit `http://localhost:3000` to verify your setup.
+
+Later, if you want to prepare for production, first build your project:
+
+```bash
+npm run build
+```
+
+Then start the compiled application:
+
+```bash
+npm start
+```
+
+### Add ESLint and Prettier
+
+```bash
+npm install --save-dev eslint eslint-config-prettier eslint-plugin-prettier eslint-plugin-simple-import-sort eslint-plugin-unicorn prettier prettier-plugin-tailwindcss typescript @typescript-eslint/eslint-plugin @vitest/eslint-plugin
+```
+
+`prettier.config.js`
+
+```js title="prettier.config.js"
+export default {
+  arrowParens: 'avoid',
+  bracketSameLine: false,
+  bracketSpacing: true,
+  htmlWhitespaceSensitivity: 'css',
+  insertPragma: false,
+  jsxSingleQuote: false,
+  plugins: ['prettier-plugin-tailwindcss'],
+  printWidth: 80,
+  proseWrap: 'always',
+  quoteProps: 'as-needed',
+  requirePragma: false,
+  semi: true,
+  singleQuote: true,
+  tabWidth: 2,
+  trailingComma: 'all',
+  useTabs: false,
+};
+```
+  
+`eslint.config.js`
+
+```js title="eslint.config.js"
+import eslint from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+import eslintPluginUnicorn from 'eslint-plugin-unicorn';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
+import vitest from '@vitest/eslint-plugin';
+
+export default tseslint.config(
+  eslint.configs.recommended,
+  ...tseslint.configs.recommended,
+  eslintPluginUnicorn.configs['flat/recommended'],
+  {
+    files: ['**/*.{js,ts}'],
+    ignores: ['**/*.js', 'dist/**/*', 'node_modules/**/*'],
+    plugins: {
+      'simple-import-sort': simpleImportSort,
+    },
+    rules: {
+      'simple-import-sort/imports': 'error',
+      'simple-import-sort/exports': 'error',
+      'unicorn/better-regex': 'warn',
+      'unicorn/no-process-exit': 'off',
+    },
+  },
+  {
+    files: ['**/*.test.{js,ts}'],
+    ...vitest.configs.recommended,
+  },
+  eslintPluginPrettierRecommended,
+);
+```
+
+### Add Vitest
+
+```bash
+npm install -D vitest
+```
+
+### Split into Server and app
+
+
+
+
+### Logging
+
+Fastify comes with built-in logging support. You can customize the logger or integrate with other logging solutions as needed.
+
+  ```typescript
+  const app = Fastify({
+    logger: true, // Enables built-in logging
+  });
+  ```
+
+- **Error Handling**: Fastify provides robust error handling mechanisms. Ensure you handle errors gracefully in your routes and consider setting up global error handlers.

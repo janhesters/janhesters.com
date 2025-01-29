@@ -38,6 +38,29 @@ npm install --save-dev --save-exact prettier
 "format": "prettier --write .",
 ```
 
+Configure Prettier to use the `prettier.config.ts` file.
+
+```ts title="prettier.config.ts"
+export default {
+  arrowParens: 'avoid',
+  bracketSameLine: false,
+  bracketSpacing: true,
+  htmlWhitespaceSensitivity: 'css',
+  insertPragma: false,
+  jsxSingleQuote: false,
+  plugins: ['prettier-plugin-tailwindcss'],
+  printWidth: 80,
+  proseWrap: 'always',
+  quoteProps: 'as-needed',
+  requirePragma: false,
+  semi: true,
+  singleQuote: true,
+  tabWidth: 2,
+  trailingComma: 'all',
+  useTabs: false,
+};
+```
+
 Make Eslint & Prettier get along.
 
 ```bash

@@ -8,10 +8,6 @@ thumbnailUrl: 'https://i.magecdn.com/ada680/c7d1f2_what_is_redux_yt_thumbnail_v1
 import { getUrl } from '../lib/misc';
 import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
 
-export const config = {
-  runtime: 'nodejs'
-};
-
 export function loader({ request }) {
   return getUrl(request);
 }

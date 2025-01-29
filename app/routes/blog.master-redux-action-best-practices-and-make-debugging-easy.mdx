@@ -9,10 +9,6 @@ isDraft: true
 import { getUrl } from '../lib/misc';
 import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
 
-export const config = {
-  runtime: 'nodejs'
-};
-
 export function loader({ request }) {
   return getUrl(request);
 }
