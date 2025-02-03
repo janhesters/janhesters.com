@@ -1,5 +1,5 @@
 ---
-title: "TDD a Modern TypeScript Rest API with Fastify"
+title: "TDD a Modern TypeScript Rest API with Express"
 datePublished: '2024-12-17'
 description: "This blog post teaches you Redux inside-out. You'll learn Redux from scratch, fill knowledge gaps if you're already experienced, and discover secret tricks to write clean, scalable code. Create your own middleware and learn advanced selector composition."
 thumbnailUrl: 'https://i.magecdn.com/ada680/c7d1f2_what_is_redux_yt_thumbnail_v1?f=webp,q.25,p.f,l.f'
@@ -43,6 +43,7 @@ Add `"type": "module"` to the `package.json` file.
 ```json title="package.json"
 {
   // ...other properties
+  "main": "dist/index.js",
   "type": "module"
   // ...other properties
 }
@@ -51,13 +52,13 @@ Add `"type": "module"` to the `package.json` file.
 Install the necessary dependencies for Fastify.
 
 ```bash
-npm install fastify
+npm install express
 ```
 
 Then, install TypeScript and the required type definitions as development dependencies.
 
 ```bash
-npm install -D fastify-cli typescript @types/node
+npm install -D typescript @types/node @types/express tsx
 ```
 
 Run the following command to initialize a TypeScript configuration file:
@@ -71,27 +72,36 @@ This will create a `tsconfig.json` file. Update it to set the output directory f
 ```json title="tsconfig.json"
 {
   "compilerOptions": {
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "target": "es2022",
     "allowJs": true,
-    "resolveJsonModule": true,
-    "moduleDetection": "force",
+    "esModuleInterop": true,
     "isolatedModules": true,
-    "verbatimModuleSyntax": true,
-
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-
+    "lib": [
+      "ESNext"
+    ],
     "module": "NodeNext",
+    "moduleDetection": "force",
+    "noImplicitOverride": true,
+    "noUncheckedIndexedAccess": true,
     "outDir": "dist",
+    "paths": {
+      "~/*": [
+        "./src/*"
+      ]
+    },
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
     "sourceMap": true,
-
-    "lib": ["es2022"]
+    "strict": true,
+    "target": "ES2023",
+    "verbatimModuleSyntax": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": [
+    "node_modules",
+    "dist"
+  ],
+  "include": [
+    "src/**/*"
+  ]
 }
 ```
 
@@ -104,26 +114,18 @@ mkdir src
 Inside the `src` directory, create an `index.ts` file with the following content:
 
 ```typescript title="src/index.ts"
-import fastify from 'fastify';
+import express from 'express';
 
-const app = fastify();
-const port = process.env.PORT || 3000;
+const app = express();
+const port = Number(process.env.PORT) || 3000;
 
-app.get('/', async () => {
-  return 'Fastify + TypeScript Server';
+app.get('/', (request, response) => {
+  response.send('Express + TypeScript Server');
 });
 
-const start = async () => {
-  try {
-    await app.listen({ port: Number(port), host: '0.0.0.0' });
-    console.log(`Server is running at http://localhost:${port}`);
-  } catch (error) {
-    app.log.error(error);
-    process.exit(1);
-  }
-};
-
-start();
+app.listen(port, () => {
+  console.log(`Server is running at http://localhost:${port}`);
+});
 ```
 
 Update your `package.json` to include build and run scripts:
@@ -132,7 +134,7 @@ Update your `package.json` to include build and run scripts:
 "scripts": {
   "build": "tsc",
   "start": "node dist/index.js",
-  "dev": "fastify start -w src/index.ts",
+  "dev": "tsx watch src/index.ts"
 }
 ```
 
@@ -163,7 +165,7 @@ npm start
 ### Add ESLint and Prettier
 
 ```bash
-npm install --save-dev eslint eslint-config-prettier eslint-plugin-prettier eslint-plugin-simple-import-sort eslint-plugin-unicorn prettier prettier-plugin-tailwindcss typescript @typescript-eslint/eslint-plugin @vitest/eslint-plugin
+npm install --save-dev eslint typescript-eslint eslint-config-prettier eslint-plugin-prettier eslint-plugin-simple-import-sort eslint-plugin-unicorn prettier typescript @typescript-eslint/eslint-plugin @vitest/eslint-plugin
 ```
 
 `prettier.config.js`
@@ -176,7 +178,7 @@ export default {
   htmlWhitespaceSensitivity: 'css',
   insertPragma: false,
   jsxSingleQuote: false,
-  plugins: ['prettier-plugin-tailwindcss'],
+  plugins: [],
   printWidth: 80,
   proseWrap: 'always',
   quoteProps: 'as-needed',
@@ -214,21 +216,47 @@ export default tseslint.config(
       'simple-import-sort/exports': 'error',
       'unicorn/better-regex': 'warn',
       'unicorn/no-process-exit': 'off',
+      'unicorn/no-array-reduce': 'off',
+      'unicorn/prevent-abbreviations': [
+        'error',
+        { replacements: { params: false } },
+      ],
     },
   },
   {
-    files: ['**/*.test.{js,ts}'],
+    files: ['src/**/*.test.{js,ts}'],
     ...vitest.configs.recommended,
   },
   eslintPluginPrettierRecommended,
 );
 ```
 
+Add scripts for linting and formatting:
+
+```json title="package.json"
+"scripts": {
+  "format": "prettier --write .",
+  "lint": "eslint .",
+  "lint:fix": "eslint . --fix",
+}
+```
+
 ### Add Vitest
 
 ```bash
-npm install -D vitest
+npm install -D vitest vite-tsconfig-paths supertest @types/supertest @faker-js/faker
 ```
+
+```ts title="vitest.config.ts"
+import { defineConfig } from 'vite';
+import tsconfigPaths from 'vite-tsconfig-paths';
+
+export default defineConfig({
+  plugins: [tsconfigPaths()],
+  test: { environment: 'node' },
+});
+```
+
 
 ### Split into Server and app
 
@@ -237,12 +265,347 @@ npm install -D vitest
 
 ### Logging
 
-Fastify comes with built-in logging support. You can customize the logger or integrate with other logging solutions as needed.
+```sh
+npm i morgan && npm i -D @types/morgan
+```
 
-  ```typescript
-  const app = Fastify({
-    logger: true, // Enables built-in logging
+```ts title="src/index.ts"
+import morgan from 'morgan';
+
+// ...
+
+app.use(morgan('tiny'));
+```
+
+
+In API design, a route defines the path and HTTP method (e.g., GET, POST) that a client uses to access a specific resource or functionality. An endpoint refers to the specific URL where this resource or functionality is accessible. The controller contains the logic that executes when a route is accessed. In summary, routes and endpoints specify how and where clients can access resources, while controllers define what happens when those routes are accessed.
+
+**Routes** and **endpoints** are often used interchangeably in casual discussions, but technically:
+
+- **Route**: Emphasizes the combination of HTTP method and URL path.
+- **Endpoint**: Focuses on the specific URL (which may implicitly include the method when considering the full API operation).
+- **Controller**: A container for related methods/actions/handlers. Universally refers to the logic handling the requests directed by routes / endpoints.
+- **Method/Action**: A specific function within the controller that handles a particular request.
+
+Consider the following HTTP request:
+
+- Request: GET https://api.example.com/users/123
+Breakdown:
+
+- **Endpoint**: https://api.example.com/users/123
+- **Route**: GET `/users/:id`
+- **Controller Action**: `getUserById` function (action / method / handler) in the `userController`.
+
+Lets breakd down a long route pattern like `/api/v1/organizations/:slug/members/:id`:
+
+- **`/api`**: Base path or API namespace.
+- **`v1/`**: Version segment.
+- **`/organizations`**: Primary resource path.
+- **`:slug`**: Route parameter for an organization identifier.
+- **`/members`**: Nested resource path.
+- **`:id`**: Route parameter for a member identifier.
+
+### Grouping By Feature
+
+Here is a typical file structure for an Express application:
+
+```
+.
+├── eslint.config.js
+├── package-lock.json
+├── package.json
+├── prettier.config.js
+├── src
+│   ├── app.ts
+│   ├── features
+│   │   ├── ... other features ...
+│   │   └── feature
+│   │       ├── ...
+│   │       ├── feature-controller.ts
+│   │       ├── feature-routes.ts
+│   │       └── feature.test.ts
+│   ├── ... other folders ...
+│   ├── routes.ts
+│   └── server.ts
+├── tsconfig.json
+└── vitest.config.ts
+```
+
+It also shows how Express apps use routes, controllers etc.
+
+### Seperate Application Code From Server Code
+
+Delete your `src/index.ts` file and create a new file `src/app.ts` with the following content:
+
+```ts title="src/app.ts"
+import type { Express } from 'express';
+import express from 'express';
+
+export function buildApp(): Express {
+  const app = express();
+
+  // Middleware for JSON parsing.
+  app.use(express.json());
+
+  return app;
+}
+```
+
+```ts title="src/server.ts"
+import morgan from 'morgan';
+
+import { buildApp } from './app.js';
+
+const port = Number(process.env.PORT) || 3000;
+const app = buildApp();
+
+// Configure morgan logging based on environment.
+const environment = process.env.NODE_ENV || 'development';
+app.use(environment === 'development' ? morgan('dev') : morgan('tiny'));
+
+// Start the server and capture the returned Server instance.
+const server = app.listen(port, () => {
+  console.log(`Server is running at http://localhost:${port}`);
+});
+
+// Listen for the SIGTERM signal to gracefully shut down the server.
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  server.close(() => {
+    console.log('HTTP server closed');
   });
-  ```
+});
+```
 
-- **Error Handling**: Fastify provides robust error handling mechanisms. Ensure you handle errors gracefully in your routes and consider setting up global error handlers.
+Notice the `.js` extension when importing the `app.ts` file. This is because the `tsconfig.json` file is set to `"module": "NodeNext"`. TODO: Explain further.
+
+### Healt Check Endpoint
+
+Create a test for a health check endpoint.
+
+```ts title="src/features/health-check/health-check.test.ts"
+import request from 'supertest';
+import { describe, expect, test } from 'vitest';
+
+import { buildApp } from '~/app.js';
+
+describe('/api/v1/health-check', () => {
+  test('given: a GET request, should: return a 200 with a message, timestamp and uptime', async () => {
+    const app = buildApp();
+
+    const actual = await request(app).get('/api/v1/health-check').expect(200);
+    const expected = {
+      message: 'OK',
+      timestamp: expect.any(Number),
+      uptime: expect.any(Number),
+    };
+
+    expect(actual.body).toEqual(expected);
+  });
+});
+```
+
+Run the test and watch it fail.
+
+```sh
+npm test
+
+ ❯ src/features/health-check/health-check.test.ts (1 test | 1 failed) 13ms
+   × /api/v1/health-check > given: a GET request, should: return a 200 with a message, timestamp and uptime 12ms
+     → expected 200 "OK", got 404 "Not Found"
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/health-check/health-check.test.ts > /api/v1/health-check > given: a GET request, should: return a 200 with a message, timestamp and uptime
+Error: expected 200 "OK", got 404 "Not Found"
+ ❯ src/features/health-check/health-check.test.ts:10:67
+      8|     const app = buildApp();
+      9| 
+     10|     const actual = await request(app).get('/api/v1/health-check').expect(2…
+       |                                                                   ^
+     11|     const expected = {
+     12|       message: 'OK',
+ ❯ Test._assertStatus node_modules/supertest/lib/test.js:252:14
+ ❯ node_modules/supertest/lib/test.js:308:13
+ ❯ Test._assertFunction node_modules/supertest/lib/test.js:285:13
+ ❯ Test.assert node_modules/supertest/lib/test.js:164:23
+ ❯ Server.localAssert node_modules/supertest/lib/test.js:120:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  13:09:40
+   Duration  78ms
+
+ FAIL  Tests failed. Watching for file changes...
+       press h to show help, press q to quit
+```
+
+The test fails with a 404 not found error. This is because we haven't defined any routes yet.
+
+Vitest runs a watch script by default, so you want to leave `npm test` running while you work on your code.
+
+Let's make the test pass. Start by adding a controller with one handler for the health check endpoint.
+
+```ts title="src/features/health-check/health-check-controller.ts"
+import type { NextFunction, Request, Response } from 'express';
+
+export async function healthCheckHandler(
+  request: Request,
+  response: Response,
+  next: NextFunction,
+) {
+  try {
+    const body = {
+      message: 'OK',
+      timestamp: Date.now(),
+      uptime: process.uptime(),
+    };
+    response.json(body);
+  } catch (error) {
+    next(error);
+  }
+}
+```
+
+Every feature gets at least one controller and one router. Create the router file next.
+
+```ts title="src/features/health-check/health-check-routes.ts"
+import { Router } from 'express';
+
+import { healthCheckHandler } from './health-check-controller.js';
+
+const router = Router();
+
+router.get('/', healthCheckHandler);
+
+export { router as healthCheckRoutes };
+```
+
+Now create a main file for all routes.
+
+```ts title="src/routes.ts"
+import { Router } from 'express';
+
+import { healthCheckRoutes } from '~/features/health-check/health-check-routes.js';
+
+export const apiV1Router = Router();
+
+apiV1Router.use('/health-check', healthCheckRoutes);
+```
+
+If you ever migrate APIs, you can define differnt versions of the API in the `routes.ts` file.
+
+Add the routes to your app in the `src/app.ts` file.
+
+```ts title="src/app.ts" {4, 13}
+import type { Express } from 'express';
+import express from 'express';
+
+import { apiV1Router } from './routes.js';
+
+export function buildApp(): Express {
+  const app = express();
+
+  // Middleware for JSON parsing.
+  app.use(express.json());
+
+  // Group routes under /api/v1.
+  app.use('/api/v1', apiV1Router);
+
+  return app;
+}
+```
+
+Your test will now pass.
+
+```sh
+ ✓ src/features/health-check/health-check.test.ts (1 test) 10ms
+   ✓ /api/v1/health-check > given: a GET request, should: return a 200 with a message, timestamp and uptime
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  14:01:14
+   Duration  99ms
+
+ PASS  Waiting for file changes...
+       press h to show help, press q to quit
+```
+
+### Database
+
+```sh
+npm i -D prisma && npm i @prisma/client @paralleldrive/cuid2
+```
+
+```sh
+npx prisma init
+```
+
+This generates a `.env` file and a `prisma/schema.prisma` file. Make sure that the `DATABASE_URL` contains the correct database URL and credentials.
+
+```json title="package.json"
+"prisma:deploy": "npx prisma migrate deploy && npx prisma generate",
+"prisma:migrate": "npx prisma migrate dev --name",
+"prisma:push": "npx prisma db push && npx prisma generate",
+"prisma:seed": "tsx ./prisma/seed.ts",
+"prisma:setup": "prisma generate && prisma migrate deploy && prisma db push",
+"prisma:studio": "npx prisma studio",
+"prisma:wipe": "npx prisma migrate reset --force && npx prisma db push",
+```
+
+```prisma title="prisma/schema.prisma"
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model UserProfile {
+  id        String   @id @default(cuid(2))
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String   @default("")
+}
+```
+
+Run `npm run prisma:setup` to create the database and generate the Prisma client.
+
+Create a `database.ts` file to connect to the database.
+
+```ts title="src/database.ts"
+import { PrismaClient } from '@prisma/client';
+
+declare global {
+  // eslint-disable-next-line no-var
+  var prisma: PrismaClient | undefined;
+}
+
+export const prisma = globalThis.prisma || new PrismaClient();
+
+if (process.env.NODE_ENV !== 'production') {
+  globalThis.prisma = prisma;
+}
+```
+
+#### Validate Queries And Bodies
+
+```sh
+npm i express-validator
+```
+
+
+### Authentication
+
