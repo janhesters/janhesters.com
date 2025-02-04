@@ -257,6 +257,12 @@ export default defineConfig({
 });
 ```
 
+```json title="package.json"
+"scripts": {
+  "test": "vitest"
+}
+```
+
 
 ### Split into Server and app
 
@@ -335,6 +341,12 @@ It also shows how Express apps use routes, controllers etc.
 
 ### Seperate Application Code From Server Code
 
+The "app" is an Express application. It holds middleware and routes. It processes HTTP requests.
+
+The "server" is an HTTP server. It listens for network connections. It is created by calling app.listen().
+
+The app is the logic that runs on the server. 
+
 Delete your `src/index.ts` file and create a new file `src/app.ts` with the following content:
 
 ```ts title="src/app.ts"
@@ -378,6 +390,8 @@ process.on('SIGTERM', () => {
 ```
 
 Notice the `.js` extension when importing the `app.ts` file. This is because the `tsconfig.json` file is set to `"module": "NodeNext"`. TODO: Explain further.
+
+Why `morgan` in `server.ts` instead of `app.ts`?
 
 ### Healt Check Endpoint
 
