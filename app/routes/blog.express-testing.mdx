@@ -22,12 +22,11 @@ export const meta = ({ data }) => getSocialsMetaForBlogPost({
 
 ### Initialize Your Project
 
-```md
-Start by creating a new directory for your Fastify project.
+Start by creating a new directory for your Express project.
 
 ```bash
-mkdir fastify-ts-app
-cd fastify-ts-app
+mkdir express-ts-app
+cd express-ts-app
 ```
 
 Then, initialize your project with `npm`:
@@ -49,7 +48,7 @@ Add `"type": "module"` to the `package.json` file.
 }
 ```
 
-Install the necessary dependencies for Fastify.
+Install the necessary dependencies for Express.
 
 ```bash
 npm install express
@@ -67,7 +66,7 @@ Run the following command to initialize a TypeScript configuration file:
 npx tsc --init
 ```
 
-This will create a `tsconfig.json` file. Update it to set the output directory for compiled files:
+This will create a `tsconfig.json` file. Update it to set the output directory for compiled files - along with other options:
 
 ```json title="tsconfig.json"
 {
@@ -162,13 +161,22 @@ Then start the compiled application:
 npm start
 ```
 
+You can execute a quick curl request to verify that your server is running.
+
+```bash
+$ curl http://localhost:3000
+Express + TypeScript Server
+```
+
 ### Add ESLint and Prettier
+
+Install ESLint and Prettier to make sure your code adheres to consistent style guidelines and catches potential errors early
 
 ```bash
 npm install --save-dev eslint typescript-eslint eslint-config-prettier eslint-plugin-prettier eslint-plugin-simple-import-sort eslint-plugin-unicorn prettier typescript @typescript-eslint/eslint-plugin @vitest/eslint-plugin
 ```
 
-`prettier.config.js`
+Create a `prettier.config.js` file. I like the following rules, but you can customize them as you see fit.
 
 ```js title="prettier.config.js"
 export default {
@@ -190,8 +198,8 @@ export default {
   useTabs: false,
 };
 ```
-  
-`eslint.config.js`
+
+Next, create an `eslint.config.js` file.
 
 ```js title="eslint.config.js"
 import eslint from '@eslint/js';
@@ -231,7 +239,17 @@ export default tseslint.config(
 );
 ```
 
-Add scripts for linting and formatting:
+This configuration combines several ESLint rule sets.
+
+It starts by extending the recommended JavaScript and TypeScript rules, then adds the Unicorn plugin's suggestions for code improvements while customizing some of its rules (e.g., warning for better regex usage, disabling process exit checks, and adjusting abbreviation prevention).
+
+You also include the `simple-import-sort` plugin to automatically sort your import and export statements, treating any deviations as errors.
+
+For test files, the Vitest recommended rules are applied to ensure tests follow best practices.
+
+And finally, the Prettier plugin is added to integrate code formatting into your linting process, so your code stays both syntactically correct and consistently styled.
+
+Add scripts for linting and formatting to your `package.json` file:
 
 ```json title="package.json"
 "scripts": {
@@ -241,11 +259,15 @@ Add scripts for linting and formatting:
 }
 ```
 
-### Add Vitest
+### Vitest & Supertest
+
+In order to be able to do Test-Driven Development (TDD), you a testing framework, so install Vitest and Supertest.
 
 ```bash
 npm install -D vitest vite-tsconfig-paths supertest @types/supertest @faker-js/faker
 ```
+
+Create a `vitest.config.ts` file.
 
 ```ts title="vitest.config.ts"
 import { defineConfig } from 'vite';
@@ -257,103 +279,30 @@ export default defineConfig({
 });
 ```
 
+You configure Vitest to use the `tsconfig.json` file with `tsconfig-paths` and to run in node environment.
+
+Add a test script to your `package.json` file.
+
 ```json title="package.json"
 "scripts": {
   "test": "vitest"
 }
 ```
 
-
 ### Split into Server and app
 
+Your `src/index.ts` file currently serves two purposes at once. It acts as both the app and the server.
 
+In the context of writing a Rest API with Express, the "app" refers to your Express application. It holds middleware and routes, and it processes HTTP requests. In other words, the app is the logic that runs on the server.
 
-
-### Logging
-
-```sh
-npm i morgan && npm i -D @types/morgan
-```
-
-```ts title="src/index.ts"
-import morgan from 'morgan';
-
-// ...
-
-app.use(morgan('tiny'));
-```
-
-
-In API design, a route defines the path and HTTP method (e.g., GET, POST) that a client uses to access a specific resource or functionality. An endpoint refers to the specific URL where this resource or functionality is accessible. The controller contains the logic that executes when a route is accessed. In summary, routes and endpoints specify how and where clients can access resources, while controllers define what happens when those routes are accessed.
-
-**Routes** and **endpoints** are often used interchangeably in casual discussions, but technically:
-
-- **Route**: Emphasizes the combination of HTTP method and URL path.
-- **Endpoint**: Focuses on the specific URL (which may implicitly include the method when considering the full API operation).
-- **Controller**: A container for related methods/actions/handlers. Universally refers to the logic handling the requests directed by routes / endpoints.
-- **Method/Action**: A specific function within the controller that handles a particular request.
-
-Consider the following HTTP request:
-
-- Request: GET https://api.example.com/users/123
-Breakdown:
-
-- **Endpoint**: https://api.example.com/users/123
-- **Route**: GET `/users/:id`
-- **Controller Action**: `getUserById` function (action / method / handler) in the `userController`.
-
-Lets breakd down a long route pattern like `/api/v1/organizations/:slug/members/:id`:
-
-- **`/api`**: Base path or API namespace.
-- **`v1/`**: Version segment.
-- **`/organizations`**: Primary resource path.
-- **`:slug`**: Route parameter for an organization identifier.
-- **`/members`**: Nested resource path.
-- **`:id`**: Route parameter for a member identifier.
-
-### Grouping By Feature
-
-Here is a typical file structure for an Express application:
-
-```
-.
-├── eslint.config.js
-├── package-lock.json
-├── package.json
-├── prettier.config.js
-├── src
-│   ├── app.ts
-│   ├── features
-│   │   ├── ... other features ...
-│   │   └── feature
-│   │       ├── ...
-│   │       ├── feature-controller.ts
-│   │       ├── feature-routes.ts
-│   │       └── feature.test.ts
-│   ├── ... other folders ...
-│   ├── routes.ts
-│   └── server.ts
-├── tsconfig.json
-└── vitest.config.ts
-```
-
-It also shows how Express apps use routes, controllers etc.
-
-### Seperate Application Code From Server Code
-
-The "app" is an Express application. It holds middleware and routes. It processes HTTP requests.
-
-The "server" is an HTTP server. It listens for network connections. It is created by calling app.listen().
-
-The app is the logic that runs on the server. 
+The "server" is an HTTP server. It listens for network connections. It is created when you call `app.listen()`.
 
 Delete your `src/index.ts` file and create a new file `src/app.ts` with the following content:
 
 ```ts title="src/app.ts"
-import type { Express } from 'express';
 import express from 'express';
 
-export function buildApp(): Express {
+export function buildApp() {
   const app = express();
 
   // Middleware for JSON parsing.
@@ -363,7 +312,45 @@ export function buildApp(): Express {
 }
 ```
 
+You need to configure the `express.json()` middleware to enable your app to handle JSON data from incoming requests.
+
+Now, create a `src/server.ts` file.
+
 ```ts title="src/server.ts"
+import { buildApp } from './app.js';
+
+const port = Number(process.env.PORT) || 3000;
+const app = buildApp();
+
+// Start the server and capture the returned Server instance.
+const server = app.listen(port, () => {
+  console.log(`Server is running at http://localhost:${port}`);
+});
+
+// Listen for the SIGTERM signal to gracefully shut down the server.
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  server.close(() => {
+    console.log('HTTP server closed');
+  });
+});
+```
+
+Notice the `.js` extension when importing the `app.ts` file. When using `"module": "NodeNext"` in your `tsconfig.json` file, TypeScript follows Node.js's ES module resolution, requiring explicit file extensions in imports. Although you write your code in TypeScript, it compiles to JavaScript, so you must import the `.js` files (e.g., `import { buildApp } from './app.js';`). This guarantees that Node.js finds the correct files at runtime and prevents errors.
+
+### Logging
+
+When you write servers, you want to monitor your application's behavior by tracking requsts, which can help you to debug issues. A common approach is using middleware like `morgan`.
+
+Install it and the types.
+
+```sh
+npm i morgan && npm i -D @types/morgan
+```
+
+Add it to your app.
+
+```ts title="src/server.ts" {1, 9-10}
 import morgan from 'morgan';
 
 import { buildApp } from './app.js';
@@ -389,11 +376,90 @@ process.on('SIGTERM', () => {
 });
 ```
 
-Notice the `.js` extension when importing the `app.ts` file. This is because the `tsconfig.json` file is set to `"module": "NodeNext"`. TODO: Explain further.
+You can configure `morgan`'s logging format based on your app's environment. The `dev` format provides colorful logs for local development, while `tiny` offers minimal logs for production.
 
-Why `morgan` in `server.ts` instead of `app.ts`?
+It's best to set up the `morgan` middleware in `server.ts` because your tests will use only the `buildApp()` function. Placing it in `app.ts` would clutter your test output with unnecessary logs.
 
-### Healt Check Endpoint
+### Grouping By Feature
+
+Before you start implementing the first features, let's talk about the general structure of an Express application.
+
+Going forward in this tutorial, you will group files by feature. Here is a typical file structure for an Express application when you group by feature:
+
+```
+.
+├── eslint.config.js
+├── package-lock.json
+├── package.json
+├── prettier.config.js
+├── src
+│   ├── app.ts
+│   ├── features
+│   │   ├── ... other features ...
+│   │   └── feature
+│   │       ├── ...
+│   │       ├── feature-model.ts
+│   │       ├── feature-controller.ts
+│   │       ├── feature-routes.ts
+│   │       └── feature.test.ts
+│   ├── ... other folders ...
+│   ├── routes.ts
+│   └── server.ts
+├── tsconfig.json
+└── vitest.config.ts
+```
+
+Express generally follows the MVC pattern.
+
+- The **m**odel refers to the code that interacts with the database or external APIs.
+- The **v**iew part of your code is responsible for displaying data and the user interface.
+- The **c**ontroller contains the logic that executes when a route is accessed. It connects the model and the view, updates the model, and determines which view to display.
+
+If your app is a pure Rest API backend, like this tutorial shows you, you don't need a view layer in your Express app.
+
+### Routes, Endpoints & Controllers
+
+In API design, a route defines the path and HTTP method (e.g., GET, POST) that a client uses to access a specific resource or functionality. An endpoint refers to the specific URL where this resource or functionality is accessible. The controller contains the logic that executes when a route is accessed. In summary, routes and endpoints specify how and where clients can access resources, while controllers define what happens when those routes are accessed.
+
+**Routes** and **endpoints** are often used interchangeably in casual discussions, but technically:
+
+- **Route**: Emphasizes the combination of HTTP method and URL path.
+- **Endpoint**: Focuses on the specific URL (which may implicitly include the method when considering the full API operation).
+- **Controller**: A container for related methods/actions/handlers. Universally refers to the logic handling the requests directed by routes / endpoints.
+- **Method / action**: A specific function within the controller that handles a particular request.
+
+Consider the following HTTP request:
+
+```
+GET https://api.example.com/users/123
+```
+
+You can break it down like this:
+
+- **Endpoint**: https://api.example.com/users/123
+- **Route**: GET `/users/:id`
+- **Controller action**: `getUserById` function (action / method / handler) in the `userController` object and / or the `user-controller.ts` file.
+
+When dealing with long routes like `/api/v1/organizations/:slug/members/:id`, an endpoint might look like this:  
+
+```
+GET https://api.example.com/api/v1/organizations/acme/members/123
+```
+
+Each part of the route has a specific name:  
+
+- **`/api`** - Base path or API namespace.  
+- **`/v1`** - API version segment.  
+- **`/organizations`** - Primary resource path.  
+- **`/:slug`** - Route parameter for the organization identifier.  
+- **`/members`** - Nested resource path.  
+- **`/:id`** - Route parameter for the member identifier.  
+
+### Health Check Endpoint
+
+Your app is now set up correctly, and you're ready to write your first test for your first feature.
+
+You're going to create a simple health check endpoint first. A health check endpoint allows monitoring systems, such as load balancers or orchestrators like Kubernetes, to determine if your application is running correctly and ready to handle traffic. It helps detect issues like crashed processes, unresponsive services, or failed dependencies. These orchestrators can then enable your app to automatically recover from failures and intelligently rollout new versions.
 
 Create a test for a health check endpoint.
 
@@ -418,6 +484,8 @@ describe('/api/v1/health-check', () => {
   });
 });
 ```
+
+Your test simply makes a GET request to the `/api/v1/health-check` endpoint and checks that the response is a 200 status code with a message, timestamp and uptime.
 
 Run the test and watch it fail.
 
@@ -484,6 +552,10 @@ export async function healthCheckHandler(
 }
 ```
 
+Create a simple body that contains a message, timestamp and uptime and then send it as a JSON response, which will default to a 200 status code.
+
+You use a try-catch block to handle errors and call the `next` function to pass the error to any error handling middleware. You haven't created any error handling middleware in this tutorial, so by default Express will use its built-in error handler. This default handler logs the error to the console and sends a simple error response back to the client, for example a 500 status code with a message like `Internal Server Error`.
+
 Every feature gets at least one controller and one router. Create the router file next.
 
 ```ts title="src/features/health-check/health-check-routes.ts"
@@ -498,6 +570,8 @@ router.get('/', healthCheckHandler);
 export { router as healthCheckRoutes };
 ```
 
+Import the `healthCheckHandler` from the controller. Then set up a GET route at the root path `/` that uses the `healthCheckHandler` and export the configured router as `healthCheckRoutes`.
+
 Now create a main file for all routes.
 
 ```ts title="src/routes.ts"
@@ -510,7 +584,9 @@ export const apiV1Router = Router();
 apiV1Router.use('/health-check', healthCheckRoutes);
 ```
 
-If you ever migrate APIs, you can define differnt versions of the API in the `routes.ts` file.
+Here you set up the base route path `/health-check` for the health check routes, where `/health-check` is the primary resource path.
+
+Additionally, if you ever migrate APIs, you can define differnt versions (e.g. `apiV2Router`) of the API in the `routes.ts` file.
 
 Add the routes to your app in the `src/app.ts` file.
 
@@ -533,6 +609,8 @@ export function buildApp(): Express {
 }
 ```
 
+You set up the base path and API version segment here for the router.
+
 Your test will now pass.
 
 ```sh
@@ -548,17 +626,126 @@ Your test will now pass.
        press h to show help, press q to quit
 ```
 
+#### `asyncHandler`
+
+Actually, the pattern you've seen before where you use `next` in your handlers is pretty annoying. It forces you to use 3 arguments, adds another layer of indentation, and makes the code less readable and more boilerplate-y.
+
+So let's create a helper function that wraps your handler in a try-catch block and calls `next` with the error if it occurs.
+
+```ts title="src/utils/async-handler.ts"
+import type { NextFunction, Request, Response } from 'express';
+import type { ParamsDictionary } from 'express-serve-static-core';
+import type { ParsedQs } from 'qs';
+
+/**
+ * A helper that wraps an async route handler (without `next`) so that any errors are automatically
+ * passed to `next()`. This avoids having to include try/catch blocks in every async handler.
+ *
+ * @param fn - An asynchronous Express request handler that returns a Promise.
+ * @returns A standard Express request handler.
+ */
+export function asyncHandler<
+  P = ParamsDictionary,
+  ResponseBody = unknown,
+  RequestBody = unknown,
+  RequestQuery = ParsedQs,
+  LocalsObject extends Record<string, unknown> = Record<string, unknown>,
+>(
+  function_: (
+    request: Request<P, ResponseBody, RequestBody, RequestQuery, LocalsObject>,
+    response: Response<ResponseBody, LocalsObject>,
+  ) => Promise<void>,
+): (
+  request: Request<P, ResponseBody, RequestBody, RequestQuery, LocalsObject>,
+  response: Response<ResponseBody, LocalsObject>,
+  next: NextFunction,
+) => Promise<void> {
+  return async function (
+    request: Request<P, ResponseBody, RequestBody, RequestQuery, LocalsObject>,
+    response: Response<ResponseBody, LocalsObject>,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      await function_(request, response);
+    } catch (error) {
+      next(error);
+    }
+  };
+}
+```
+
+This function is many lines of code, but that's just to make TypeScript happy. It really boils down to this:
+
+```js title="temp-async-handler.js"
+function asyncHandler(fn) {
+  return async function (request, response, next) {
+    try {
+      await fn(request, response);
+    } catch (error) {
+      next(error);
+    }
+  };
+}
+```
+
+You call the `asyncHandler` function with your handler and it returns a new handler that you can use in your router. It wraps your original handler in a try-catch block and calls `next` with the error if it occurs for you.
+
+This is one of the classic examples of how TypeScript can make your code less readable. I'm going to release a video on how you can write Express apps a lot cleaner without TypeScript using programming techniques far more advanced than what you see in this video, so subscribe to this channel because you do NOt want to miss that.
+
+Now refactor your `health-check-routes.ts` file to use the `asyncHandler` helper.
+
+```ts title="src/features/health-check/health-check-routes.ts" {3, 9}
+import { Router } from 'express';
+
+import { asyncHandler } from '~/utils/async-handler.js';
+
+import { healthCheckHandler } from './health-check-controller.js';
+
+const router = Router();
+
+router.get('/', asyncHandler(healthCheckHandler));
+
+export { router as healthCheckRoutes };
+```
+
+You can simply wrap your handler in the `asyncHandler` function and it will do the rest for you.
+
+This allows you to simplify your handler by getting rid of the try-catch block and the `next` function.
+
+```ts title="src/features/health-check/health-check-controller.ts"
+import type { Request, Response } from 'express';
+
+export async function healthCheckHandler(request: Request, response: Response) {
+  const body = {
+    message: 'OK',
+    timestamp: Date.now(),
+    uptime: process.uptime(),
+  };
+  response.json(body);
+}
+```
+
+Going forward, you're going to use the `asyncHandler` helper for all of your handlers.
+
 ### Database
+
+You're going to use Prisma with PostgreSQL for this tutorial. Install the [Postgres App](https://postgresapp.com/) to create a local PostgreSQL database.
+
+Then install Prisma, the Prisma client and the CUID2 library.
 
 ```sh
 npm i -D prisma && npm i @prisma/client @paralleldrive/cuid2
 ```
 
+Initialize Prisma.
+
 ```sh
 npx prisma init
 ```
 
-This generates a `.env` file and a `prisma/schema.prisma` file. Make sure that the `DATABASE_URL` contains the correct database URL and credentials.
+This generates a `.env` file and a `prisma/schema.prisma` file. Make sure that the `DATABASE_URL` in your `.env` file contains the correct database URL and credentials.
+
+Add the following scripts to your `package.json` file.
 
 ```json title="package.json"
 "prisma:deploy": "npx prisma migrate deploy && npx prisma generate",
@@ -569,6 +756,12 @@ This generates a `.env` file and a `prisma/schema.prisma` file. Make sure that t
 "prisma:studio": "npx prisma studio",
 "prisma:wipe": "npx prisma migrate reset --force && npx prisma db push",
 ```
+
+The only important script for this tutorial is `prisma:setup`. It will create the database and generate the Prisma client. You will run it in a very soon.
+
+For a full explanation of all of these scripts, check out my video ["How To Set Up Next.js 15 For Production In 2025"](https://janhesters.com/blog/how-to-set-up-nextjs-15-for-production-in-2025).
+
+Now add a `UserProfile` model to your `prisma/schema.prisma` file.
 
 ```prisma title="prisma/schema.prisma"
 // This is your Prisma schema file,
@@ -587,11 +780,12 @@ datasource db {
 }
 
 model UserProfile {
-  id        String   @id @default(cuid(2))
-  email     String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  name      String   @default("")
+  id             String   @id @default(cuid(2))
+  email          String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  name           String   @default("")
+  hashedPassword String
 }
 ```
 
@@ -614,12 +808,207 @@ if (process.env.NODE_ENV !== 'production') {
 }
 ```
 
+Prisma is now ready to go, but there are still some things missing before we can work on the next features.
+
 #### Validate Queries And Bodies
 
+You're going to use Zod to validate queries and bodies. Usually you would use `express-validator` for this, but it doesn't work well with TypeScript because Express can't infer the shape of the data.
+
+Install Zod.
+
 ```sh
-npm i express-validator
+npm i zod
 ```
 
+Now create a `src/middleware/validation.ts` file.
+
+```ts title="src/middleware/validation.ts"
+import type { Request, Response } from 'express';
+import type { ZodSchema } from 'zod';
+import { ZodError } from 'zod';
+
+export function createValidate(key: 'body' | 'query' | 'params') {
+  return async function validate<T>(
+    schema: ZodSchema<T>,
+    request: Request,
+    response: Response,
+  ): Promise<T> {
+    try {
+      const result = await schema.parseAsync(request[key]);
+      return result;
+    } catch (error) {
+      if (error instanceof ZodError) {
+        response
+          .status(400)
+          .json({ message: 'Bad Request', errors: error.errors });
+        throw new Error('Validation failed');
+      }
+      throw error;
+    }
+  };
+}
+
+export const validateBody = createValidate('body');
+export const validateQuery = createValidate('query');
+export const validateParams = createValidate('params');
+```
+
+In it you create a `createValidate` function that is curried and takes a key and returns a function that validates the request body, query or params by using the `parseAsync` method of the Zod schema.
+
+In case you're wondering what the difference is between the `body`, `query` and `params` keys, here's a quick explanation:
+
+- **`body`**: Contains the data sent in the request payload (commonly used with POST, PUT, etc.) and typically parsed via middleware like `body-parser`.
+- **`query`**: Holds key-value pairs from the URL's query string (the part after `?`), often used for filtering or pagination.
+- **`params`**: Consists of route parameters defined in the URL path (e.g., `id` in `/users/:id`), used to capture specific segments of the URL.
+
+You then create three exports that validate the body, query and params.
+
+### Cookies
+
+One more thing that your server needs to be able to do is to read cookies.
+
+For that you can use the `cookie-parser` middleware, so install it.
+
+```sh
+npm i cookie-parser && npm i -D @types/cookie-parser
+```
+
+Add the cookie parser middleware to your app.
+
+```ts title="src/app.ts" {1}
+import cookieParser from 'cookie-parser';
+import type { Express } from 'express';
+import express from 'express';
+
+import { apiV1Router } from './routes.js';
+
+export function buildApp(): Express {
+  const app = express();
+
+  // Middleware for JSON parsing.
+  app.use(express.json());
+  app.use(cookieParser());
+
+  // Group routes under /api/v1.
+  app.use('/api/v1', apiV1Router);
+
+  return app;
+}
+```
+
+Simply add the cookie parser middleware to your app. Now any request will have a `request.cookies` object that contains the cookies sent by the client.
 
 ### Authentication
 
+Most applications need some form of authentication. In this tutorial you're going to use JWT tokens in cookies to authenticate requests. And users are going to use a classic email and password combination to authenticate.
+
+However, it's important to note that [**passwords are obsolete**](https://medium.com/javascript-scene/passwords-are-obsolete-how-to-secure-your-app-and-protect-your-users-1cd6c7b7c3bc). Stop collecting or storing passwords. Passwords are weak because they can be copied, stolen, or cracked by brute force attacks. For over a decade, hackers have grown more skilled. **Choose [passkeys](https://safety.google/authentication/passkey/) for a strong login** and **use email OTP only as a backup**.
+
+The only reason I'm teaching you password authentication is that many apps still use passwords. This skill remains valuable in today's job market, even if only to learn how to spot risks and replace passwords with secure passkeys.
+
+With this disclaimer out of the way, let's create the authentication feature.
+
+First, create a `src/features/user-authentication/user-authentication.test.ts` file.
+
+```ts title="src/features/user-authentication/user-authentication.test.ts"
+import { createId } from '@paralleldrive/cuid2';
+import request from 'supertest';
+import { describe, expect, onTestFinished, test } from 'vitest';
+
+import { buildApp } from '~/app.js';
+
+import { createPopulatedUserProfile } from '../user-profile/user-profile-factories.js';
+import {
+  deleteUserProfileFromDatabaseById,
+  saveUserProfileToDatabase,
+} from '../user-profile/user-profile-model.js';
+import { hashPassword } from './user-authentication-helpers.js';
+
+async function setup({ password = 'password' }: { password?: string } = {}) {
+  const app = buildApp();
+
+  const userProfile = await saveUserProfileToDatabase(
+    createPopulatedUserProfile({
+      hashedPassword: await hashPassword(password),
+    }),
+  );
+
+  onTestFinished(async () => {
+    await deleteUserProfileFromDatabaseById(userProfile.id);
+  });
+
+  return { app, userProfile };
+}
+
+describe('/api/v1/login', () => {
+  test('given: valid credentials for an existing user, should: return a 200 and set a JWT cookie', async () => {
+    const password = createId();
+    const { app, userProfile } = await setup({ password });
+
+    const actual = await request(app)
+      .post('/api/v1/login')
+      .send({ email: userProfile.email, password })
+      .expect(200);
+
+    expect(actual.body).toEqual({ message: 'Logged in successfully' });
+    // Verify that the HTTP-only cookie has been set. It is typed wrongly as a
+    // string by supertest for some reason, even though it is an array.
+    const cookies = actual.headers['set-cookie'] as unknown as string[];
+    expect(cookies).toBeDefined();
+    expect(cookies.some(cookie => cookie.includes('jwt='))).toEqual(true);
+  });
+
+  test('given: valid credentials for a non-existing user, should: return a 401', async () => {
+    const { app } = await setup();
+
+    const { body: actual } = await request(app)
+      .post('/api/v1/login')
+      .send({ email: 'non-existing@test.com', password: 'password' })
+      .expect(401);
+    const expected = { message: 'Invalid credentials' };
+
+    expect(actual).toEqual(expected);
+  });
+
+  test('given: valid credentials, but wrong password for an existing user, should: return a 401', async () => {
+    const { app, userProfile } = await setup();
+
+    const actual = await request(app)
+      .post('/api/v1/login')
+      .send({ email: userProfile.email, password: 'invalid password' })
+      .expect(401);
+
+    expect(actual.body).toEqual({ message: 'Invalid credentials' });
+  });
+
+  test('given: invalid credentials, should: return a 400', async () => {
+    const { app } = await setup();
+
+    const { body: actual } = await request(app)
+      .post('/api/v1/login')
+      .send({})
+      .expect(400);
+    const expected = {
+      message: 'Bad Request',
+      errors: [
+        {
+          code: 'invalid_type',
+          expected: 'string',
+          message: 'Required',
+          path: ['email'],
+          received: 'undefined',
+        },
+        {
+          code: 'invalid_type',
+          expected: 'string',
+          message: 'Required',
+          path: ['password'],
+          received: 'undefined',
+        },
+      ],
+    };
+
+    expect(actual).toEqual(expected);
+  });
+});
+```

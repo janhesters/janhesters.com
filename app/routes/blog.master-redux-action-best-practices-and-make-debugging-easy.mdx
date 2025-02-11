@@ -1,9 +1,8 @@
 ---
 title: "Master Redux Action Best Practices & Make Debugging Easy"
-datePublished: "2024-12-12"
-description: "In this tutorial, you'll learn how to name and structure Redux actions to make debugging easier and your code more readable. Discover how to use descriptive names, leverage named parameters for clarity, apply data transformations, and hook up multiple reducers per action."
-thumbnailUrl: ""
-isDraft: true
+datePublished: "2025-02-11"
+description: "In this micro-lesson, you'll learn how to name and structure Redux actions to make debugging easier and your code more readable. Discover how to use descriptive names, leverage named parameters for clarity, apply data transformations, and hook up multiple reducers per action."
+thumbnailUrl: "https://i.magecdn.com/ada680/38504d_master_redux_actions_yt_thumbnail_v1?f=webp,q.25,p.f,l.f"
 ---
 
 import { getUrl } from '../lib/misc';
@@ -20,13 +19,23 @@ export const meta = ({ data }) => getSocialsMetaForBlogPost({
 
 ## {frontmatter.title}
 
-So, I recently released the first videos on my [YouTube channel](https://www.youtube.com/@janhesters) of a series about Redux.
+I recently released the first articles and videos on my [YouTube channel](https://www.youtube.com/@janhesters) as part of a series about Redux.
 
-When I talked to my mentees, some of them struggled to get their actions right.
+When I talked to my mentees, some of them struggled with getting their actions right. To be fair, even though actions seem simple, small mistakes can compound and lead to significant tech debt.
 
-I want to record this bonus micro-lesson for you to lay out the best practices for actions in detail.
+So, I wanted to write this bonus micro-lesson for you to lay out the best practices for actions in detail. **Everything you're about to learn applies to *any* action design** - whether you use vanilla Redux, Redux Toolkit, or React's built-in `useReducer` hook.
 
-Before we jump into it, if you haven't watched part one, ["What Is Redux? (Get A Senior Understanding Of How Redux Works)"](https://janhesters.com/blog/what-is-redux-get-a-senior-understanding-of-how-redux-works) and part two, ["Redux Saga Is Hard Until You Look Under The Hood"](https://janhesters.com/blog/redux-saga-is-hard-until-you-look-under-the-hood), pause this video now and watch them first. Then come back. This video assumes you know Redux's six building blocks and the basics of Redux Saga.
+<iframe
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  allowFullScreen
+  className="aspect-video w-full"
+  frameBorder="0"
+  referrerPolicy="strict-origin-when-cross-origin"
+  src="https://www.youtube.com/embed/DXz3eEKArxM?si=MISP-QWofgqyL8LO"
+  title="Master Redux Action Best Practices & Make Debugging Easy"
+></iframe>
+
+Before we jump into it, if you haven't read part one, ["What Is Redux? (Get A Senior Understanding Of How Redux Works)"](https://janhesters.com/blog/what-is-redux-get-a-senior-understanding-of-how-redux-works) and part two, ["Redux Saga Is Hard Until You Look Under The Hood"](https://janhesters.com/blog/redux-saga-is-hard-until-you-look-under-the-hood), open them in a new tab and read them first. Then come back. This article assumes you know Redux's six building blocks and the basics of Redux Saga.
 
 As a quick recap, Redux actions are objects with a `type` and an optional `payload`.
 
@@ -48,15 +57,9 @@ const loginClicked = (email, password) => ({
 
 ### Descriptive Names
 
-The first best pratice is that actions should have descriptive names. These names should describe what happened in the app, instead of what the action does. This helps when debugging. Most people name their actions after what the action does, which makes it hard to understand what they do in the context of your app.
+The first best practice is that your actions should have **descriptive names**. These names should describe what happened in your app rather than what the action does. This helps with debugging. Most people name their actions after what the action does, which makes it harder to understand their role in the context of your app.
 
-I want to give you a real example that came up with one of my mentees. He wanted to practice what he learned in the Redux videos and built a typing trainer game. In that game, the user types in certain strings that contain a lot of special characters. For each keystroke, the game checks if the user typed the correct characters, and if he got all right, it saves the level.
-
----
-
-**Note to Cheta:** Record a few rounds / levels of the typing game, so we can show the footage here. Here is the link: [Symbol Trainer Redux](https://leonwarscheck.com/symbol-trainer-redux)
-
----
+Let me give you a real-world example that came up with one of my mentees. He wanted to practice what he had learned in the Redux videos and built a typing trainer game. In that game, the user types certain strings containing many special characters. With each keystroke, the game checks whether the user typed the correct characters, and if that user got everything right, it saves the level.
 
 In the beginning, he designed his state with a single `setInputString` action.
 
@@ -93,17 +96,17 @@ export const selectLevelString = state =>
   selectTypeTrainerSlice(state).levelString;
 ```
 
-He created a `setInputString` action that would be dispatched whenever the user typed in the input field.  
+He created a `setInputString` action that was dispatched whenever the user typed in the input field.
 
-The state contained the current input string and the level string. The level string was the string for each level that the user had to type correctly.
+The state contained the current input string and the level string. The level string represented the text the user had to type correctly for each level.
 
-In the reducer, he would update the state with the new input string.
+In the reducer, he updated the state with the new input string.
 
-Furthermore, he had selectors to read the current input string and the level string.
+Furthermore, he had selectors to read both the current input string and the level string.
 
-This state is highly simplified because I only want to illustrate the point of descriptive action names.  
+This state is highly simplified because I only want to illustrate the importance of descriptive action names.
 
-Additionally, he had a saga that listened to all the changes of the input string and checked if the user typed the correct characters.
+He also had a saga that listened for all changes to the input string and checked whether the user typed the correct characters.
 
 ```js title="src/features/type-trainer/type-trainer-saga.js"
 import { put, takeLeading } from 'redux-saga/effects';
@@ -133,25 +136,13 @@ export function* watchInputString() {
 }
 ```
 
-The saga would listen to all the changes of the input string and check if the user typed the correct characters. If the user typed the correct characters, he used the `setInputString` action in the saga to reset the input string. In the real world, the action was even used a third time to reset the input when the user made a mistake.  
+The saga would listen to all changes in the input string and check whether the user typed the correct characters. If the user typed the correct characters, he used the `setInputString` action in the saga to reset the input string. In reality, the action was even used a third time to reset the input when the user made a mistake.
 
-Now, here is how this example illustrates the problem with non-descriptive action names.  
+Now, here's how this example illustrates **the problem with non-descriptive action names**:  
 
-If there is a bug in the code, it is hard to trace where the bug came from. By extension, the sagas are also hard to put into context. Currently, it looks like these sagas should run whenever the input string changes, even when triggered by themselves, e.g., during the reset.
+If there is a bug in the code, **it's hard to trace where it came from**. As a result, the sagas are also difficult to put into context. Right now, it looks like these sagas should run whenever the input string changes, even when triggered by themselves - such as during a reset.
 
----
-
-**Note to editors:** really highlight the recursive nature here, that `setInputString` is triggering itself.
-
----
-
-To fix this issue, you should give the action a descriptive name that explains what just happened, rather than what the action does.
-
----
-
-**Note to Cheta:** As always, show the full file and change the things that changed here, even though a short circuit the example here with comments.
-
----
+To fix this issue, you should **give the action a descriptive name that explains what just happened**, rather than what the action does.
 
 ```js title="src/features/type-trainer/type-trainer-reducer.js" {1-2, 13, 16-18}
 export const userTyped = payload => ({ type: 'USER_TYPED', payload });
@@ -181,9 +172,9 @@ export const reducer = (state = initialState, { type, payload } = {}) => {
 // ... selectors
 ```
 
-Now the action `userTyped` describes what happened. And you add a second action `userSucceeded` to describe what happened when the user got typed the correct characters.
+Now, the action `userTyped` describes what happened. Additionally, you add a second action, `userSucceeded`, to describe what happened when the user typed the correct characters.
 
-You can now use them in your saga.
+You can now use these actions in your saga.
 
 ```js title="src/features/type-trainer/type-trainer-saga.js" {6-7, 10, 20, 24-25}
 import { put, takeLeading } from 'redux-saga/effects';
@@ -214,7 +205,7 @@ export function* watchUserTyped() {
 }
 ```
 
-Now you can see that the saga only listens to the `userTyped` action. When the user types the correct characters, the `userSucceeded` action is dispatched. This makes it clear what the saga is doing in the context of the app's functionality, rather than just in the context of what the action does programmatically.  
+Now you can see that the saga only listens to the `userTyped` action. When the user types the correct characters, the `userSucceeded` action is dispatched instead. This clearly communicates what the saga is doing within the app's functionality rather than just describing what the action does programmatically.
 
 ### Named Parameters  
 
@@ -227,11 +218,11 @@ const loginClicked = (email, password) => ({
 });
 ```
 
-You can make action creators easier to read by using named parameters.
+You can make action creators easier to read by using **named parameters**.
 
-If you've never heard of named parameters, they allow you to specify function arguments by explicitly naming each parameter and assigning it a value when calling the function. This makes it clear which value corresponds to which parameter and allows arguments to be provided in any order.  
+If you've never heard of named parameters, they allow you to specify function arguments by explicitly naming each parameter and assigning it a value when calling the function. This makes it clear which value corresponds to which parameter and allows arguments to be provided in any order.
 
-Technically, JavaScript doesn't support named parameters, so here is an example in Python, which does support named parameters.  
+Technically, JavaScript doesn't support named parameters, so here is an example in Python, which does support named parameters.
 
 ```py title="login.py"
 def login(email, password):
@@ -267,7 +258,7 @@ This makes it obvious what each argument means.
 
 ### Default Values
 
-Using named parameters via an object is also a good way to set default values for the action.
+Using named parameters via an object is also a good way to set **default values** for the action.
 
 ```js title="login.js"
 const saveProfileAvatarImage = ({ image, alt = 'Your profile avatar' }) => ({
@@ -276,7 +267,7 @@ const saveProfileAvatarImage = ({ image, alt = 'Your profile avatar' }) => ({
 });
 ```
 
-In this example, the `alt` parameter is optional. If you don't provide it, it will default to 'Your profile avatar'. This also gives you type inference for the action and your editor knows that the `alt` property should be a string.
+In this example, the `alt` parameter is optional. If you don't provide it, it will default to 'Your profile avatar'. This also gives you **type inference** for the action and your editor knows that the `alt` property should be a string.
 
 ### Data Transformations
 
@@ -289,13 +280,13 @@ const saveDate = date => ({
 });
 ```
 
-**As long as the action creator remains a pure function**, you can freely perform data transformations and even use array methods like `.map()`, `.filter()`, `.reduce()`, and others. This is obviously also true for the action handlers in your reducer's cases. And usually you do the complex transformations in those handlers. But I wanted to point out that in theory, you can also do pure data transformations in the action creator.
+**As long as the action creator remains a pure function,** you can freely perform data transformations and even use array methods like `.map()`, `.filter()`, `.reduce()`, and others. This also applies to the action handlers in your reducer's cases. And **you usually perform complex transformations in your reducer case handlers**. However, I wanted to point out that, in theory, you can also perform pure data transformations within your action creator.
 
 ### Named Properties On Payloads
 
 In this previous example, you saw that the action creator returns the date directly as the payload. Therefore, when you debug your Redux app, you only see that there is a date string on the object, but you don't know what it means.
 
-```
+```text title="Redux DevTools Log Output"
 action SAVE_DATE @ 12:34:56.789
   prev state  { ...previousState }
   action      { 
@@ -305,7 +296,7 @@ action SAVE_DATE @ 12:34:56.789
   next state  { ...nextState }
 ```
 
-You can make it possible for people to understand what the date means, by giving the payload a named property.
+You can make it possible for people to understand what the date means, by giving the payload a **named property**.
 
 ```js title="saveDate.js"
 const saveDate = date => ({
@@ -316,7 +307,7 @@ const saveDate = date => ({
 
 When you log out the action, you see that the payload contains a `currentBackupDate` property.
 
-```
+```text title="Redux DevTools Log Output"
 action SAVE_DATE @ 12:34:56.789
   prev state  { ...previousState }
   action      { 
@@ -326,9 +317,9 @@ action SAVE_DATE @ 12:34:56.789
   next state  { ...nextState }
 ```
 
-This lets your coworkers, or your future self now, that the date of the payload is the date when the backup was created.
+This lets your coworkers - or your future self - know that the date in the payload is when the backup was created.
 
-You can combine this with named properties, to make your action even more expressive.
+You can combine this with named properties for your arguments to make your actions even more expressive.
 
 ```js title="saveDate.js"
 const saveDate = ({ currentBackupDate }) => ({
@@ -378,11 +369,11 @@ export const reducer = (state = initialState, { type, payload } = {}) => {
 };
 ```
 
-This reducer was responsible for three actions: `loginClicked`, `userFetched` and `finishLogin`.
+This reducer was responsible for three actions: `loginClicked`, `userFetched`, and `finishLogin`.
 
-When the login was clicked, he would set the loading state to `true`. When the user was fetched, he would set the user profile. And when the login was finished, he would set the loading state to `false`.
+When the login was clicked, he set the loading state to `true`. When the user was fetched, he set the user profile. And when the login was finished, he set the loading state to `false`.
 
-He also had a toast reducer that would show a toast message, for example when the login was successful.
+He also had a toast reducer that would display a toast message, for example, when the login was successful.
 
 ```js title="src/features/toast/toast-reducer.js"
 export const showToast = message => ({ type: 'SHOW_TOAST', payload: message });
@@ -405,7 +396,7 @@ export const reducer = (state = initialState, { type, payload } = {}) => {
 
 Again, I'm simplifying the code in all of these examples to illustrate the point.
 
-He would use all of these actions in his saga.
+He used all of these actions in his saga.
 
 ```js title="src/features/user-authentication/user-authentication-saga.js"
 import { call, put, takeLeading } from 'redux-saga/effects';
@@ -430,11 +421,11 @@ export function* watchLoginClicked() {
 }
 ```
 
-If you paid attention, you see that he already does many things right. He named a few actions descriptively, which also caused the sagas to have good names. And he was already using the same actions in multiple places: The `loginClicked` action both modified the state and started the `handleLoginClicked` saga. However, he structured his code in a way that forced him to dispatch too many actions. 
+If you paid attention, you'll notice that he already did many things right. He named some actions descriptively, which also led to well-named sagas. He was also reusing the same actions in multiple places—for example, the `loginClicked` action both modified the state and started the `handleLoginClicked` saga. However, he structured his code in a way that required dispatching too many actions.
 
-When the login succeeds, all that really happens is that the login is successful. There is no need to design the consequences so granularly.  
+When the login succeeds, the only meaningful event is that the login was successful. **There's no need to design the consequences so granularly.**
 
-He fixed it by creating a single action, `loginSucceeded`, which is dispatched when the login is successful.
+He fixed this by creating a single action, `loginSucceeded`, which is dispatched when the login is successful.
 
 ```js title="src/features/user-authentication/user-authentication-reducer.js" {5-8, 22-23}
 export const loginClicked = ({ email, password }) => ({
@@ -468,11 +459,11 @@ export const reducer = (state = initialState, { type, payload } = {}) => {
 };
 ```
 
-Notice how he designed the `loginSucceeded` action to take the user as an argument but still included it in the payload as a key-value pair in an object. This approach makes it easier to see what the payload contains when using logging middleware or Redux DevTools.  
+Notice how he designed the `loginSucceeded` action with named properties to take the user as an argument while still including it in the payload as a key-value pair in an object. As you learned earlier, this approach makes it easier to see what the payload contains when using logging middleware or Redux DevTools.
 
 Now, you can use the action in the saga to consolidate two dispatch calls into one.
 
-```js title="src/features/user-authentication/user-authentication-saga.js" {10-11}
+```js title="src/features/user-authentication/user-authentication-saga.js" {5, 9}
 import { call, put, takeLeading } from 'redux-saga/effects';
 
 import { showToast } from './toast-reducer';
@@ -492,9 +483,9 @@ export function* watchLoginClicked() {
 
 ### Multiple Reducers Can Handle The Same Action
 
-You might have noticed that there is still a seperate action `showToast` being dispatched in the saga.
+You might have noticed that a separate action, `showToast`, is still being dispatched in the saga.
 
-Another important best practice for actions is that it is okay to let multiple reducers handle the same action. Instead of dispatching `showToast`, let the toast reducer also respond to `loginSucceeded`:
+Another important best practice for actions is that **it's okay for multiple reducers to handle the same action.** Instead of dispatching `showToast`, let the toast reducer also respond to `loginSucceeded`:
 
 ```js title="src/features/toast/toast-reducer.js" {1, 14-16}
 import { loginSucceeded } from './user-authentication-reducer';
@@ -520,17 +511,11 @@ export const reducer = (state = initialState, { type, payload } = {}) => {
 };
 ```
 
-You import the `loginSucceeded` action from the `user-authentication-reducer.js` and also create a case for it in the `toast-reducer.js`.
+You import the `loginSucceeded` action from `user-authentication-reducer.js` and create a case for it in `toast-reducer.js`.
 
-The handler for the `loginSucceeded` action ignores the `payload`. You also don't need to pass a message as the payload because, when the login succeeds, the toast message is always the same.
+The handler for the `loginSucceeded` action ignores the `payload`. You don’t need to pass a message as the payload because the toast message is always the same when login succeeds.
 
-Now you can remove the `showToast` action from the saga.
-
----
-
-**Note to Cheta:** Show the full file and change the things that changed here.
-
----
+Now, you can remove the `showToast` action from the saga because `loginSucceeded` implicitly shows the toast.
 
 ```js title="src/features/user-authentication/user-authentication-saga.js"
 import { call, put, takeLeading } from 'redux-saga/effects';
@@ -554,7 +539,7 @@ When we refactored his code like this during a mentoring session, the mentee ask
 
 > “What if the `loginSucceeded` action is used in multiple places? For example, if there are different sagas for different login strategies (e.g., Google, email/password, etc.)?”  
 
-The answer is that if the reducers' behavior should be the same, you can use the same action. If they are different, you should use distinct actions that describe exactly what happened differently. Instead of `loginSucceeded`, you could have `loginSucceededWithGoogle` and `loginSucceededWithEmailPassword`, and so on. This ties back to the first point about using descriptive action names. You will see code for this in the next section.
+The answer is that **if the reducers' behavior should be the same, you can use the same action.** If they are different, you should use distinct actions that describe exactly what happened differently. Instead of `loginSucceeded`, you could have `loginSucceededWithGoogle` and `loginSucceededWithEmailPassword`, and so on. This ties back to the first point about using descriptive action names. You will see code for this in the next section.
 
 In conclusion, one action can either be dispatched in multiple sagas or on clicks in different places in your app. And this one action can be handled in the case of different reducers and simultaneously trigger different sagas.
 
@@ -564,13 +549,7 @@ Going back to the example from above with different login strategies, assume tha
 
 Here is how the reducer looks like:
 
----
-
-**Note to Cheta:** Please pay careful attention and show the exact changes as compared to the previous iteration with just one login strategy.
-
----
-
-```js title="src/features/user-authentication/user-authentication-reducer.js"
+```js title="src/features/user-authentication/user-authentication-reducer.js" {24, 26-30}
 export const loginWithEmailClicked = ({ email, password }) => ({
   type: 'LOGIN_WITH_EMAIL_CLICKED',
   payload: { email, password },
@@ -623,11 +602,11 @@ export const reducer = (state = initialState, { type, payload } = {}) => {
 };
 ```
 
-There are two different actions depending on what strategy the user clicked. And there are also two actions that are dispatched when either of the login strategies is successful.
+There are two different actions depending on which strategy the user selected. Additionally, two actions are dispatched when either of the login strategies succeeds.
 
-Since they cause the same state update, their state updates can be abstracted away into state update helper functions that then get used in the respective cases.
+Since they trigger the same state update, the state updates can be abstracted into helper functions - `startAuthentication` and `loginSucceeded` - which are then used in the respective cases.
 
-Here is how the sagas would use these actions.
+Here's how the sagas would use these actions.
 
 ```js title="src/features/user-authentication/user-authentication-saga.js"
 import { call, put, takeLeading } from 'redux-saga/effects';
@@ -670,11 +649,11 @@ export function* watchLoginWithGoogleClicked() {
 }
 ```
 
-You create two sagas that listen to the respective actions and dispatch the respective login succeeded actions.
+You create two sagas that listen for the respective actions and dispatch the corresponding login success actions.
 
-You need to add a case to the toast reducer for each of these strategies because they should show different toast messages.
+You also need to add a case to the toast reducer for each strategy because they should display different toast messages.
 
-```js title="src/features/toast/toast-reducer.js"
+```js title="src/features/toast/toast-reducer.js" {2-3, 17-22}
 import {
   loginSucceededWithEmail,
   loginSucceededWithGoogle,
@@ -711,6 +690,7 @@ In this example, you saw that the `loginWithEmailClicked` and `loginWithGoogleCl
 The last point that confused people was encountering actions with a static `type` property, used like this:  
 
 ```js title="static-type-property.js"
+// ... in some-reducer.js
 const reducer = (state = initialState, { type, payload } = {}) => {
   switch (type) {
     case someAction.type: {
@@ -719,12 +699,13 @@ const reducer = (state = initialState, { type, payload } = {}) => {
   }
 };
 
+// ... in some-saga.js
 function* watchSomeAction() {
   yield takeEvery(someAction.type, handleSomeAction);
 }
 ```  
 
-This pattern sometimes appears, especially with Redux Toolkit's `createAction`, which your learn in the third video of this series.  
+This pattern sometimes appears, especially with Redux Toolkit's `createAction`, which your learn in the third article of this series.
 
 When creating actions manually, some developers like to attach the `type` as a static property to the action:  
 
@@ -746,9 +727,10 @@ function* watchSomeAction() {
 }
 ```
 
-This avoids creating unnecessary action objects when calling the action to determine the type for the case or when hooking up sagas.
+This pattern has two main benefits:
 
-But if you have actions with transformations that require data, you can't call them without arguments, like we did it above in cases and when hooking up sagas.
+1. It avoids creating unnecessary action objects when calling the action to determine the type for the case or when hooking up sagas.
+2. If you have actions with transformations that require data, you can't call them without arguments, like we did above in cases and when hooking up sagas.
 
 ```js title="static-type-property-required.js"
 const explodeWithoutArgs = data => ({
@@ -776,11 +758,11 @@ This difference is small and stylistic. It comes down to preference.
 
 ### Redux Toolkit
 
-Everything you learned in this video also applies when you create your slices with `createSlice` from Redux Toolkit (RTK).
+Everything you learned in this article also applies when creating slices with `createSlice` from Redux Toolkit (RTK).
 
-My recent videos on Redux received some negative feedback because I'm showing you Redux without RTK and people prefer using RTK. But I believe lots of fundamentals are easier to understand with Vanilla Redux because using RTK then just becomes a matter of learning the new API syntax.
+My recent articles on Redux received some negative feedback because I'm showing Redux without RTK, and many people prefer using RTK. But I believe many fundamentals are easier to understand with vanilla Redux because learning RTK then becomes just a matter of learning the new API syntax.
 
-Anyways, here is how the toast reducer would look like with RTK.
+Anyway, here's how the toast reducer would look with RTK. (**Note:** You might want to open this article in another tab and compare the two versions of the toast reducer side by side.)
 
 ```ts title="src/features/toast/toast-slice.ts"
 import type { PayloadAction } from '@reduxjs/toolkit';
@@ -822,4 +804,4 @@ You define the `showToast` action creator in the `reducers` object.
 
 And you react to the `loginSucceededWithEmail` and `loginSucceededWithGoogle` actions in the `extraReducers` object.
 
-The syntax of Redux Toolkit is explained in depth in the third video of this series on Redux, so go watch that one next.
+The syntax of Redux Toolkit is explained in depth in the third article of this series on Redux, so go read that one next.

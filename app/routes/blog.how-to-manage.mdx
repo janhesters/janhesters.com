@@ -1,0 +1,41 @@
+---
+title: "How To Manage Dev Teams"
+datePublished: '2024-12-17'
+description: "This blog post teaches you Redux inside-out. You'll learn Redux from scratch, fill knowledge gaps if you're already experienced, and discover secret tricks to write clean, scalable code. Create your own middleware and learn advanced selector composition."
+thumbnailUrl: ""
+isDraft: true
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+- DM when people forgot something
+- Praise in public
+  - Unless the praise is irrelevant in public
+- critique in private
+- A compliment goes a long way
+  - People don't just work for money
+  - Recognition can be one of the main drivers for people
+- People love to learn and to grow
+  - Be able to mentor them
+    - code
+    - soft skills
+    - sometimes even in real-life
+      - not every employee wants or appreciates tips from their manager in their private life. You will feel it (because they ask for advice) if it's appropriate. If there is only the slightest hint of you crossing a line, back off immediately.
+- the paradox of equality and hierarchy
+  - you are NOT better than anyone
+    - treat people with respect
+    - have gratitude for their work
+      - sincere gratitude, not fake. If you're aren't grateful to work with talented people, you might want to consider working on your values before managing people.
+    - 

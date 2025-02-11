@@ -112,8 +112,8 @@ async function setup() {
   const user = createPopulatedUserAccount();
   await saveUserAccountToDatabase(user);
 
-  onTestFinished(() => {
-    deleteUserAccountFromDatabaseById(user.id);
+  onTestFinished(async () => {
+    await deleteUserAccountFromDatabaseById(user.id);
   });
 
   return { user };

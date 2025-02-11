@@ -471,7 +471,7 @@ If you want to learn what first-class functions enable in React check out [this 
 
 The last example `multiply` that you saw is called a "higher-order function" because when you call it for the first time with a number, it returns a function.
 
-Any function that takes in or returns a function is called a higher order function.
+**Any function that takes in or returns a function is called a higher order function.**
 
 ```js
 function greet() {
@@ -487,9 +487,9 @@ identity(greet)(); // "Hello World!"
 
 The `multiply` function from earlier hid another key concept: Closure.
 
-A closure happens when a function is bundled together with it's lexical scope. In other words, a closure gives you access to an outer function’s scope from an inner function. Closures in JavaScript are created whenever a function is created, at function creation time.
+**A closure happens when a function is bundled together with it's lexical scope.** In other words, a closure gives you access to an outer function’s scope from an inner function. Closures in JavaScript are created whenever a function is created, at function creation time.
 
-To use a closure, define a function inside another function and expose it by returning the inner function or passing it to another function.
+To use a closure, define a function inside another function and expose it by **returning the inner function** or passing it to another function.
 
 The inner function can access variables in the outer function's scope, even after the outer function has returned.
 
