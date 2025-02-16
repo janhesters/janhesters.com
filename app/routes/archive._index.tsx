@@ -14,10 +14,9 @@ export const meta: MetaFunction = () =>
     url: 'https://janhesters.com/archive',
   });
 
-export function loader() {
-  return getAllPostsMetaSortedByDate().filter(
-    meta => meta.isArchived && !meta.isDraft,
-  );
+export async function loader() {
+  const posts = await getAllPostsMetaSortedByDate();
+  return posts.filter(meta => meta.isArchived && !meta.isDraft);
 }
 
 export default function BlogIndex() {

@@ -23,14 +23,14 @@ export const mapFilePathToSlug = (filePath: string): string => {
   const blogPrefix = 'blog.';
   const mdxSuffix = '.mdx';
 
-  const fileName = filePath.split('/').pop() || '';
+  const fileName = filePath.split('/').pop() ?? '';
 
   if (!fileName.startsWith(blogPrefix) || !fileName.endsWith(mdxSuffix)) {
     return '';
   }
 
   const slugCandidate =
-    fileName.slice(blogPrefix.length, -mdxSuffix.length).split('.').pop() || '';
+    fileName.slice(blogPrefix.length, -mdxSuffix.length).split('.').pop() ?? '';
 
   return slugify(slugCandidate);
 };
@@ -70,20 +70,38 @@ export const getMetaFromFileEntries = (
   fileEntries.map(([filePath, { frontmatter }]) => ({
     ...frontmatter,
     slug: mapFilePathToSlug(filePath),
-    isArchived: frontmatter.isArchived || false,
+    isArchived: frontmatter.isArchived ?? false,
   }));
+
+/**
+ * Loads blog post files lazily and extracts metadata.
+ *
+ * @returns A promise resolving to an array of file entries.
+ */
+export const loadBlogFiles = async (): Promise<FileEntry[]> => {
+  const files = import.meta.glob('/app/routes/blog*.mdx') as Record<
+    string,
+    () => Promise<{ frontmatter: BlogFrontmatter }>
+  >;
+
+  const entries = await Promise.all(
+    Object.entries(files).map(async ([path, importFunction]) => {
+      const module = await importFunction();
+      return [path, module] as FileEntry;
+    }),
+  );
+
+  return entries;
+};
 
 /**
  * Retrieves metadata for all blog posts.
  *
- * @returns An array of BlogPostMeta objects containing metadata for each
- * blog post.
+ * @returns A promise resolving to an array of BlogPostMeta objects containing metadata for each blog post.
  */
-export const getAllPostsMeta = (): BlogPostMeta[] => {
-  const files = import.meta.glob('/app/routes/blog*.mdx', {
-    eager: true,
-  }) as Record<string, { frontmatter: BlogFrontmatter }>;
-  return getMetaFromFileEntries(Object.entries(files));
+export const getAllPostsMeta = async (): Promise<BlogPostMeta[]> => {
+  const fileEntries = await loadBlogFiles();
+  return getMetaFromFileEntries(fileEntries);
 };
 
 /**
@@ -92,12 +110,17 @@ export const getAllPostsMeta = (): BlogPostMeta[] => {
  * @param posts - An array of BlogPostMeta objects to be sorted.
  * @returns A new array of BlogPostMeta objects sorted by date in descending order.
  */
-export const sortPostsByDate = (posts: BlogPostMeta[]) =>
+export const sortPostsByDate = (posts: BlogPostMeta[]): BlogPostMeta[] =>
   [...posts].sort((a, b) => {
     const dateA = new Date(a.datePublished);
     const dateB = new Date(b.datePublished);
     return dateB.getTime() - dateA.getTime();
   });
 
-export const getAllPostsMetaSortedByDate = () =>
-  sortPostsByDate(getAllPostsMeta());
+/**
+ * Retrieves and sorts all blog post metadata by date.
+ *
+ * @returns A promise resolving to an array of sorted BlogPostMeta objects.
+ */
+export const getAllPostsMetaSortedByDate = async (): Promise<BlogPostMeta[]> =>
+  sortPostsByDate(await getAllPostsMeta());

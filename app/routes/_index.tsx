@@ -7,10 +7,9 @@ import { PlatformsComponent } from '~/features/landing/platforms-component';
 
 import { EmailCapture } from './email-capture';
 
-export function loader() {
-  return getAllPostsMetaSortedByDate()
-    .filter(meta => !meta.isArchived && !meta.isDraft)
-    .slice(0, 3);
+export async function loader() {
+  const posts = await getAllPostsMetaSortedByDate();
+  return posts.filter(meta => !meta.isArchived && !meta.isDraft).slice(0, 3);
 }
 
 export default function Index() {
