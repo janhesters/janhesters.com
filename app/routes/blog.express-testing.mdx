@@ -694,6 +694,22 @@ export async function healthCheckHandler(request: Request, response: Response) {
 }
 ```
 
+Now you can use the `asyncHandler` in your `health-check-routes.ts` file.
+
+```ts title="src/features/health-check/health-check-routes.ts" {3, 9}
+import { Router } from 'express';
+
+import { asyncHandler } from '~/utils/async-handler.js';
+
+import { healthCheckHandler } from './health-check-controller.js';
+
+const router = Router();
+
+router.get('/', asyncHandler(healthCheckHandler));
+
+export { router as healthCheckRoutes };
+```
+
 Going forward, you're going to use the `asyncHandler` helper for all of your handlers.
 
 ### Database
@@ -940,7 +956,7 @@ This factory function allows you to quickly create user profiles with fake data,
 
 ### Validate Queries And Bodies
 
-You're going to use Zod to validate queries and bodies. Usually you would use `express-validator` for this, but it doesn't work well with TypeScript because Express can't infer the shape of the data.
+You're going to use Zod to validate queries and bodies. Usually you would use `express-validator` for this, but it doesn't work well with TypeScript because Express can't infer the shape of the data. I'll explain this in more detail in a bit.
 
 Install Zod.
 
@@ -991,6 +1007,65 @@ In case you're wondering what the difference is between the `body`, `query`, and
 
 You then create three exports that validate the body, query, and params.
 
+Okay, so remember how I said that `express-validator` doesn't work well with TypeScript? `express-validator` is usually used like this:
+
+```ts title="temp-express-validator-example.ts" {7}
+import express from 'express';
+import { query } from 'express-validator';
+
+const app = express();
+
+app.use(express.json());
+app.get('/hello', query('person').notEmpty(), (request, response) => {
+  response.send(`Hello, ${request.query.person}!`);
+});
+
+app.listen(3000);
+```
+
+In that code snippet, TypeScript does NOT know that `request.query.person` is a string because `express-validator` operates at runtime, while TypeScript's type system only has knowledge of the static type definitions provided by Express.
+
+But with your custom `validateQuery` function, TypeScript knows that the `person` query parameter is a string.
+
+Here's how you can leverage this in your code:
+
+```ts title="temp-validate-query-example.ts" {3, 15}
+import express from 'express';
+import { z } from 'zod';
+import { validateQuery } from '../middleware/validate';
+
+const app = express();
+
+// Define a Zod schema for the query parameters.
+const helloQuerySchema = z.object({
+  person: z.string().min(1, { message: 'person is required' }),
+});
+
+app.get('/hello', async (request, response, next) => {
+  try {
+    // Validate and parse the query using our custom validator.
+    const query = await validateQuery(helloQuerySchema, request, response);
+    
+    // TypeScript now knows that query.person is a string.
+    response.send(`Hello, ${query.person}!`);
+  } catch (error) {
+    // Handle errors appropriately (validation errors are already sent to the
+    // client).
+    next(error);
+  }
+});
+
+app.listen(3000, () => {
+  console.log('Server is running on port 3000');
+});
+```
+
+You define a Zod schema called `helloQuerySchema` that expects a `person` property as a non-empty string. Your `validateQuery` function uses this schema to parse the request's query object. If the validation succeeds, it returns an object with the correct types. If it fails, a 400 response is automatically sent.
+
+And thanks to Zod's static type inference, TypeScript now understands that `query.person` is a string, improving both developer experience and type safety.
+
+This pattern can be similarly applied to the request body using `validateBody` or URL parameters using `validateParams`.
+
 ### Cookies
 
 One more thing that your server needs to be able to do is to read cookies.
@@ -1003,7 +1078,7 @@ npm i cookie-parser && npm i -D @types/cookie-parser
 
 Add the cookie parser middleware to your app.
 
-```ts title="src/app.ts" {1}
+```ts title="src/app.ts" {1, 12}
 import cookieParser from 'cookie-parser';
 import type { Express } from 'express';
 import express from 'express';
@@ -1024,17 +1099,17 @@ export function buildApp(): Express {
 }
 ```
 
-Simply add the cookie parser middleware to your app. Now any request will have a `request.cookies` object that contains the cookies sent by the client.
+Now any request will have a `request.cookies` object that contains the cookies sent by the client.
 
 ### Authentication
 
 Most applications need some form of authentication. In this tutorial you're going to use JWT tokens in cookies to authenticate requests. And users are going to use a classic email and password combination to authenticate.
 
-However, it's important to note that [**passwords are obsolete**](https://medium.com/javascript-scene/passwords-are-obsolete-how-to-secure-your-app-and-protect-your-users-1cd6c7b7c3bc). Stop collecting or storing passwords. Passwords are weak because they can be copied, stolen, or cracked by brute force attacks. For over a decade, hackers have grown more skilled. **Choose [passkeys](https://safety.google/authentication/passkey/) for a strong login** and **use email OTP only as a backup**.
+However, it's important to note that [**passwords are obsolete**](https://medium.com/javascript-scene/passwords-are-obsolete-how-to-secure-your-app-and-protect-your-users-1cd6c7b7c3bc). Stop collecting or storing passwords. Passwords are weak because they can be copied, stolen, or cracked by brute force attacks. **Choose [passkeys](https://safety.google/authentication/passkey/) for a strong login** and **use email OTP only as a backup**.
 
 The only reason I'm teaching you password authentication is that many apps still use passwords. This skill remains valuable in today's job market, even if only to learn how to spot risks and replace passwords with secure passkeys.
 
-And **everything you learn about handling JWT tokens & cookies will be useful no matter what authentication method you choose**.
+And **everything you learn about handling JWT tokens & cookies will be useful** no matter what authentication method you choose.
 
 With this disclaimer out of the way, let's create the authentication feature.
 
@@ -1043,126 +1118,6 @@ Authenication will work via cookies. When a user registers or logs on, a cookie 
 #### Login
 
 Start with the the `login` route and create a `src/features/user-authentication/user-authentication.test.ts` file.
-
-```ts title="src/features/user-authentication/user-authentication.test.ts"
-import { createId } from '@paralleldrive/cuid2';
-import request from 'supertest';
-import { describe, expect, onTestFinished, test } from 'vitest';
-
-import { buildApp } from '~/app.js';
-
-import { createPopulatedUserProfile } from '../user-profile/user-profile-factories.js';
-import {
-  deleteUserProfileFromDatabaseById,
-  saveUserProfileToDatabase,
-} from '../user-profile/user-profile-model.js';
-import { hashPassword } from './user-authentication-helpers.js';
-
-async function setup({ password = 'password' }: { password?: string } = {}) {
-  const app = buildApp();
-
-  const userProfile = await saveUserProfileToDatabase(
-    createPopulatedUserProfile({
-      hashedPassword: await hashPassword(password),
-    }),
-  );
-
-  onTestFinished(async () => {
-    await deleteUserProfileFromDatabaseById(userProfile.id);
-  });
-
-  return { app, userProfile };
-}
-
-describe('/api/v1/login', () => {
-  test('given: valid credentials for an existing user, should: return a 200 and set a JWT cookie', async () => {
-    const password = createId();
-    const { app, userProfile } = await setup({ password });
-
-    const actual = await request(app)
-      .post('/api/v1/login')
-      .send({ email: userProfile.email, password })
-      .expect(200);
-
-    expect(actual.body).toEqual({ message: 'Logged in successfully' });
-    // Verify that the HTTP-only cookie has been set. It is typed wrongly as a
-    // string by supertest for some reason, even though it is an array.
-    const cookies = actual.headers['set-cookie'] as unknown as string[];
-    expect(cookies).toBeDefined();
-    expect(cookies.some(cookie => cookie.includes('jwt='))).toEqual(true);
-  });
-
-  test('given: valid credentials for a non-existing user, should: return a 401', async () => {
-    const { app } = await setup();
-
-    const { body: actual } = await request(app)
-      .post('/api/v1/login')
-      .send({ email: 'non-existing@test.com', password: 'password' })
-      .expect(401);
-    const expected = { message: 'Invalid credentials' };
-
-    expect(actual).toEqual(expected);
-  });
-
-  test('given: valid credentials, but wrong password for an existing user, should: return a 401', async () => {
-    const { app, userProfile } = await setup();
-
-    const actual = await request(app)
-      .post('/api/v1/login')
-      .send({ email: userProfile.email, password: 'invalid password' })
-      .expect(401);
-
-    expect(actual.body).toEqual({ message: 'Invalid credentials' });
-  });
-
-  test('given: invalid credentials, should: return a 400', async () => {
-    const { app } = await setup();
-
-    const { body: actual } = await request(app)
-      .post('/api/v1/login')
-      .send({})
-      .expect(400);
-    const expected = {
-      message: 'Bad Request',
-      errors: [
-        {
-          code: 'invalid_type',
-          expected: 'string',
-          message: 'Required',
-          path: ['email'],
-          received: 'undefined',
-        },
-        {
-          code: 'invalid_type',
-          expected: 'string',
-          message: 'Required',
-          path: ['password'],
-          received: 'undefined',
-        },
-      ],
-    };
-
-    expect(actual).toEqual(expected);
-  });
-});
-```
-
-You start by creating a `setup` function that builds the app, creates a user profile with a hashed password, and saves it to the database. Additionally, you register an `onTestFinished` handler to delete the user profile after the tests finish.
-
-Your `hashPassword` function doesn't exist yet, but you will create it very soon. Generally, when you're doing TDD, it's okay to use functions that don't exist yet because you can recursively TDD them as well.
-
-Then you create a test for the `/api/v1/login` route.
-
-You first test the happy path, where the user exists and the credentials are valid.
-
-Now you need to handle 4 test cases:
-
-- Valid credentials for an existing user,
-- Valid credentials for a non-existing user,
-- Wrong password for an existing user,
-- Invalid credentials in the request body.
-
-Each of these tests asserts the correct HTTP status code and the correct response body.
 
 ```ts title="src/features/user-authentication/user-authentication.test.ts"
 import { createId } from '@paralleldrive/cuid2';
@@ -1363,7 +1318,7 @@ You import bcrypt to securely hash and compare passwords. In the `hashPassword` 
 <details>
   <summary>What does the salt do?</summary>
 
-  You use 10 salt rounds to tell bcrypt to hash your password 10 times, which makes each hash computation slower. A salt is a random string added to the password before hashing, ensuring that even identical passwords result in different hashes. This randomness prevents attackers from using precomputed rainbow tables. Moreover, because each password guess requires these multiple rounds of hashing, brute-force attacks become much slower and less efficient.
+  You use 10 salt rounds to tell bcrypt to hash your password 10 times, which makes each hash computation slower. A **salt** is a random string added to the password before hashing, ensuring that even identical passwords result in different hashes. This randomness prevents attackers from using precomputed rainbow tables. Moreover, because each password guess requires these multiple rounds of hashing, brute-force attacks become much slower and less efficient.
 
   bcrypt stores the random salt alongside the hash embedded in the hashed result. When you later call `bcrypt.compare()`, it extracts the salt from the stored hash to hash the provided password for comparison.
 
@@ -1454,7 +1409,7 @@ The `generateJwtToken` function takes a user profile, extracts the `id` and `ema
 
 Now your test should pass.
 
-The last function you need to create before you're ready to implement the route is a function to set the JWT cookie. This function does not need tests because in order to unit test you'd have to mock Express' `Respone' object and you'd be testing the mock more than the actual function. Instead, this function will be implicitly tested in your integration tests.
+The last function you need to create before you're ready to implement the route is a function to set the JWT cookie. This function does not need tests because in order to unit test you'd have to mock Express' `Response` object and you'd be testing the mock more than the actual function. Instead, this function will be implicitly tested in your integration tests.
 
 ```ts title="src/features/user-authentication/user-authentication-helpers.ts" {2, 13-19}
 // ... other imports ...
@@ -1561,7 +1516,7 @@ router.post('/login', asyncHandler(login));
 export { router as userAuthenticationRoutes };
 ```
 
-This router also needs to be hookep up in your `apiV1Router`.
+This router also needs to be hooked up in your `apiV1Router`.
 
 ```ts title="src/routes.ts" {4, 9}
 import { Router } from 'express';
@@ -1855,9 +1810,9 @@ export function getJwtTokenFromCookie(request: Request) {
 }
 ```
 
-You create a helper function called **isTokenValid** that checks whether a decoded token has the correct structure (i.e., it's an object that includes an `id` and an `email`).
+You create a helper function called `isTokenValid` that checks whether a decoded token has the correct structure (i.e., it's an object that includes an `id` and an `email`).
 
-Then, you write another function, **getJwtTokenFromCookie**, which extracts the JWT token from the request's cookies using a predefined cookie name. Inside this function, you verify the token using your secret, check its validity with **isTokenValid**, and if everything looks good, you return the decoded token. If the token is missing or invalid, you throw an error.
+Then, you write another function, `getJwtTokenFromCookie`, which extracts the JWT token from the request's cookies using a predefined cookie name. Inside this function, you verify the token using your secret, check its validity with `isTokenValid`, and if everything looks good, you return the decoded token. If the token is missing or invalid, you throw an error.
 
 Again, you do NOT need tests for `getJwtTokenFromCookie` because this middleware 1.) is only testable with mocking, and 2.) will be tested thoroughly implicitly by your integration tests. (If you want you could test `isTokenValid`, but I leave that as an exercise for you.)
 

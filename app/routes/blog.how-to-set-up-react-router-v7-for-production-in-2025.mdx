@@ -1,0 +1,22 @@
+---
+title: "How To Set Up React Router v7 For Production In 2025"
+datePublished: '2024-02-16'
+description: "Learn how you can set up a scalable React Router app. This article covers everything from initial configuration with TypeScript, Tailwind CSS, and ESLint to advanced topics like internationalization, database integration using Prisma, and end-to-end testing with Playwright."
+thumbnailUrl: 'https://i.magecdn.com/ada680/ebb0f4_nextjs_for_production_yt_thumbnail_v1?f=webp,q.25,p.f,l.f'
+isDraft: true
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
