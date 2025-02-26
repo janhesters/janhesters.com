@@ -179,7 +179,7 @@ Express + TypeScript Server
 Install ESLint and Prettier to ensure your code adheres to consistent style guidelines and catches potential errors early.
 
 ```bash
-npm install --save-dev eslint typescript-eslint eslint-config-prettier eslint-plugin-prettier eslint-plugin-simple-import-sort eslint-plugin-unicorn prettier typescript @typescript-eslint/eslint-plugin @vitest/eslint-plugin
+npm install --save-dev eslint typescript-eslint eslint-config-prettier eslint-plugin-prettier eslint-plugin-simple-import-sort eslint-plugin-unicorn prettier @vitest/eslint-plugin
 ```
 
 Create a `prettier.config.js` file. I like the following rules, but you can customize them as you see fit.
@@ -519,7 +519,6 @@ Vitest runs a watch script by default, so you should leave `npm test` running wh
 
 Let's make the test pass. Start by adding a controller with one handler for the health check endpoint.
 
-```md
 ```ts title="src/features/health-check/health-check-controller.ts"
 import type { NextFunction, Request, Response } from 'express';
 
@@ -920,7 +919,7 @@ You will use these facades later in both your tests and your application code.
 
 #### Factory Functions
 
-Factory functions or factories are an important tool in any codebase that deals with structured data. A **factory function** is simply a **function that returns an object**. This object typically represents a meaningful unit in your application, such as a database record, a custom data structure, or an object in object-oriented programming.
+A **factory function** is simply a **function that returns an object**. This object typically represents a meaningful unit in your application, such as a database record, a custom data structure, or an object in object-oriented programming. Later in this tutorial, you will use factory functions to create placeholder data for your tests.
 
 First, create a generic `Factory` type that you will reuse throughout your codebase for any factory.
 
@@ -952,7 +951,7 @@ export const createPopulatedUserProfile: Factory<UserProfile> = ({
 } = {}) => ({ id, email, name, createdAt, updatedAt, hashedPassword });
 ```
 
-This factory function allows you to quickly create user profiles with fake data, which you can use in your code - especially in tests.
+This factory function allows you to quickly create user profiles with dummy data.
 
 ### Validate Queries And Bodies
 
@@ -1029,9 +1028,10 @@ But with your custom `validateQuery` function, TypeScript knows that the `person
 
 Here's how you can leverage this in your code:
 
-```ts title="temp-validate-query-example.ts" {3, 15}
+```ts title="temp-validate-query-example.ts" {4, 16}
 import express from 'express';
 import { z } from 'zod';
+
 import { validateQuery } from '../middleware/validate';
 
 const app = express();
@@ -1068,7 +1068,7 @@ This pattern can be similarly applied to the request body using `validateBody` o
 
 ### Cookies
 
-One more thing that your server needs to be able to do is to read cookies.
+One more thing that your server needs to be able to do is to read cookies. By default, Express has the ability to set cookies in responses, but not to read them from requests.
 
 For that you can use the `cookie-parser` middleware, so install it.
 
@@ -1224,7 +1224,7 @@ describe('/api/v1/login', () => {
 
 You start by creating a `setup` function that builds the app, creates a user profile with a hashed password, and saves it to the database. Additionally, you register an `onTestFinished` handler to delete the user profile after the tests finish.
 
-Your `hashPassword` function doesn't exist yet, but you will create it very soon. Generally, when you're doing TDD, it's okay to use functions that don't exist yet because you can recursively TDD them as well.
+Your `hashPassword` function doesn't exist yet, but you will create it very soon. Generally, when you're doing TDD, it's okay to use functions that don't exist yet because you can recursively TDD them as well. Usually, you first want to create an empty version of it so the imports pass, and  then you implement the behavior.
 
 Then you create a test for the `/api/v1/login` route.
 
@@ -1240,14 +1240,14 @@ Now you need to handle 4 test cases:
 Each of these tests asserts the correct HTTP status code and the correct response body.
 
 <details>
-  <summary>Why does the endpoint respond with a 200 status code?</summary>
+  <summary>Frontend redirection vs REST API redirection: Why does the endpoint respond with a 200 status code?</summary>
 
     In this example, a successful `/login` request returns a 200 status code. This approach is common in older frontend apps where the client-side code handles redirecting the user after login. Alternatively, you could have your REST API redirect the browser directly by sending a 301 status code. In fact, I recommend you to redirect the user via the REST API. However, I'm demonstrating the legacy approach here because, as discussed earlier in this tutorial, modern full-stack frameworks (like Next.js or React Router V7) no longer need a dedicated REST API. Therefore it's more likely that when you write a REST API, you will write it for a frontend that handles the redirects.
 </details>
 
 Now, to implement the route and its tests, you need a couple of helper functions.
 
-You need a function to hash the password, another to compare the provided password with the hashed one, a function to generate a JWT token for the user, and a function to set the JWT cookie. Additionally, you need a way to check if the token is valid and a function to retrieve the JWT token from the request's cookies.
+You need a function to hash the password, another to compare the provided password with the hashed one, a function to generate a JWT token for the user, and a function to set the JWT cookie. Additionally, you need a way to check if the token is valid and a function to retrieve the JWT token from the request's cookies. Let's TDD both functions together.
 
 The `hashPassword` function and the `getIsPasswordValid` function are a pair of functions that only make sense together. Therefore, you want to use them together in their test.
 
@@ -1411,12 +1411,14 @@ Now your test should pass.
 
 The last function you need to create before you're ready to implement the route is a function to set the JWT cookie. This function does not need tests because in order to unit test you'd have to mock Express' `Response` object and you'd be testing the mock more than the actual function. Instead, this function will be implicitly tested in your integration tests.
 
-```ts title="src/features/user-authentication/user-authentication-helpers.ts" {2, 13-19}
+```ts title="src/features/user-authentication/user-authentication-helpers.ts" {2, 7, 15-21}
 // ... other imports ...
 import type { Response } from 'express';
 import jwt from 'jsonwebtoken';
 
 // ... existing functions ...
+
+export const JWT_COOKIE_NAME = 'jwt';
 
 /**
  * Set the JWT cookie.
@@ -1529,6 +1531,8 @@ export const apiV1Router = Router();
 apiV1Router.use('/health-check', healthCheckRoutes);
 apiV1Router.use(userAuthenticationRoutes);
 ```
+
+Notice how you are NOT adding a segment (e.g. `/authentication`) for the user authentication routes. This is because you want those routes to be available at the root level of your API via `/login`, `/register`, and `/logout`.
 
 Now your tests should pass.
 
@@ -1666,6 +1670,23 @@ You validate the user name and password as usual, and check if the user already 
 
 If it doesn't exist, you hash the password and create the user profile. Then you generate a JWT token, set it as an HTTP-only cookie on the response, and send a 201 status with a success message.
 
+Notice, how you're NOT explicitly throwing a 400 error. This is because the `validateBody` middleware already throws a 400 error if the request body is invalid.
+
+```ts title="src/features/user-authentication/user-authentication-routes.ts" {5, 10}
+import { Router } from 'express';
+
+import { asyncHandler } from '~/utils/async-handler.js';
+
+import { login, register } from './user-authentication-controller.js';
+
+const router = Router();
+
+router.post('/login', asyncHandler(login));
+router.post('/register', asyncHandler(register));
+
+export { router as userAuthenticationRoutes };
+```
+
 After hooking up the handler in your routes file, your tests for the registration logic will pass.
 
 #### Logout
@@ -1674,7 +1695,7 @@ For the logout functionality, you only need one test because all that the route 
 
 ```ts title="src/features/user-authentication/user-authentication.test.ts"
 describe('/api/v1/logout', () => {
-  test('given: a valid JWT cookie, should: clear the JWT cookie and return a 200', async () => {
+  test('given: any POST request, should: clear the JWT cookie and return a 200', async () => {
     const { app } = await setup();
 
     const response = await request(app).post('/api/v1/logout').expect(200);
@@ -1759,7 +1780,7 @@ Now your logout test should pass, too.
 
 One more authentication related function that you need is a middleware, which let's you guard routes so they can only be used by authenticated users.
 
-To write this middleware, you need a user authentication helper function that checks if a user is authenticated.
+To write this middleware, you need a user authentication helper function that checks if a user is authenticated. You do NOT need tests for this new helper function because this middleware 1.) will only testable with mocking, and 2.) will be tested thoroughly implicitly by your integration tests. (If you want you could test `isTokenValid`, but I leave that as an exercise for you.)
 
 ```ts title="src/features/user-authentication/user-authentication-helpers.ts" {2}
 // ... other imports ...
@@ -1814,8 +1835,6 @@ You create a helper function called `isTokenValid` that checks whether a decoded
 
 Then, you write another function, `getJwtTokenFromCookie`, which extracts the JWT token from the request's cookies using a predefined cookie name. Inside this function, you verify the token using your secret, check its validity with `isTokenValid`, and if everything looks good, you return the decoded token. If the token is missing or invalid, you throw an error.
 
-Again, you do NOT need tests for `getJwtTokenFromCookie` because this middleware 1.) is only testable with mocking, and 2.) will be tested thoroughly implicitly by your integration tests. (If you want you could test `isTokenValid`, but I leave that as an exercise for you.)
-
 Now you can implement the middleware.
 
 ```ts title="src/middleware/require-authentication.ts"
@@ -1839,7 +1858,34 @@ export function requireAuthentication(request: Request, response: Response) {
 }
 ```
 
-This middleware simply checks if a user is authenticated by trying to retrieve their JWT token from the request's cookies. If it succeeds, you return the token payload (which includes the user's ID and email). But if there's an issue (like if the token is missing or invalid), you catch the error and respond with a 401 Unauthorized status along with a message. Just like `validateBody`, this middleware is meant to be called inline so it can be used with TypeScript.
+This middleware simply checks if a user is authenticated by trying to retrieve their JWT token from the request's cookies. If it succeeds, you return the token payload (which includes the user's ID and email). But if there's an issue (like if the token is missing or invalid), you catch the error and respond with a 401 Unauthorized status along with a message.
+
+Just like `validateBody`, this middleware is meant to be called inline so it can be used with TypeScript.
+
+```ts title="temp-require-authentication-example.ts"
+import express from 'express';
+import cookieParser from 'cookie-parser';
+
+import { requireAuthentication } from '../middleware/require-authentication.js';
+
+const app = express();
+app.use(cookieParser()); // Ensure cookie-parser is included
+
+app.get('/protected/profile', async (request, response, next) => {
+  try {
+    // Inline usage of requireAuthentication to get the token payload
+    const { id, email } = requireAuthentication(request, response);
+
+    // Use the authenticated user's ID and email in the response
+    response.status(200).json({
+      message: `Hello, ${email}! Your user ID is ${id}`,
+      userId: id,
+    });
+  } catch (error) {
+    next(error); // Pass errors to Express error handling
+  }
+});
+```
 
 ### CRUD Routes For User Profiles
 
@@ -1864,6 +1910,7 @@ import {
   saveUserProfileToDatabase,
 } from './user-profile-model.js';
 
+
 async function setup(numberOfProfiles = 1) {
   const app = buildApp();
 
@@ -1873,19 +1920,26 @@ async function setup(numberOfProfiles = 1) {
     ),
   );
 
-  onTestFinished(async () => {
-    try {
-      await Promise.all(
-        profiles.map(profile => deleteUserProfileFromDatabaseById(profile.id)),
-      );
-    } catch {
-      // The test failed so there was nothing to clean up.
-    }
-  });
-
   const authenticatedUser = createPopulatedUserProfile();
   await saveUserProfileToDatabase(authenticatedUser);
   const token = generateJwtToken(authenticatedUser);
+
+  onTestFinished(async () => {
+    try {
+      await Promise.all(
+        [...profiles, authenticatedUser].map(profile =>
+          deleteUserProfileFromDatabaseById(profile.id),
+        ),
+      );
+    } catch {
+      // We need to catch here to handle tests that delete user profiles.
+      // If a test fails and the implementation code does NOT delete the user
+      // profiles, we need to delete them in the try block.
+      // If the test passes and the implementation code deletes the user
+      // profiles, this cleanup will not be needed and would throw, which is why
+      // we need to catch the error.
+    }
+  });
 
   return {
     app,
@@ -2105,6 +2159,18 @@ describe('/api/v1/user-profiles', () => {
 
   describe('/:id', () => {
     describe('GET', () => {
+      test('given: an unauthenticated request, should: return a 401', async () => {
+        const { app, profiles } = await setup();
+        const [profile] = profiles as [UserProfile];
+
+        const { status: actual } = await request(app).get(
+          `/api/v1/user-profiles/${profile.id}`,
+        );
+        const expected = 401;
+
+        expect(actual).toEqual(expected);
+      });
+
       test('given: profile exists, should: return a 200 with the profile', async () => {
         const { app, profiles, token } = await setup();
         const [profile] = profiles as [UserProfile];
@@ -2156,7 +2222,7 @@ describe('/api/v1/user-profiles', () => {
         const { app, profiles, token } = await setup();
         const [profile] = profiles as [UserProfile];
 
-        const updates = { name: 'Updated Name' };
+        const updates = { name: 'Updated Name', ignoredField: 'ignoreMe' };
         const actual = await request(app)
           .patch(`/api/v1/user-profiles/${profile.id}`)
           .set('Cookie', [`${JWT_COOKIE_NAME}=${token}`])
@@ -2253,7 +2319,7 @@ describe('/api/v1/user-profiles', () => {
         );
         const expected = 401;
 
-        expect(actual).toEqual(expected);
+        expect(actual).toEqual(expected);ƒ
       });
 
       test('given: existing profile, should: return a 200 with the deleted profile', async () => {
@@ -2390,6 +2456,8 @@ type ErrorWithMessage = {
   message: string;
 };
 
+// This validates an existing message property in standard errors, custom errors
+// and objects with a message property.
 function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
   return (
     typeof error === 'object' &&
@@ -2407,8 +2475,8 @@ function toErrorWithMessage(maybeError: unknown): ErrorWithMessage {
 
     return new Error(JSON.stringify(maybeError));
   } catch {
-    // fallback in case there's an error stringifying the maybeError
-    // like with circular references for example.
+    // JSON.stringify() would throw in the case of a circular reference. We then
+    // catch it here and coerce it into the [object Object] string.
     return new Error(String(maybeError));
   }
 }

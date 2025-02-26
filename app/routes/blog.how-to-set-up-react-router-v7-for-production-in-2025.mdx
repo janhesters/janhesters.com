@@ -1,6 +1,6 @@
 ---
-title: "How To Set Up React Router v7 For Production In 2025"
-datePublished: '2024-02-16'
+title: "How To Set Up React Router V7 For Production In 2025"
+datePublished: '2025-10-29'
 description: "Learn how you can set up a scalable React Router app. This article covers everything from initial configuration with TypeScript, Tailwind CSS, and ESLint to advanced topics like internationalization, database integration using Prisma, and end-to-end testing with Playwright."
 thumbnailUrl: 'https://i.magecdn.com/ada680/ebb0f4_nextjs_for_production_yt_thumbnail_v1?f=webp,q.25,p.f,l.f'
 isDraft: true
@@ -19,4 +19,541 @@ export const meta = ({ data }) => getSocialsMetaForBlogPost({
 });
 
 ## {frontmatter.title}
+
+```sh
+npx create-react-router@latest my-react-router-app
+```
+
+```sh
+cd my-react-router-app
+npm run dev
+```
+
+By default, React Router V7 comes with Tailwind V4.
+
+## ESLint & Prettier
+
+```sh
+npm i -D prettier prettier-plugin-tailwindcss eslint @eslint/js typescript-eslint eslint-config-prettier eslint-plugin-prettier eslint-plugin-unicorn eslint-plugin-simple-import-sort @vitest/eslint-plugin eslint-plugin-testing-library eslint-plugin-playwright
+```
+
+
+```js title="prettier.config.js"
+export default {
+  arrowParens: 'avoid',
+  bracketSameLine: false,
+  bracketSpacing: true,
+  htmlWhitespaceSensitivity: 'css',
+  insertPragma: false,
+  jsxSingleQuote: false,
+  plugins: ['prettier-plugin-tailwindcss'],
+  printWidth: 80,
+  proseWrap: 'always',
+  quoteProps: 'as-needed',
+  requirePragma: false,
+  semi: true,
+  singleQuote: true,
+  tabWidth: 2,
+  trailingComma: 'all',
+  useTabs: false,
+};
+```
+
+```js title="eslint.config.js"
+import eslint from '@eslint/js';
+import vitest from '@vitest/eslint-plugin';
+import playwright from 'eslint-plugin-playwright';
+import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
+import testingLibrary from 'eslint-plugin-testing-library';
+import eslintPluginUnicorn from 'eslint-plugin-unicorn';
+import tseslint from 'typescript-eslint';
+
+export default tseslint.config(
+  {
+    ignores: ['dist/**/*', 'node_modules/**/*', '.react-router/**/*'],
+  },
+  eslint.configs.recommended,
+  tseslint.configs.recommendedTypeChecked,
+  tseslint.configs.stylisticTypeChecked,
+  eslintPluginUnicorn.configs['flat/recommended'],
+  {
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  {
+    files: ['**/*.{js,ts,jsx,tsx}'],
+    plugins: {
+      'simple-import-sort': simpleImportSort,
+    },
+    rules: {
+      'simple-import-sort/imports': 'error',
+      'simple-import-sort/exports': 'error',
+      'unicorn/better-regex': 'warn',
+      'unicorn/no-process-exit': 'off',
+      'unicorn/no-array-reduce': 'off',
+      'unicorn/prevent-abbreviations': [
+        'error',
+        { replacements: { params: false, utils: false } },
+      ],
+    },
+  },
+  {
+    files: ['src/**/*.test.{js,ts,jsx,tsx}'],
+    plugins: { vitest },
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    rules: {
+      // @ts-expect-error https://github.com/vitest-dev/eslint-plugin-vitest/issues/667
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      ...vitest.configs.recommended.rules,
+    },
+    settings: { vitest: { typecheck: true } },
+    languageOptions: { globals: { ...vitest.environments.env.globals } },
+  },
+  {
+    files: ['src/**/*.test.{jsx,tsx}'],
+    ...testingLibrary.configs['flat/react'],
+  },
+  {
+    files: ['**/*.spec.ts'],
+    ...playwright.configs['flat/recommended'],
+  },
+  eslintPluginPrettierRecommended,
+);
+```
+
+```json title="package.json"
+"scripts": {
+  "format": "prettier --write .",
+  "lint": "eslint .",
+  "lint:fix": "eslint . --fix",
+}
+```
+
+If you ever get the error ``Unsafe call of a(n) `error` type typed value.``, just reload your editor.
+
+## Commitlint
+
+## Routing
+
+```sh
+npm install -D remix-flat-routes @react-router/remix-routes-option-adapter
+```
+
+```ts title="app/routes.ts"
+import { flatRoutes } from "remix-flat-routes";
+import { remixRoutesOptionAdapter } from "@react-router/remix-routes-option-adapter";
+
+export default remixRoutesOptionAdapter((defineRoutes) => {
+  return flatRoutes("routes", defineRoutes, {
+    ignoredRouteFiles: ["**/.*"], // Ignore dotfiles like .DS_Store
+  });
+});
+```
+
+Move the `app/routes/home.tsx` file to `app/routes/_index.tsx`.
+
+## Vitest
+
+```sh
+npm install -D vitest
+```
+
+```json title="package.json"
+"scripts": {
+  "test": "vitest --reporter=verbose",
+}
+```
+
+```ts title="app/example.test.ts"
+import { describe, expect, test } from 'vitest';
+
+describe('Example', () => {
+  test('should be true', () => {
+    expect(true).toEqual(true);
+  });
+});
+```
+
+```sh
+$ npm test
+
+> test
+> vitest --reporter=verbose
+
+
+ DEV  v3.0.7 /Users/jan/dev/my-react-router-app
+
+ ✓ app/example.test.ts (1 test) 1ms
+   ✓ Example (1)
+     ✓ should be true
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  21:42:12
+   Duration  42ms (transform 8ms, setup 0ms, collect 21ms, tests 21ms, environment 0ms, prepare 21ms)
+```
+
+### React Testing Library
+
+```sh
+npm install --save-dev @testing-library/react @testing-library/dom @testing-library/jest-dom @testing-library/user-event happy-dom
+```
+
+```ts title="app/test/setup-test-environment.ts"
+import '@testing-library/jest-dom/vitest';
+
+import { cleanup } from '@testing-library/react';
+import { afterEach } from 'vitest';
+
+afterEach(() => {
+  cleanup();
+});
+```
+
+```ts title="vite.config.ts" {9, 12-16}
+import { reactRouter } from '@react-router/dev/vite';
+import tailwindcss from '@tailwindcss/vite';
+import { defineConfig } from 'vite';
+import tsconfigPaths from 'vite-tsconfig-paths';
+
+export default defineConfig({
+  plugins: [
+    tailwindcss(),
+    !process.env.VITEST && reactRouter(),
+    tsconfigPaths(),
+  ],
+  test: {
+    environmentMatchGlobs: [['**/*.test.tsx', 'happy-dom']],
+    include: ['./app/**/*.{spec,test}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    setupFiles: ['app/test/setup-test-environment.ts'],
+  },
+});
+```
+
+```ts title="test/react-test-utils.tsx"
+import type { RenderOptions } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import type { ReactElement, ReactNode } from 'react';
+
+const AllTheProviders = ({ children }: { children: ReactNode }) => {
+  return <>{children}</>;
+};
+
+const customRender = (
+  ui: ReactElement,
+  options?: Omit<RenderOptions, 'wrapper'>,
+) => render(ui, { wrapper: AllTheProviders, ...options });
+
+export * from '@testing-library/react';
+export { customRender as render };
+export { default as userEvent } from '@testing-library/user-event';
+export { createRoutesStub } from 'react-router';
+```
+
+## Internationalization
+
+```sh
+npm install remix-i18next i18next react-i18next i18next-browser-languagedetector i18next-http-backend i18next-fs-backend
+```
+
+```json title="public/locales/en/common.json"
+{
+  "greeting": "Hello"
+}
+```
+
+```ts title="app/utils/i18n.ts"
+export default {
+  // This is the list of languages your application supports
+  supportedLngs: ['en'],
+  // This is the language you want to use in case
+  // if the user language is not in the supportedLngs
+  fallbackLng: 'en',
+  // The default namespace of i18next is "translation",
+  // but you can customize it here
+  defaultNS: 'common',
+};
+```
+
+```ts title="app/utils/i18next.server.ts"
+import path from 'node:path';
+
+import Backend from 'i18next-fs-backend/cjs';
+import { RemixI18Next } from 'remix-i18next/server';
+
+import i18n from './i18n';
+
+const i18next = new RemixI18Next({
+  detection: {
+    supportedLanguages: i18n.supportedLngs,
+    fallbackLanguage: i18n.fallbackLng,
+  },
+  i18next: {
+    ...i18n,
+    backend: {
+      loadPath: path.resolve('./public/locales/{{lng}}/{{ns}}.json'),
+    },
+  },
+  plugins: [Backend],
+});
+
+export default i18next;
+```
+
+```tsx title="app/entry.client.tsx"
+import i18next from 'i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
+import Backend from 'i18next-http-backend';
+import { startTransition, StrictMode } from 'react';
+import { hydrateRoot } from 'react-dom/client';
+import { I18nextProvider, initReactI18next } from 'react-i18next';
+import { HydratedRouter } from 'react-router/dom';
+import { getInitialNamespaces } from 'remix-i18next/client';
+
+import i18n from '~/utils/i18n';
+
+async function hydrate() {
+  await i18next
+    .use(initReactI18next)
+    .use(LanguageDetector)
+    .use(Backend)
+    .init({
+      ...i18n,
+      ns: getInitialNamespaces(),
+      backend: { loadPath: '/locales/{{lng}}/{{ns}}.json' },
+      detection: {
+        order: ['htmlTag'],
+        caches: [],
+      },
+    });
+
+  startTransition(() => {
+    hydrateRoot(
+      document,
+      <I18nextProvider i18n={i18next}>
+        <StrictMode>
+          <HydratedRouter />
+        </StrictMode>
+      </I18nextProvider>,
+    );
+  });
+}
+
+if (globalThis.requestIdleCallback) {
+  globalThis.requestIdleCallback(() => void hydrate());
+} else {
+  // Safari doesn't support requestIdleCallback
+  // https://caniuse.com/requestidlecallback
+  globalThis.setTimeout(() => void hydrate(), 1);
+}
+```
+
+```tsx title="app/entry.server.tsx"
+import path from 'node:path';
+import { PassThrough } from 'node:stream';
+
+import { createReadableStreamFromReadable } from '@react-router/node';
+import { createInstance } from 'i18next';
+import Backend from 'i18next-fs-backend';
+import { isbot } from 'isbot';
+import type { RenderToPipeableStreamOptions } from 'react-dom/server';
+import { renderToPipeableStream } from 'react-dom/server';
+import { I18nextProvider, initReactI18next } from 'react-i18next';
+import type { EntryContext } from 'react-router';
+import { ServerRouter } from 'react-router';
+
+import i18n from '~/utils/i18n';
+import i18next from '~/utils/i18next.server';
+
+export const streamTimeout = 5000;
+
+export default async function handleRequest(
+  request: Request,
+  responseStatusCode: number,
+  responseHeaders: Headers,
+  routerContext: EntryContext,
+  // loadContext: AppLoadContext,
+) {
+  const instance = createInstance();
+  const lng = await i18next.getLocale(request);
+  const ns = i18next.getRouteNamespaces(routerContext);
+
+  await instance
+    .use(initReactI18next)
+    .use(Backend)
+    .init({
+      ...i18n,
+      lng,
+      ns,
+      backend: {
+        loadPath: path.resolve('./public/locales/{{lng}}/{{ns}}.json'),
+      },
+    });
+
+  return new Promise((resolve, reject) => {
+    let shellRendered = false;
+
+    const userAgent = request.headers.get('user-agent');
+
+    // Ensure requests from bots and SPA Mode renders wait for all content to load before responding
+    // https://react.dev/reference/react-dom/server/renderToPipeableStream#waiting-for-all-content-to-load-for-crawlers-and-static-generation
+    const readyOption: keyof RenderToPipeableStreamOptions =
+      (userAgent && isbot(userAgent)) || routerContext.isSpaMode
+        ? 'onAllReady'
+        : 'onShellReady';
+
+    const { pipe, abort } = renderToPipeableStream(
+      <I18nextProvider i18n={instance}>
+        <ServerRouter context={routerContext} url={request.url} />
+      </I18nextProvider>,
+      {
+        [readyOption]() {
+          shellRendered = true;
+          const body = new PassThrough();
+          const stream = createReadableStreamFromReadable(body);
+
+          responseHeaders.set('Content-Type', 'text/html');
+
+          resolve(
+            new Response(stream, {
+              headers: responseHeaders,
+              status: responseStatusCode,
+            }),
+          );
+
+          pipe(body);
+        },
+        onShellError(error: unknown) {
+          reject(error as Error);
+        },
+        onError(error: unknown) {
+          responseStatusCode = 500;
+          // Log streaming rendering errors from inside the shell.  Don't log
+          // errors encountered during initial shell rendering since they'll
+          // reject and get logged in handleDocumentRequest.
+          if (shellRendered) {
+            console.error(error);
+          }
+        },
+      },
+    );
+
+    // Abort the rendering stream after the `streamTimeout` so it has time to
+    // flush down the rejected boundaries
+    setTimeout(abort, streamTimeout + 1000);
+  });
+}
+```
+
+```tsx title="app/root.tsx" {3-4, 12, 14, 16, 33, 35-38, 41, 43, 45, 48}
+import './app.css';
+
+import { useTranslation } from 'react-i18next';
+import type { LoaderFunctionArgs } from 'react-router';
+import {
+  isRouteErrorResponse,
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  useLoaderData,
+} from 'react-router';
+import { useChangeLanguage } from 'remix-i18next/react';
+
+import i18next from '~/utils/i18next.server';
+
+import type { Route } from './+types/root';
+
+export const links: Route.LinksFunction = () => [
+  { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+  {
+    rel: 'preconnect',
+    href: 'https://fonts.gstatic.com',
+    crossOrigin: 'anonymous',
+  },
+  {
+    rel: 'stylesheet',
+    href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
+  },
+];
+
+export const handle = { i18n: 'common' };
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const locale = await i18next.getLocale(request);
+  return { locale };
+}
+
+export function Layout({ children }: { children: React.ReactNode }) {
+  const { locale } = useLoaderData<typeof loader>();
+
+  const { i18n } = useTranslation();
+
+  useChangeLanguage(locale);
+
+  return (
+    <html lang={locale} dir={i18n.dir()}>
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        {children}
+        <ScrollRestoration />
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+
+// ... rest of the default code
+```
+
+```tsx title="app/welcome/welcome.tsx" {1, 7, 16}
+import { useTranslation } from 'react-i18next';
+
+import logoDark from './logo-dark.svg';
+import logoLight from './logo-light.svg';
+
+export function Welcome() {
+  const { t } = useTranslation();
+
+  return (
+    <main className="flex items-center justify-center pt-16 pb-4">
+      <div className="flex min-h-0 flex-1 flex-col items-center gap-16">
+        {/* ... Header code ... */}
+        <div className="w-full max-w-[300px] space-y-6 px-4">
+          <nav className="space-y-4 rounded-3xl border border-gray-200 p-6 dark:border-gray-700">
+            <p className="text-center leading-6 text-gray-700 dark:text-gray-200">
+              {t('greeting')}
+            </p>
+            {/* ... resources list code ... */}
+          </nav>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+// ... your resources ...
+```
+
+## Database
+
+### Prisma
+
+### Facades
+
+## Playwright
+
+## GitHub Actions
+
 

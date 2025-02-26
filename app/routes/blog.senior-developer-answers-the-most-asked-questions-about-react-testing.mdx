@@ -1,9 +1,8 @@
 ---
 title: "Senior Developer Answers The Most Asked Questions About React Testing"
-datePublished: "2024-12-11"
-description: "Learn how to implement a simple email-only sign up process using AWS Amplify in your React Native application."
-thumbnailUrl: ""
-isDraft: true
+datePublished: "2025-02-26"
+description: "This guide answers top React testing questions, explaining unit, integration, and functional tests with examples using Vitest, Jest, and React Testing Library."
+thumbnailUrl: "https://i.magecdn.com/ada680/51a3c5_maqs_about_react_testing_yt_thumbnail_v1?f=webp,q.25,p.f,l.f"
 ---
 
 import { getUrl } from '../lib/misc';
@@ -20,15 +19,7 @@ export const meta = ({ data }) => getSocialsMetaForBlogPost({
 
 ## {frontmatter.title}
 
----
-
-**Notes to Cheta:** For each test, run the test file and also record the test run.
-
-For most of these tests, you can copy the code from SocialKit, e.g. `throwIfEntityIsMissing` etc.
-
----
-
-"Hello, I'm Jan" and I'm going to answer the most Googled questions about React testing like "What is a unit test in React", "How do you test code with REST API calls?", "When should you use `act` with React Testing Library", and so much more.
+I'm going to answer the most Googled questions about React testing like "What is a unit test in React", "How do you test code with REST API calls?", "When should you use `act` with React Testing Library", and so much more.
 
 And to kick things of, we're going to start with:
 
@@ -147,7 +138,7 @@ describe('requireUserExists()', () => {
 
 When you write integration tests that modify a database, you either need to mock the database or you need to write setup and teardown code to clean up after the test. If you're unfamiliar with mocking, it means replacing a function with a test double.
 
-You should know that "Mocking Is A Code Smell", but that is a topic for another video. So in this tutorial you're going to use a setup function.
+You should know that ["Mocking Is A Code Smell"](https://medium.com/javascript-scene/mocking-is-a-code-smell-944a70c90a6a), but that is a topic for another article. In this tutorial, you're going to use a setup function.
 
 It uses a factory function `createPopulatedUserAccount` to create a user and then saves it to the database.
 
@@ -167,13 +158,13 @@ And finally, there are also ...
 
 **Functional tests** test your app from your user's perspective.
 
-You can either write functional tests for React components with the previously mentioned frameworks together with [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/). Or you can use a framework like [Playwright](https://playwright.dev/docs/test-intro) or [Cypress](https://docs.cypress.io/guides/overview/why-cypress) that spins up an actual browser.
+You can either write functional tests for React components with the previously mentioned frameworks together with [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) (RTL). Or you can use a framework like [Playwright](https://playwright.dev/docs/test-intro) or [Cypress](https://docs.cypress.io/guides/overview/why-cypress) that spins up an actual browser.
 
-React Testing Library is used together with Jest or Vitest to write functional tests for your React components. And you mock the DOM using JSDom or Happy DOM. You will learn how to install those and use React Testing Library later in this video.
+React Testing Library is used together with Jest or Vitest to write functional tests for your React components. And you mock the DOM using JSDom or Happy DOM. You will learn how to install those and use React Testing Library later in this article.
 
 An E2E test framework like Playwright or Cypress use an actual browser to visit your app and then interact with it.
 
-So RTL runs faster than E2E test frameworks, but E2E test frameworks give you more confidence that your app works as expected.
+RTL runs faster than E2E test frameworks, but E2E test frameworks give you more confidence that your app works as expected.
 
 Here is what a functional test using Playwright looks like.
 
@@ -249,7 +240,7 @@ You will develop a feeling what to call a test based on the context over time.
 
 Remember:
 
-> “When in Rome, do as the Romans do.” - [Julius Caesar](https://en.wikipedia.org/wiki/Julius_Caesar)
+> “When in Rome, do as the Romans do.” - Julius Caesar
 
 In other words, if you're working in a team, you should follow the conventions of your team.
 
@@ -257,21 +248,15 @@ Now let's move on to the next question:
 
 ### How to do unit testing in React?
 
----
-
-**Note to Cheta:** Create a blank Next.js project.
-
----
-
 In your React project, install Vitest.
 
 ```bash
 npm install --save-dev vitest
 ```
 
-For the latest instructions on how to set up Vitest, [check out their docs](https://vitest.dev/guide/#getting-started).
+If you're reading this article in the future, for the latest instructions on how to set up Vitest, [check out their docs](https://vitest.dev/guide/#getting-started).
 
-Add a test script to your `package.json`:
+Add a test script to your `package.json`.
 
 ```json title="package.json"
 {
@@ -369,13 +354,13 @@ Now you are ready to write your React component tests with React Testing Library
 
 ### What does testing a React app with Jest do?
 
-Jest is a test runner. It provides helper functions so you can write tests, and executes those functions for you when you run your tests. This tutorial uses Vitest because it has the same API as Jest, but runs faster. Everything you learn in this video is applicable to Jest.
+Jest is a test runner. It provides helper functions so you can write tests, and executes those functions for you when you run your tests. This tutorial uses Vitest because it has the same API as Jest, but runs faster. Everything you learn in this article is applicable to Jest.
 
 The main difference in usage is that Jest is frequently configured to expose its methods globally. This means that in any file with `.test.ts` or `.test.tsx`, you can use `describe`, `test`, `expect`, and so on without importing them.
 
 Vitest or Jest alone are a bad choice for writing functional tests for your React apps, though.
 
-You should use React Testing Library (RTL), too. With RTL you can simulate user interactions.
+You should use React Testing Library, too. With RTL you can simulate user interactions.
 
 React Testing Library together with [Happy DOM](https://github.com/capricorn86/happy-dom) or [Jest DOM](https://github.com/testing-library/jest-dom) renders your React component in a mocked browser environment for you.
 
@@ -442,17 +427,9 @@ So everything that you learn about React testing going forward applies to class 
 
 I want to point out the "bluriness" of test definitions here one more time. Notice how both of these tests test the component from the perspective of a user. Therefore, you can legitimately call them functional tests. But, they also test the component in isolation, so they could also be called unit tests.
 
----
-
-**Note to Editors:** Maybe insert Noah Penguin / Elefent meme / gif / screenshot here: https://www.youtube.com/watch?v=t_5XkPh3vXg
-
-Elephant on body has "unit test" penguin has "functional test". (Good screengrab is [here](https://imgflip.com/memegenerator/167618150/Family-guy-Noahs-ark))
-
----
-
 ### How to test a function in React Testing Library?
 
-If you mean a function component, rewind to the part where you test the first React component, `Greeting`, because that's a function component.
+If you mean a function component, scroll up back to the part where you test the first React component, `Greeting`, because that's a function component.
 
 If you're talking about functions that are being passed as props to your React components, you need to mock them. This allows you to test that your functions are called as expected.
 
@@ -853,7 +830,7 @@ Now you can use the `selectOptions` method from `userEvent` to select an option 
 
 ### How to test useEffect in React Testing Library?
 
-Did you know that React 18 and up runs `useEffect` twice on mount in strict mode? Let me know in the comments if you want me to make a video to break down how many React developers are using `useEffect` wrong.
+Did you know that React 18 and up runs `useEffect` twice on mount in strict mode? Let me know on [X](https://x.com/janhesters) if you want me to write an article to break down how many React developers are using `useEffect` wrong.
 
 Anyways, let's look at a correct usage of `useEffect` in an `OfflineIndicator` component.
 
