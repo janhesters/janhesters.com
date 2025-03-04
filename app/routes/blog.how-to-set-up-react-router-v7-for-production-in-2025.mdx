@@ -29,12 +29,14 @@ cd my-react-router-app
 npm run dev
 ```
 
-By default, React Router V7 comes with Tailwind V4.
-
 ## ESLint & Prettier
 
 ```sh
-npm i -D prettier prettier-plugin-tailwindcss eslint @eslint/js typescript-eslint eslint-config-prettier eslint-plugin-prettier eslint-plugin-unicorn eslint-plugin-simple-import-sort @vitest/eslint-plugin eslint-plugin-testing-library eslint-plugin-playwright
+npm i -D prettier eslint
+```
+
+```sh
+npm i -D prettier-plugin-tailwindcss @eslint/js @eslint/compat typescript-eslint eslint-config-prettier eslint-plugin-prettier eslint-plugin-unicorn eslint-plugin-simple-import-sort @vitest/eslint-plugin eslint-plugin-testing-library eslint-plugin-playwright
 ```
 
 
@@ -60,6 +62,10 @@ export default {
 ```
 
 ```js title="eslint.config.js"
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { includeIgnoreFile } from '@eslint/compat';
 import eslint from '@eslint/js';
 import vitest from '@vitest/eslint-plugin';
 import playwright from 'eslint-plugin-playwright';
@@ -69,10 +75,12 @@ import testingLibrary from 'eslint-plugin-testing-library';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 import tseslint from 'typescript-eslint';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const gitignorePath = path.resolve(__dirname, '.gitignore');
+
 export default tseslint.config(
-  {
-    ignores: ['dist/**/*', 'node_modules/**/*', '.react-router/**/*'],
-  },
+  includeIgnoreFile(gitignorePath),
   eslint.configs.recommended,
   tseslint.configs.recommendedTypeChecked,
   tseslint.configs.stylisticTypeChecked,
@@ -98,7 +106,7 @@ export default tseslint.config(
       'unicorn/no-array-reduce': 'off',
       'unicorn/prevent-abbreviations': [
         'error',
-        { replacements: { params: false, utils: false } },
+        { replacements: { params: false, props: false, utils: false } },
       ],
     },
   },
@@ -126,6 +134,16 @@ export default tseslint.config(
 );
 ```
 
+```json title="tsconfig.json"
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    // ...
+  }
+}
+```
+
 ```json title="package.json"
 "scripts": {
   "format": "prettier --write .",
@@ -138,6 +156,179 @@ If you ever get the error ``Unsafe call of a(n) `error` type typed value.``, jus
 
 ## Commitlint
 
+To enforce consistent commit messages and automate formatting checks in your React Router V7 project, you can integrate **Commitlint** with **Husky**. This setup ensures that every commit follows the [conventional commit format](https://www.conventionalcommits.org/en/v1.0.0/) and that code is automatically formatted before being committed.
+
+### Why Use Conventional Commits?
+
+Using conventional commits (e.g., `feat(app): add new feature`, `fix: resolve bug`) provides a structured format for commit messages, which offers several key benefits:
+
+- **Automated Changelog Generation**: Tools like `standard-version` or `semantic-release` can parse conventional commits to automatically generate a changelog. For example, `feat` commits become "Features," `fix` commits become "Bug Fixes," and so on, saving you time and ensuring consistency when preparing release notes.
+- **Semantic Versioning**: Conventional commits align with semantic versioning (e.g., MAJOR.MINOR.PATCH). A `feat` triggers a minor version bump, a `fix` triggers a patch, and breaking changes (noted with a `!` like `feat!: update API`) trigger a major version bump. This makes versioning predictable and automatable.
+- **Improved Readability and Collaboration**: A standardized format makes it easier for team members to understand the intent and scope of changes at a glance, enhancing collaboration and code review processes.
+- **Tooling Integration**: Many modern tools, such as CI/CD pipelines, linters, and release managers, are built to work seamlessly with conventional commits, streamlining workflows. You're going to learn how to do this later in this article.
+
+By adopting conventional commits, you set your project up for scalability and maintainability, especially as it grows or when preparing for production releases.
+
+### Husky
+
+First, install the necessary dependencies:
+
+```sh
+npm install -D @commitlint/cli @commitlint/config-conventional husky
+```
+
+Next, initialize Husky to manage Git hooks:
+
+```sh
+npx husky-init
+```
+
+This creates a `.husky` directory in your project. It also sets up a pre-commit hook to run formatting and linting checks automatically. Edit the `.husky/pre-commit` file:
+
+```sh title=".husky/pre-commit"
+npm run lint && npm run typecheck
+```
+
+Furthermore, the `husky-init` commands updates your `package.json` scripts to enable Husky by adding a `prepare` script to your `package.json`. You need to modify this `prepare` script to use `|| true`:
+
+```json title="package.json"
+"scripts": {
+  "prepare": "husky || true"
+}
+```
+
+When installing only dependencies (and not `devDependencies`), the `'prepare': 'husky'` script might fail since Husky won’t be installed.
+
+Run the following to ensure Husky is set up:
+
+```sh
+npm run prepare
+```
+
+Now, every time you run `git commit`, Husky will trigger `npm run lint` and `npm run typecheck` to format your code with Prettier and check it with ESLint, then stage the changes automatically.
+
+### Commitizen
+
+To streamline writing conventional commit messages, integrate **Commitizen** with Commitlint. This allows you to use an interactive CLI to generate commit messages that adhere to the conventional commit standard.
+
+Install Commitizen and the conventional changelog adapter:
+
+```sh
+npm install -D commitizen cz-conventional-changelog
+```
+
+Configure Commitizen by adding the following to your `package.json`:
+
+```json title="package.json"
+"config": {
+  "commitizen": {
+    "path": "cz-conventional-changelog"
+  }
+}
+```
+
+Next, configure Commitlint to enforce the conventional commit format. Create a `commitlint.config.js` file in the root of your project:
+
+```js title="commitlint.config.js"
+export default {
+  extends: ['@commitlint/config-conventional'],
+  rules: {
+    'type-enum': [
+      2,
+      'always',
+      [
+        'feat',
+        'fix',
+        'docs',
+        'style',
+        'refactor',
+        'perf',
+        'test',
+        'build',
+        'ci',
+        'chore',
+        'revert',
+      ],
+    ],
+    'scope-empty': [2, 'never'], // Enforces a scope like (app) or (tests)
+  },
+};
+```
+
+To integrate Commitlint with Husky, add a `commit-msg` hook. Create or edit `.husky/commit-msg`:
+
+```sh title=".husky/commit-msg"
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+npx --no -- commitlint --edit "$1"
+```
+
+You might need to make both of your scripts executable:
+
+```sh
+chmod a+x .husky/pre-commit
+chmod a+x .husky/commit-msg
+```
+
+These two Unix commands, `chmod a+x .husky/pre-commit` and `chmod a+x .husky/prepare-commit-msg`, make the specified Husky hook scripts executable for all users by adding executable permissions. This allows Git to run `pre-commit` and `prepare-commit-msg` automatically.
+
+Now, instead of using `git commit`, you can run:
+
+```sh
+git add --all
+npx cz
+```
+
+This will launch an interactive prompt like this:
+
+```sh
+$ npx cz
+cz-cli@4.3.0, cz-conventional-changelog@3.3.0
+
+? Select the type of change that you're committing: (Use arrow keys)
+❯ feat:     A new feature 
+  fix:      A bug fix 
+  docs:     Documentation only changes 
+  style:    Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
+  refactor: A code change that neither fixes a bug nor adds a feature
+  perf:     A code change that improves performance
+  test:     Adding missing tests or correcting existing tests
+```
+
+Follow the prompts to select the type, add a scope (e.g., `(app)`), and write a commit message. For example:
+
+```
+feat(app): add Commitlint with Husky integration
+```
+
+What is scope? The scope in a conventional commit (e.g., `(app)` or `(tests)`) is an optional part of the message that specifies the area of the codebase affected by the change. It provides context, making it easier to identify which module, component, or feature the commit relates to, especially in larger projects.
+
+Commitizen will format this into a conventional commit message, and Commitlint will validate it via the Husky hook. If the message doesn’t meet the rules (e.g., missing scope or invalid type), the commit will fail with an error message, prompting you to fix it.
+
+### Verify the Setup
+
+Test the setup by making a change, staging it, and running:
+
+```sh
+git add --all
+npx cz
+```
+
+Then, try committing directly with an invalid message to see Commitlint in action:
+
+```sh
+git commit -m "bad commit message"
+```
+
+You should see an error like:
+
+```
+⧺  invalid type: "bad" is not one of "feat", "fix", "docs", "style", "refactor", "perf", "test", "build", "ci", "chore", "revert"
+```
+
+With this configuration, your React Router V7 project now enforces consistent commits and automates formatting checks, keeping your codebase clean and maintainable.
+
 ## Routing
 
 ```sh
@@ -145,12 +336,21 @@ npm install -D remix-flat-routes @react-router/remix-routes-option-adapter
 ```
 
 ```ts title="app/routes.ts"
-import { flatRoutes } from "remix-flat-routes";
-import { remixRoutesOptionAdapter } from "@react-router/remix-routes-option-adapter";
+import { remixRoutesOptionAdapter } from '@react-router/remix-routes-option-adapter';
+import { flatRoutes } from 'remix-flat-routes';
 
-export default remixRoutesOptionAdapter((defineRoutes) => {
-  return flatRoutes("routes", defineRoutes, {
-    ignoredRouteFiles: ["**/.*"], // Ignore dotfiles like .DS_Store
+export default remixRoutesOptionAdapter(defineRoutes => {
+  return flatRoutes('routes', defineRoutes, {
+    ignoredRouteFiles: [
+      '**/.*', // Ignore dotfiles like .DS_Store
+      '**/*.{test,spec}.{js,jsx,ts,tsx}',
+      // This is for server-side utilities you want to colocate next to your
+      // routes without making an additional directory. If you need a route that
+      // includes "server" or "client" in the filename, use the escape brackets
+      // like: my-route.[server].tsx.
+      '**/*.server.*',
+      '**/*.client.*',
+    ],
   });
 });
 ```
@@ -215,24 +415,45 @@ afterEach(() => {
 });
 ```
 
-```ts title="vite.config.ts" {9, 12-16}
+```ts title="vite.config.ts" {9, 14-36, 38}
 import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
-export default defineConfig({
+const rootConfig = defineConfig({
   plugins: [
     tailwindcss(),
     !process.env.VITEST && reactRouter(),
     tsconfigPaths(),
   ],
+});
+
+const testConfig = defineConfig({
   test: {
-    environmentMatchGlobs: [['**/*.test.tsx', 'happy-dom']],
-    include: ['./app/**/*.{spec,test}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    setupFiles: ['app/test/setup-test-environment.ts'],
+    workspace: [
+      {
+        ...rootConfig,
+        test: { include: ['app/**/*.test.ts'], name: 'unit-tests' },
+      },
+      {
+        ...rootConfig,
+        test: { include: ['app/**/*.spec.ts'], name: 'integration-tests' },
+      },
+      {
+        ...rootConfig,
+        test: {
+          environment: 'happy-dom',
+          include: ['app/**/*.test.tsx'],
+          name: 'react-happy-dom-tests',
+          setupFiles: ['app/test/setup-test-environment.ts'],
+        },
+      },
+    ],
   },
 });
+
+export default defineConfig({ ...rootConfig, ...testConfig });
 ```
 
 ```ts title="test/react-test-utils.tsx"
@@ -253,6 +474,46 @@ export * from '@testing-library/react';
 export { customRender as render };
 export { default as userEvent } from '@testing-library/user-event';
 export { createRoutesStub } from 'react-router';
+```
+
+```tsx title="app/example.test.tsx"
+import { describe, expect, test } from 'vitest';
+
+import { render, screen } from '~/test/react-test-utils';
+
+function Greeting() {
+  return (
+    <div>
+      <h1>Hello World</h1>
+
+      <p>Some description</p>
+    </div>
+  );
+}
+
+describe('Greeting component', () => {
+  test('renders a greeting', () => {
+    render(<Greeting />);
+
+    expect(
+      screen.getByRole('heading', { name: /hello world/i }),
+    ).toBeInTheDocument();
+
+    expect(screen.getByText(/some description/i)).toBeInTheDocument();
+  });
+});
+```
+
+## Styling
+
+By default, React Router V7 comes with Tailwind V4.
+
+```sh
+npx shadcn@latest init
+```
+
+```sh
+npx shadcn@latest add card
 ```
 
 ## Internationalization
@@ -548,12 +809,328 @@ export function Welcome() {
 
 ## Database
 
+Since React Router v7 is a full-stack framework, you can use any database you want. This tutorial will use [Postgres](https://www.postgresql.org/) because it is well battle-tested, but you're going to use the [Prisma ORM](https://www.prisma.io/) to abstract away the database layer.
+
+For local development, you can use Docker to spin up a PostgreSQL 17 database independently, while running your React Router app with `npm run dev` and `npm run build` as usual. This keeps your development workflow lightweight. In production, you can either run both your app and the database with Docker, or you can connect to a serverless database like [Supabase](https://supabase.com/).
+
+To run a PostgreSQL container locally, create a minimal `docker-compose.yml` file in your project root:
+
+```yaml title="docker-compose.yml"
+version: '3.8'
+
+services:
+  db:
+    image: postgres:17-alpine
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=myapp
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:
+```
+
+This configuration:
+- Uses the `postgres:17-alpine` image for a lightweight PostgreSQL 17 instance.
+- Exposes port `5432` for local access.
+- Sets up a database named `myapp` with credentials `user`/`password`.
+- Persists data in a named volume (`postgres-data`).
+
+Start the database with:
+
+```sh
+docker-compose up -d
+```
+
+The `-d` flag runs it in detached mode, keeping it in the background. To stop it later, use:
+
+```sh
+docker-compose down
+```
+
+Your app can connect to this database using the connection string `postgresql://user:password@localhost:5432/myapp?schema=public`. You’ll configure this in the Prisma setup below.
+
 ### Prisma
+
+To interact with your database, use **Prisma**, a modern ORM for Node.js. Here’s how to set it up with a simple `UserProfile` model for both local PostgreSQL and Supabase (which also uses PostgreSQL).
+
+Install Prisma and its client:
+
+```sh
+npm install -D prisma
+npm install @prisma/client
+```
+
+Initialize Prisma:
+
+```sh
+npx prisma init
+```
+
+This creates a `prisma` directory with a `schema.prisma` file and a `.env` file. Add the `.env` file to your `.gitignore` file to avoid committing it to your repository:
+
+```sh title=".gitignore" {8}
+.DS_Store
+/node_modules/
+
+# React Router
+/.react-router/
+/build/
+
+*.env
+```
+
+Update `.env` with the local database connection string:
+
+```env title=".env"
+DATABASE_URL="postgresql://user:password@localhost:5432/myapp?schema=public"
+```
+
+Define your schema in `prisma/schema.prisma`:
+
+```prisma title="prisma/schema.prisma"
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model UserProfile {
+  id                         String   @id @default(cuid(2))
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+  email                      String   @unique
+  name                       String   @default("")
+  acceptedTermsAndConditions Boolean  @default(false)
+}
+```
+
+This schema works for both local PostgreSQL and Supabase, defining a `UserProfile` with:
+- A unique `id` using [`cuid(2)`](https://github.com/paralleldrive/cuid2).
+- `createdAt` and `updatedAt` timestamps.
+- A unique `email`, optional `name`, and `acceptedTermsAndConditions` boolean.
+
+Add Prisma scripts to `package.json`:
+
+```json title="package.json"
+"scripts": {
+  "prisma:deploy": "npx prisma migrate deploy && npx prisma generate",
+  "prisma:migrate": "npx prisma migrate dev --name",
+  "prisma:push": "npx prisma db push && npx prisma generate",
+  "prisma:reset-dev": "npm run prisma:wipe && npm run prisma:seed && npm run dev",
+  "prisma:setup": "prisma generate && prisma migrate deploy && prisma db push",
+  "prisma:studio": "npx prisma studio",
+  "prisma:wipe": "npx prisma migrate reset --force && npx prisma db push",
+}
+```
+
+- `"prisma:deploy"`: Applies pending Prisma migrations to the database and generates the Prisma Client.
+- `"prisma:migrate"`: Creates a new migration based on changes in the Prisma schema and applies it to the development database, requiring a name for the migration.
+- `"prisma:push"`: Synchronizes the database schema with the Prisma schema without creating migration files and generates the Prisma Client.
+- `"prisma:reset-dev"`: Wipes the database, seeds it with initial data, and starts the development server.
+- `"prisma:setup"`: Generates the Prisma Client, applies migrations, and syncs the database schema with the Prisma schema.
+- `"prisma:studio"`: Launches the Prisma Studio interface for visually managing the database.
+- `"prisma:wipe"`: Resets the database by dropping all data and reapplying migrations, then syncs the schema with Prisma.
+
+With the PostgreSQL container running and the scripts in place, apply the schema:
+
+```sh
+npm run prisma:setup
+```
+
+This creates the `UserProfile` table in your local database. For Supabase, you can run the same command in production after updating `DATABASE_URL`, or use Supabase’s dashboard to apply migrations.
+
+Set up a Prisma client:
+
+```ts title="app/utils/database.server.ts"
+import { PrismaClient } from '@prisma/client';
+
+let prisma: PrismaClient;
+
+declare global {
+  // eslint-disable-next-line no-var
+  var __database__: PrismaClient;
+}
+
+// This is needed because in development we don't want to restart
+// the server with every change, but we want to make sure we don't
+// create a new connection to the DB with every change either.
+// In production we'll have a single connection to the DB.
+if (process.env.NODE_ENV === 'production') {
+  prisma = new PrismaClient();
+} else {
+  if (!globalThis.__database__) {
+    globalThis.__database__ = new PrismaClient();
+  }
+  prisma = globalThis.__database__;
+  void prisma.$connect();
+}
+
+export { prisma };
+```
+
+Use it in your app, like this:
+
+```ts
+import db from '~/utils/database.server';
+
+await db.userProfile.create({
+  data: {
+    email: 'user@example.com',
+    name: 'Jane Doe',
+    acceptedTermsAndConditions: true,
+  },
+});
+```
+
+With Prisma configured, your React Router V7 app is now connected to your PostgreSQL database.
+
+Now, run your app locally with:
+
+```sh
+npm run dev
+```
+
+If you want to run both your app and a PostgreSQL 17 database in production using Docker, your current Dockerfile already builds a container for your React Router V7 app. To include the database, you’ll need to manage multiple containers, and Docker Compose is the ideal tool to orchestrate both your app (using the existing Dockerfile) and a PostgreSQL service.
+
+Simply add the following to your `docker-compose.yml` file:
+
+```yml
+services
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/myapp?schema=public
+    depends_on:
+      - db
+  db:
+    # ... same as before
+```
+
+Now running `docker-compose up -d` will start both your app and the database.
 
 ### Facades
 
+It’s smart to introduce a layer of abstraction between your database logic and the rest of your app. That’s where facades come in - a design pattern that wraps a complex subsystem (like database operations) behind a clean, simplified interface tailored to your app’s needs.
+
+Let’s set up a facade for our `UserProfile` model. Create a file at `app/routes/user-profiles+/user-profiles-model.ts` to house all the database interactions related to user profiles.
+
+<details>
+<summary>What does the `+` suffix do?</summary>
+
+In `remix-flat-routes`, the `+` suffix on a folder (e.g., `user-profiles+`) tells the routing system to treat the files inside as [flat-files](https://reactrouter.com/how-to/file-route-conventions) at the parent level, flattening the folder name into a dot-separated path rather than a nested URL segment. For example, `routes/user-profiles+/_index.tsx` maps to `/user-profiles` as if it were `routes/user-profiles._index.tsx`, and `routes/user-profiles+/detail.tsx` maps to `/user-profiles/detail` like `routes/user-profiles.detail.tsx`. This allows you to organize routes in folders while emulating the flat-files convention (dot-separated paths), avoiding extra URL slashes from folder nesting, all while supporting colocation of related files like utilities or layouts within the folder.
+</details>
+
+```ts title="app/features/user-profiles+/user-profiles-model.ts"
+import type { UserProfile } from '@prisma/client';
+
+import { prisma } from '~/utils/database.server';
+
+export async function retrieveUserProfileFromDatabaseByEmail(
+  email: UserProfile['email'],
+) {
+  return await prisma.userProfile.findUnique({ where: { email } });
+}
+
+export async function retrieveAllUserProfilesFromDatabase() {
+  return await prisma.userProfile.findMany();
+}
+```
+
+Now, whenever you need to fetch a user by email or grab all user profiles, you can call these functions instead of writing raw Prisma queries throughout your app. For example, in a loader or action:
+
+```ts
+import { retrieveAllUserProfilesFromDatabase } from './user-profiles-model';
+
+const users = await retrieveAllUserProfilesFromDatabase();
+```
+
+So, why bother with facades? They bring a handful of compelling benefits to the table:
+
+- **Vendor Flexibility**: Facades act as a buffer between your app and the underlying database technology. Imagine you decide to swap PostgreSQL for SQLite or migrate from a local setup to a serverless provider like Supabase. Without a facade, you’d be rewriting Prisma calls scattered across your codebase. With a facade, you only tweak the logic inside `user-profiles-model.ts` - say, updating it to hit a new API or ORM - and the rest of your app can stay the same.
+- **Code Simplicity**: By encapsulating database queries into focused, app-specific functions, facades cut down on repetitive boilerplate. Instead of wrestling with Prisma’s full API every time you need data, you get a streamlined interface designed for your use cases.
+- **Readability and Intent**: Facades let you name functions in a way that reflects your app’s domain, making the code self-documenting. Compare `await prisma.userProfile.findMany()` to `await retrieveAllUserProfilesFromDatabase()` - the latter instantly tells you what’s happening without needing to decode the query.
+
 ## Playwright
+
+```sh
+$ npm init playwright@latest
+
+> npx
+> create-playwright
+
+Getting started with writing end-to-end tests with Playwright:
+Initializing project in '.'
+✔ Where to put your end-to-end tests? · playwright
+✔ Add a GitHub Actions workflow? (y/N) · false
+✔ Install Playwright browsers (can be done manually via 'npx playwright install')? (Y/n) · true
+```
+
+If this is your first time with Playwright, you might want to check the `test-examples/` folder, which is auto generated for you when you run the initialization command. Then delete it.
+
+Modify the `use` key to listen for your app's port on 5173, and the `webServer` key in your `playwright.config.ts` file to point to your app:
+
+```ts title="playwright.config.ts"
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  // ...
+  use: {
+    baseURL: process.env.BASE_URL ?? 'http://localhost:5173',
+    trace: process.env.CI ? 'on-first-retry' : 'retain-on-failure',
+  },
+  // ...
+  webServer: {
+    command: process.env.CI ? 'npm run build && npm run start' : 'npm run dev',
+  },
+});
+```
+
+```json title="package.json"
+"scripts": {
+  // ...
+  "test:e2e": "npx playwright test",
+  "test:e2e:ui": "npx playwright test --ui",
+}
+```
+
+```ts title="playwright/example.spec.ts"
+import { expect, test } from '@playwright/test';
+
+test.describe('landing page', () => {
+  test('given visiting the landing page: shows a greeting', async ({
+    page,
+  }) => {
+    await page.goto('/');
+
+    await expect(page.getByText('Hello')).toBeVisible();
+  });
+});
+```
 
 ## GitHub Actions
 
+```
+# https://docs.github.com/en/actions/learn-github-actions/variables
+env:
+  HUSKY: 0
+```
 
+
+
+---
+
+```sh
+npm install @supabase/ssr @supabase/supabase-js
+```
