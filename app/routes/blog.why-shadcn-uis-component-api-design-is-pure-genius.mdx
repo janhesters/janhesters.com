@@ -1,0 +1,947 @@
+---
+title: "Why Shadcn/UI's Component API Design Is Pure Genius"
+datePublished: '2025-04-26'
+description: ""
+thumbnailUrl: 'https://i.magecdn.com/ada680/c7d1f2_what_is_redux_yt_thumbnail_v1?f=webp,q.25,p.f,l.f'
+isDraft: true
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+In this video, you're going to learn why Shadcn/UI's component API design is genius and how you can use it to create your own component abstractions.
+
+To understand why Shadcn's way of abstracting component APIs is so good, you first need to understand how most developers do it wrong.
+
+### The “Wrong” Component Abstractions
+
+Let's say you get the assignment to create a component library for your team. And you have to start with an input, which your team decides should be controlled.
+
+So you create it like this:
+
+```tsx title="components/input.tsx"
+import type { ChangeEventHandler } from 'react';
+
+type InputProps = {
+  value: string;
+  onChange: ChangeEventHandler<HTMLInputElement>;
+};
+
+export const Input = ({ value, onChange }: InputProps) =>  (
+  <input
+    value={value}
+    onChange={onChange}
+    className="rounded-md border-2 border-gray-300 p-2"
+  />
+);
+```
+
+Now, a coworker has a use case where they need to use the component's `onBlur` event. Easy enough, you add it to the component:
+
+```tsx title="components/input.tsx" {1, 6, 9, 13}
+import type { ChangeEventHandler, FocusEventHandler } from 'react';
+
+type InputProps = {
+  value: string;
+  onChange: ChangeEventHandler<HTMLInputElement>;
+  onBlur: FocusEventHandler<HTMLInputElement>;
+};
+
+export const Input = ({ value, onChange, onBlur }: InputProps) =>  (
+  <input
+    value={value}
+    onChange={onChange}
+    onBlur={onBlur}
+    className="rounded-md border-2 border-gray-300 p-2"
+  />
+);
+```
+
+Another coworker points out that the input is very often used with a label. So you first create the label component.
+
+```tsx title="components/label.tsx"
+import type { ReactNode } from 'react';
+
+export type LabelProps = {
+  children: ReactNode;
+};
+
+export const Label = ({ children }: { children: ReactNode }) => (
+  <label className="text-sm font-medium text-gray-700">{children}</label>
+);
+```
+
+Now, you have to update the input component to use the label component's props as an optional prop.
+
+```tsx title="components/input.tsx" {1,8,14,17-20}
+import type { ChangeEventHandler, FocusEventHandler, ReactNode } from 'react';
+
+import type { LabelProps } from './label';
+import { Label } from './label';
+
+type InputProps = {
+  value: string;
+  onChange: ChangeEventHandler<HTMLInputElement>;
+  onBlur: FocusEventHandler<HTMLInputElement>;
+  label?: LabelProps;
+};
+
+export const Input = ({ value, onChange, onBlur, label }: InputProps) => (
+  <div className="flex flex-col gap-1">
+    {label && (
+      <Label {...label} />
+    )}
+    <input
+      value={value}
+      onChange={onChange}
+      onBlur={onBlur}
+      className="rounded-md border-2 border-gray-300 p-2"
+    />
+  </div>
+);
+```
+
+Now a coworker comes to you and says, he needs the label to be below the input. He also needs to customize the class name, disable the input and so on and so on. I'm sure by now you can see the problem already ...
+
+**Every new requirement change leads to a change in the component's API.**
+
+### How Shadcn/UI Solves This
+
+So how does Shadcn/UI solve this?
+
+**Shadcn/UI breaks each element into a primitive that you compose yourself.**
+
+In other words, they simply abstract away one tag at a time which gives you the flexibility to compose them however you want.
+
+Here is how the Shadcn/UI Input component looks like:
+
+```tsx title="components/input.tsx"
+import type { ComponentProps } from 'react';
+
+import { cn } from '~/lib/utils';
+
+const inputBaseClass =
+  'file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm';
+const inputFocusClass =
+  'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]';
+const inputErrorClass =
+  'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive';
+const inputClassName = cn(inputBaseClass, inputFocusClass, inputErrorClass);
+
+function Input({ className, type, ...props }: ComponentProps<'input'>) {
+  return (
+    <input
+      type={type}
+      data-slot="input"
+      className={cn(inputClassName, className)}
+      {...props}
+    />
+  );
+}
+
+export { Input, inputClassName };
+```
+
+The first thing I want to point out for you here, is that the `Input` component uses `ComponentProps` from React. This is a type that is used to describe the props of a component. It is a union of all the props that the component can receive. You can call it with a string argument for all the native HTML tags, or pass to it a custom component of yours. The `ComponentProps` type helper will extract all the prop types from the component and make them available to you.
+
+There is more to learn here, but let's also look at the Label component.
+
+```tsx title="components/label.tsx"
+import * as LabelPrimitive from '@radix-ui/react-label';
+import type { ComponentProps } from 'react';
+
+import { cn } from '~/lib/utils';
+
+function Label({
+  className,
+  ...props
+}: ComponentProps<typeof LabelPrimitive.Root>) {
+  return (
+    <LabelPrimitive.Root
+      data-slot="label"
+      className={cn(
+        'flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50',
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+export { Label };
+```
+
+It also uses `ComponentProps` from React to give you full flexibility.
+
+Now you can compose them however you want. Want the label to be below the input? No problem.
+
+```tsx title="app.tsx"
+import { useState } from 'react';
+
+import { Input } from '~/components/ui/input';
+import { Label } from '~/components/ui/label';
+
+export default function Test() {
+  const [value, setValue] = useState('');
+
+  return (
+    <div>
+      <Label htmlFor="myInput">Test</Label>
+      <Input
+        id="myInput"
+        value={value}
+        onChange={event => setValue(event.currentTarget.value)}
+      />
+    </div>
+  );
+}
+```
+
+Want to add `onBlur`, make the component uncontrolled and use another input as a file input? That's also possible.
+
+```tsx title="app.tsx"
+import { Input } from '~/components/ui/input';
+import { Label } from '~/components/ui/label';
+
+export default function Test() {
+  return (
+    <div>
+      <Label htmlFor="myInput">Test</Label>
+      <Input
+        id="myInput"
+        onBlur={() => {
+          console.log('blurred!');
+        }}
+        type="file"
+      />
+    </div>
+  );
+}
+```
+
+#### Understanding the `cn` Helper Function
+
+Shadcn/UI uses a small utility called `cn`, which stands for class-name, to merge and dedupe Tailwind CSS class strings:
+
+```tsx title="lib/utils.ts"
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+```
+
+`clsx` concatenates a mix of strings, arrays, and objects into a space-separated class list, which skips `null`, `undefined`, and `false`. 
+
+`twMerge` intelligently removes redundant or conflicting Tailwind utility classes, so your final class string is minimal and predictable (e.g., `"p-4 p-2"` → `"p-2"`).
+
+##### `cn` Helper Function Example
+
+Here's a more complex example demonstrating clearly how `cn` simplifies conditional and conflicting classnames:
+
+```tsx
+cn(
+  'p-4 bg-red-500 text-white',
+  ['bg-blue-500', false && 'text-black', 'hover:bg-blue-700'],
+  { 'opacity-50': true, 'cursor-not-allowed': false },
+  undefined,
+  null && 'font-bold', // never applied
+  'p-2', // conflicts with earlier 'p-4'
+  'font-bold',
+);
+```
+
+- **Strings & Arrays**: Combines `'p-4 bg-red-500 text-white'` with `'bg-blue-500'` and `'hover:bg-blue-700'`.
+- **Conditional Classes**: `{ 'opacity-50': true, 'cursor-not-allowed': false }` only applies `'opacity-50'`.
+- **Ignored Values**: Skips `false`, `undefined`, and `null`. You can combine them with the operand selector operator `&&` to conditionally apply classes.
+- **Conflict Resolution**: Resolves the conflict between `'p-4'` and `'p-2'`, resulting in only the last applied padding class (`'p-2'`). **This is what allows you to selectively override the default class names from Shadcn/UI.**
+
+The final output after processing would be:
+
+```html
+'p-2 bg-blue-500 text-white hover:bg-blue-700 opacity-50 font-bold'
+```
+
+Thus, the `cn` utility keeps your classes concise, organized, and conflict-free, regardless of complexity.
+
+#### Why Shadcn/UI Uses `data-slot`
+
+By adding `data-slot` to each primitive, Shadcn/UI takes full advantage of Tailwind CSS v4's attribute selectors and container queries:
+
+1. **Named Slots**: Each primitive (e.g. `Input`, `Label`, `CardHeader`) gets a stable `data-slot="…"`.
+2. **Attribute-Based Styling**: Tailwind can target these slots:  
+     ```css
+     [data-slot=card-header]:bg-gray-50
+     ```
+3. **Container Queries**: Change layouts based on slot presence or container size:  
+     ```css
+     @container/card-header {
+       grid-template-columns: 1fr auto;
+     }
+     ```
+4. **Conditional Variants**: Automatically adjust when certain slots render:  
+     ```css
+     has-[data-slot=card-action]:grid-cols-[1fr_auto]
+     ```
+5. **Zero Extra Markup**: No wrapper components or context needed - your styling hooks live right in the markup.
+
+### A Real World Example
+
+Now, I also want to show you a real world example, which is pretty long, so strap in.
+
+At my company ReactSquad, we help to build dozens of SaaS products. Most of them need a pricing page with various layouts.
+
+Usually, the pricing pages would be implemented to the exact use case of our client. For example, one pricing page looked like this:
+
+```tsx title="pricing.tsx"
+import { Link } from '@remix-run/react';
+import { CheckIcon } from 'lucide-react';
+
+import { Badge } from '~/components/ui/badge';
+import { Button, buttonVariants } from '~/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '~/components/ui/card';
+import { cn } from '~/utils/shadcn-ui';
+
+import { useTranslation } from '../localization/use-translation';
+
+export type TierCardComponentProps = {
+  /** The CTA button can either be a link, or a submit button in a form. */
+  action: 'href' | 'intent';
+  /**
+   * The href path to navigate to for links, or the value of the intent for
+   * forms.
+   */
+  actionValue: string;
+  className?: string;
+  cta: string;
+  description: string;
+  features: string[];
+  mostPopular?: boolean;
+  name: string;
+  price: string;
+  priceSuffix?: string;
+};
+
+function TierCardComponent({
+  action,
+  actionValue,
+  className,
+  cta,
+  description,
+  features,
+  mostPopular = false,
+  name,
+  price,
+  priceSuffix,
+}: TierCardComponentProps) {
+  const { t } = useTranslation('pricing');
+
+  return (
+    <Card
+      className={cn(
+        'w-full',
+        mostPopular && 'ring-2 ring-primary dark:bg-border/50',
+        className,
+      )}
+    >
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle
+            className={cn(
+              'text-lg font-semibold',
+              mostPopular && 'text-primary',
+            )}
+          >
+            {name}
+          </CardTitle>
+
+          {mostPopular && (
+            <Badge
+              className="rounded-full border-primary bg-primary/10 text-primary dark:border-transparent dark:bg-primary dark:text-primary-foreground"
+              variant="outline"
+            >
+              {t('most-popular')}
+            </Badge>
+          )}
+        </div>
+
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+
+      <CardContent className="space-y-6">
+        <p className="flex items-baseline gap-x-1">
+          <span className="text-4xl font-bold tracking-tight">{price}</span>
+
+          {priceSuffix && (
+            <span className="text-sm font-semibold text-muted-foreground">
+              {priceSuffix}
+            </span>
+          )}
+        </p>
+
+        {action === 'href' ? (
+          <Link className={cn(buttonVariants(), 'w-full')} to={actionValue}>
+            {cta}
+          </Link>
+        ) : (
+          <form method="post">
+            <Button className="w-full" name="intent" value={actionValue}>
+              {cta}
+            </Button>
+          </form>
+        )}
+
+        <ul className="space-y-3">
+          {features.map(feature => (
+            <li
+              key={feature}
+              className="flex items-center gap-x-3 text-sm text-muted-foreground"
+            >
+              <CheckIcon
+                aria-hidden="true"
+                className="size-5 flex-none text-primary dark:text-foreground"
+              />
+
+              {feature}
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
+  );
+}
+
+export type PricingChartComponentProps = {
+  tiers: TierCardComponentProps[];
+};
+
+export function PricingChartComponent({ tiers }: PricingChartComponentProps) {
+  return (
+    <ul
+      className={cn(
+        'mx-auto grid max-w-md grid-cols-1 gap-8 md:max-w-2xl md:grid-cols-2 lg:max-w-4xl xl:mx-0 xl:max-w-none xl:grid-cols-3',
+        tiers.length > 3 && '2xl:grid-cols-4',
+      )}
+    >
+      {tiers.map(tier => (
+        <li className="flex" key={tier.name}>
+          <TierCardComponent
+            className={cn(tiers.length === 1 && 'xl-col-span-2 xl:col-start-2')}
+            {...tier}
+          />
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+The problem with this was that it was very rigid.
+
+Now, we decided to abstract away this pricing page using the Shadcn/UI styling primitives.
+
+```tsx title="components/ui/pricing.tsx"
+import type { ComponentProps } from 'react';
+
+import { Badge } from '~/components/ui/badge';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '~/components/ui/card';
+import { cn } from '~/lib/utils';
+
+export function TierContainer({ className, ...props }: ComponentProps<'div'>) {
+  return <div className={cn('@container/tiers', className)} {...props} />;
+}
+
+export function TierGrid({ className, ...props }: ComponentProps<'div'>) {
+  return (
+    <div
+      className={cn(
+        'grid grid-cols-1 gap-8 @xl/tiers:grid-cols-2 @4xl/tiers:grid-cols-3',
+        '*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs',
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+export function TierCard(props: ComponentProps<typeof Card>) {
+  return <Card {...props} />;
+}
+
+export function TierCardHeader({
+  className,
+  ...props
+}: ComponentProps<typeof CardHeader>) {
+  return <CardHeader className={cn('gap-3', className)} {...props} />;
+}
+
+export function TierCardTitle({
+  className,
+  ...props
+}: ComponentProps<typeof CardTitle>) {
+  return (
+    <CardTitle
+      className={cn('flex items-center justify-between', className)}
+      {...props}
+    />
+  );
+}
+
+export function TierCardPrice({
+  className,
+  ...props
+}: ComponentProps<typeof CardDescription>) {
+  return (
+    <CardDescription
+      className={cn(
+        'text-foreground flex items-end text-xl font-bold',
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+export function OfferBadge({
+  className,
+  ...props
+}: ComponentProps<typeof Badge>) {
+  return (
+    <Badge
+      className={cn('ml-auto self-center', className)}
+      variant="outline"
+      {...props}
+    />
+  );
+}
+
+export function TierCardDescription(
+  props: ComponentProps<typeof CardDescription>,
+) {
+  return <CardDescription {...props} />;
+}
+
+export function TierCardContent({
+  className,
+  ...props
+}: ComponentProps<typeof CardContent>) {
+  return (
+    <CardContent className={cn('flex flex-col gap-3', className)} {...props} />
+  );
+}
+
+export function FeaturesListTitle({
+  className,
+  ...props
+}: ComponentProps<'p'>) {
+  return <p className={cn('text-muted-foreground', className)} {...props} />;
+}
+
+export function FeaturesList({ className, ...props }: ComponentProps<'ul'>) {
+  return <ul className={cn('flex flex-col gap-2', className)} {...props} />;
+}
+
+export function FeatureListItem({ className, ...props }: ComponentProps<'li'>) {
+  return (
+    <li
+      className={cn(
+        "flex items-center [&_svg:not([class*='mr-'])]:mr-2 [&_svg:not([class*='size-'])]:size-4",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+```
+
+Now it was easy to create the pricing page.
+
+```tsx title="app/routes/pricing.tsx"
+import { CheckIcon } from 'lucide-react';
+import { useState } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
+import { href, Link } from 'react-router';
+
+import { Badge } from '~/components/ui/badge';
+import { Button } from '~/components/ui/button';
+import { Separator } from '~/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs';
+import {
+  FeatureListItem,
+  FeaturesList,
+  FeaturesListTitle,
+  OfferBadge,
+  TierCard,
+  TierCardContent,
+  TierCardDescription,
+  TierCardHeader,
+  TierCardPrice,
+  TierCardTitle,
+  TierContainer,
+  TierGrid,
+} from '~/features/billing/pricing';
+import i18next from '~/utils/i18next.server';
+
+import type { Route } from './+types/pricing';
+
+export const handle = { i18n: 'billing' };
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const t = await i18next.getFixedT(request, 'billing');
+  return { title: t('pricing-page.page-title') };
+}
+
+export const meta: Route.MetaFunction = ({ data }) => [{ title: data?.title }];
+
+export default function PricingRoute() {
+  const { t } = useTranslation('billing', { keyPrefix: 'pricing' });
+  const { t: tPage } = useTranslation('billing', { keyPrefix: 'pricing-page' });
+  const [billingPeriod, setBillingPeriod] = useState('annual');
+
+  const getFeatures = (key: string): string[] => {
+    return t(`plans.${key}.features`, { returnObjects: true }) as string[];
+  };
+
+  return (
+    <main className="mx-auto max-w-7xl px-6 py-4 lg:px-8">
+      <div className="mx-auto mb-8 max-w-2xl text-center">
+        <h1 className="text-primary">{tPage('page-title')}</h1>
+
+        <h2 className="mt-2 text-4xl font-bold sm:text-5xl">
+          {tPage('pricing-heading')}
+        </h2>
+
+        <p className="text-muted-foreground mt-6 text-lg text-pretty">
+          {tPage('page-description')}
+        </p>
+      </div>
+
+      <Tabs value={billingPeriod} onValueChange={setBillingPeriod}>
+        <div className="mb-4 flex flex-col items-center gap-3 sm:flex-row md:mb-2">
+          <TabsList>
+            <TabsTrigger value="monthly">{t('monthly')}</TabsTrigger>
+
+            <TabsTrigger value="annual">{t('annual')}</TabsTrigger>
+          </TabsList>
+
+          {billingPeriod === 'monthly' && (
+            <p className="text-primary text-sm">{t('save-annually')}</p>
+          )}
+        </div>
+
+        <TabsContent value="monthly">
+          <TierContainer>
+            <TierGrid>
+              <TierCard>
+                <TierCardHeader>
+                  <TierCardTitle>{t('plans.hobby.title')}</TierCardTitle>
+
+                  <TierCardPrice>{t('free')}</TierCardPrice>
+
+                  <TierCardDescription>
+                    {t('plans.hobby.description')}
+                  </TierCardDescription>
+
+                  <Button asChild className="w-full">
+                    <Link to={href('/register')}>{t('plans.hobby.cta')}</Link>
+                  </Button>
+                </TierCardHeader>
+
+                <Separator />
+
+                <TierCardContent>
+                  <FeaturesListTitle>
+                    {t('plans.hobby.features-title')}
+                  </FeaturesListTitle>
+
+                  <FeaturesList>
+                    {getFeatures('hobby').map(feature => (
+                      <FeatureListItem key={feature}>
+                        <CheckIcon />
+                        {feature}
+                      </FeatureListItem>
+                    ))}
+                  </FeaturesList>
+                </TierCardContent>
+              </TierCard>
+
+              <TierCard>
+                <TierCardHeader>
+                  <TierCardTitle>{t('plans.startup.title')}</TierCardTitle>
+
+                  <TierCardPrice>
+                    <Trans
+                      i18nKey="billing:pricing.price"
+                      values={{ price: '$30' }}
+                      components={{
+                        1: (
+                          <span className="text-muted-foreground text-sm font-normal" />
+                        ),
+                      }}
+                    />
+                  </TierCardPrice>
+
+                  <TierCardDescription>
+                    {t('plans.startup.description')}
+                  </TierCardDescription>
+
+                  <Button className="w-full">{t('plans.startup.cta')}</Button>
+                </TierCardHeader>
+
+                <Separator />
+
+                <TierCardContent>
+                  <FeaturesListTitle>
+                    {t('plans.startup.features-title')}
+                  </FeaturesListTitle>
+
+                  <FeaturesList>
+                    {getFeatures('startup').map(feature => (
+                      <FeatureListItem key={feature}>
+                        <CheckIcon />
+                        {feature}
+                      </FeatureListItem>
+                    ))}
+                  </FeaturesList>
+                </TierCardContent>
+              </TierCard>
+
+              <TierCard className="ring-primary ring-2">
+                <TierCardHeader>
+                  <TierCardTitle className="text-primary">
+                    {t('plans.business.title')}
+                    <Badge>{t('most-popular')}</Badge>
+                  </TierCardTitle>
+
+                  <TierCardPrice>
+                    <Trans
+                      i18nKey="billing:pricing.price"
+                      values={{ price: '$55' }}
+                      components={{
+                        1: (
+                          <span className="text-muted-foreground text-sm font-normal" />
+                        ),
+                      }}
+                    />
+                  </TierCardPrice>
+
+                  <TierCardDescription>
+                    {t('plans.business.description')}
+                  </TierCardDescription>
+
+                  <Button className="w-full">{t('plans.business.cta')}</Button>
+                </TierCardHeader>
+
+                <Separator />
+
+                <TierCardContent>
+                  <FeaturesListTitle>
+                    {t('plans.business.features-title')}
+                  </FeaturesListTitle>
+
+                  <FeaturesList>
+                    {getFeatures('business').map(feature => (
+                      <FeatureListItem key={feature}>
+                        <CheckIcon />
+                        {feature}
+                      </FeatureListItem>
+                    ))}
+                  </FeaturesList>
+                </TierCardContent>
+              </TierCard>
+            </TierGrid>
+          </TierContainer>
+        </TabsContent>
+
+        <TabsContent value="annual">
+          <TierContainer>
+            <TierGrid className="@6xl/tiers:grid-cols-4">
+              <TierCard>
+                <TierCardHeader>
+                  <TierCardTitle>{t('plans.hobby.title')}</TierCardTitle>
+
+                  <TierCardPrice>{t('free')}</TierCardPrice>
+
+                  <TierCardDescription>
+                    {t('plans.hobby.description')}
+                  </TierCardDescription>
+
+                  <Button asChild className="w-full">
+                    <Link to={href('/register')}>{t('plans.hobby.cta')}</Link>
+                  </Button>
+                </TierCardHeader>
+
+                <Separator />
+
+                <TierCardContent>
+                  <FeaturesListTitle>
+                    {t('plans.hobby.features-title')}
+                  </FeaturesListTitle>
+
+                  <FeaturesList>
+                    {getFeatures('hobby').map(feature => (
+                      <FeatureListItem key={feature}>
+                        <CheckIcon />
+                        {feature}
+                      </FeatureListItem>
+                    ))}
+                  </FeaturesList>
+                </TierCardContent>
+              </TierCard>
+
+              <TierCard>
+                <TierCardHeader>
+                  <TierCardTitle>{t('plans.startup.title')}</TierCardTitle>
+
+                  <TierCardPrice>
+                    <Trans
+                      i18nKey="billing:pricing.price"
+                      values={{ price: '$25' }}
+                      components={{
+                        1: (
+                          <span className="text-muted-foreground text-sm font-normal" />
+                        ),
+                      }}
+                    />
+
+                    <OfferBadge>-15%</OfferBadge>
+                  </TierCardPrice>
+
+                  <TierCardDescription>
+                    {t('plans.startup.description')}
+                  </TierCardDescription>
+
+                  <Button className="w-full">{t('plans.startup.cta')}</Button>
+                </TierCardHeader>
+
+                <Separator />
+
+                <TierCardContent>
+                  <FeaturesListTitle>
+                    {t('plans.startup.features-title')}
+                  </FeaturesListTitle>
+
+                  <FeaturesList>
+                    {getFeatures('startup').map(feature => (
+                      <FeatureListItem key={feature}>
+                        <CheckIcon />
+                        {feature}
+                      </FeatureListItem>
+                    ))}
+                  </FeaturesList>
+                </TierCardContent>
+              </TierCard>
+
+              <TierCard className="ring-primary -mt-1.5 ring-2">
+                <TierCardHeader>
+                  <TierCardTitle className="text-primary">
+                    {t('plans.business.title')}
+                    <Badge>{t('most-popular')}</Badge>
+                  </TierCardTitle>
+
+                  <TierCardPrice>
+                    <Trans
+                      i18nKey="billing:pricing.price"
+                      values={{ price: '$45' }}
+                      components={{
+                        1: (
+                          <span className="text-muted-foreground text-sm font-normal" />
+                        ),
+                      }}
+                    />
+
+                    <OfferBadge>-20%</OfferBadge>
+                  </TierCardPrice>
+
+                  <TierCardDescription>
+                    {t('plans.business.description')}
+                  </TierCardDescription>
+
+                  <Button className="w-full">{t('plans.business.cta')}</Button>
+                </TierCardHeader>
+
+                <Separator />
+
+                <TierCardContent>
+                  <FeaturesListTitle>
+                    {t('plans.business.features-title')}
+                  </FeaturesListTitle>
+
+                  <FeaturesList>
+                    {getFeatures('business').map(feature => (
+                      <FeatureListItem key={feature}>
+                        <CheckIcon />
+                        {feature}
+                      </FeatureListItem>
+                    ))}
+                  </FeaturesList>
+                </TierCardContent>
+              </TierCard>
+
+              <TierCard className="@4xl/tiers:col-start-2 @6xl/tiers:col-start-auto">
+                <TierCardHeader>
+                  <TierCardTitle>{t('plans.enterprise.title')}</TierCardTitle>
+
+                  <TierCardPrice>{t('custom')}</TierCardPrice>
+
+                  <TierCardDescription>
+                    {t('plans.enterprise.description')}
+                  </TierCardDescription>
+
+                  <Button asChild className="w-full">
+                    <Link to={href('/contact-sales')}>
+                      {t('plans.enterprise.cta')}
+                    </Link>
+                  </Button>
+                </TierCardHeader>
+
+                <Separator />
+
+                <TierCardContent>
+                  <FeaturesListTitle>
+                    {t('plans.enterprise.features-title')}
+                  </FeaturesListTitle>
+
+                  <FeaturesList>
+                    {getFeatures('enterprise').map(feature => (
+                      <FeatureListItem key={feature}>
+                        <CheckIcon />
+                        {feature}
+                      </FeatureListItem>
+                    ))}
+                  </FeaturesList>
+                </TierCardContent>
+              </TierCard>
+            </TierGrid>
+          </TierContainer>
+        </TabsContent>
+      </Tabs>
+    </main>
+  );
+}
+```
+
