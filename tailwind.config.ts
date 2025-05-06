@@ -71,6 +71,28 @@ export default {
         sm: 'calc(var(--radius) - 4px)',
       },
       typography: typographyStyles,
+      keyframes: {
+        shimmer: {
+          '100%': { backgroundPosition: '100% 0' },
+        },
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        'shiny-text': {
+          '0%, 90%, 100%': {
+            'background-position': 'calc(-100% - var(--shiny-width)) 0',
+          },
+          '30%, 60%': {
+            'background-position': 'calc(100% + var(--shiny-width)) 0',
+          },
+        },
+      },
+      animation: {
+        'shiny-text': 'shiny-text 8s infinite',
+        shimmer: 'shimmer 1s cubic-bezier(.6,.6,0,1) infinite',
+        'fade-in': 'fade-in 1s ease forwards',
+      },
     },
   },
 } satisfies Config;

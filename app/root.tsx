@@ -67,7 +67,7 @@ function GitHubIcon(props: ComponentProps<'svg'>) {
 
 const navLinks = [
   { to: '/blog', label: 'Blog' },
-  { to: '/work-with-jan', label: 'Work With Me' },
+  { to: '/work-with-jan', label: 'Hire Senior React Devs' },
   { to: '/about', label: 'About' },
 ];
 

@@ -99,6 +99,7 @@ export default tseslint.config(
       'simple-import-sort': simpleImportSort,
     },
     rules: {
+      '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
       'unicorn/better-regex': 'warn',
@@ -111,7 +112,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['src/**/*.test.{js,ts,jsx,tsx}'],
+    files: ['app/**/*.test.{js,ts,jsx,tsx}'],
     plugins: { vitest },
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     rules: {
@@ -229,7 +230,7 @@ Configure Commitizen by adding the following to your `package.json`:
 
 Next, configure Commitlint to enforce the conventional commit format. Create a `commitlint.config.js` file in the root of your project:
 
-```js title="commitlint.config.js"
+```js title="commitlint.config.mjs"
 export default {
   extends: ['@commitlint/config-conventional'],
   rules: {
@@ -360,7 +361,7 @@ Move the `app/routes/home.tsx` file to `app/routes/_index.tsx`.
 ## Vitest
 
 ```sh
-npm install -D vitest
+npm install -D vitest @faker-js/faker @vitest/coverage-v8
 ```
 
 ```json title="package.json"

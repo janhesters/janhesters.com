@@ -1,10 +1,14 @@
-import Cal from '@calcom/embed-react';
 import type { MetaFunction } from '@vercel/remix';
-import { ArrowRight, Code, Lightbulb, Users } from 'lucide-react';
-import type { ReactNode } from 'react';
 
 import { Button } from '~/components/button';
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '~/components/card';
+import { AnimatedShinyText } from '~/features/work-with-me/animated-shiny-text';
 import { getSocialsMeta } from '~/lib/misc';
 
 export const meta: MetaFunction = () =>
@@ -15,95 +19,94 @@ export const meta: MetaFunction = () =>
     url: 'https://www.janhesters.com/work-with-jan',
   });
 
-type ServiceItem = {
-  icon: ReactNode;
-  title: string;
-  description: string;
-  cta: string;
-  link: string;
-};
-
-const services: ServiceItem[] = [
-  {
-    icon: <Code className="size-6" />,
-    title: 'Consulting & Architecture Review',
-    description:
-      'Get expert advice on your React projects and ensure your architecture is scalable and efficient.',
-    cta: 'Book a consultation',
-    link: 'https://www.reactsquad.io/jan',
-  },
-  {
-    icon: <Lightbulb className="size-6" />,
-    title: 'Team Training',
-    description:
-      "Elevate your team's React skills with customized training programs. Available trainings are React, Next.js, Remix and Testing.",
-    cta: 'Inquire about training',
-    link: 'mailto:jan@reactsquad.io',
-  },
-  {
-    icon: <Users className="size-6" />,
-    title: 'Developer Matching',
-    description:
-      "Find the perfect senior React developers for your team through ReactSquad's matching service.",
-    cta: 'Find developers',
-    link: 'https://www.reactsquad.io/jan',
-  },
-];
-
 export default function WorkWithJan() {
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:gap-12">
-        <div>
-          <h2 className="text-3xl font-bold text-foreground">Work with Jan</h2>
-
-          <p className="mt-6 text-lg leading-7 text-muted-foreground">
-            I&apos;m available for consulting, architecture review, and to train
-            your team. Through ReactSquad, you can also hire senior developers
-            that have been trained by me.
-          </p>
-
-          <div className="mt-10 grid grid-cols-1 gap-8">
-            {services.map((service, index) => (
-              <Card key={index}>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    {service.icon}
-                    <span className="ml-3">{service.title}</span>
-                  </CardTitle>
-                </CardHeader>
-
-                <CardContent>
-                  <p className="mb-4 text-muted-foreground">
-                    {service.description}
-                  </p>
-
-                  <Button asChild>
-                    <a href={service.link}>
-                      {service.cta} <ArrowRight className="ml-2 size-4" />
-                    </a>
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+    <main className="min-h-[calc(100vh-6.5rem)] py-16">
+      <section className="relative mx-auto max-w-[80rem] px-6 text-center md:px-8">
+        <div className="animate-fade-in group inline-flex h-7 translate-y-[-1rem] items-center justify-between gap-1 rounded-full border border-white/5 bg-white/10 px-3 text-xs text-white opacity-0 backdrop-blur-[12px] transition-all ease-in hover:bg-white/20 dark:text-black">
+          <AnimatedShinyText
+            className="inline-flex items-center justify-center"
+            shimmerWidth={100}
+          >
+            ✨ For SaaS and B2B companies
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 15 15"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="ml-1 size-3 transition-transform duration-300 ease-in-out group-hover:translate-x-0.5"
+            >
+              <path
+                d="M8.14645 3.14645C8.34171 2.95118 8.65829 2.95118 8.85355 3.14645L12.8536 7.14645C13.0488 7.34171 13.0488 7.65829 12.8536 7.85355L8.85355 11.8536C8.65829 12.0488 8.34171 12.0488 8.14645 11.8536C7.95118 11.6583 7.95118 11.3417 8.14645 11.1464L11.2929 8H2.5C2.22386 8 2 7.77614 2 7.5C2 7.22386 2.22386 7 2.5 7H11.2929L8.14645 3.85355C7.95118 3.65829 7.95118 3.34171 8.14645 3.14645Z"
+                fill="currentColor"
+                fillRule="evenodd"
+                clipRule="evenodd"
+              />
+            </svg>
+          </AnimatedShinyText>
         </div>
 
-        <div>
-          <h3 className="mb-4 mt-10 text-2xl font-semibold text-foreground md:mt-0">
-            Direct Booking
-          </h3>
+        <h2 className="translate-y-[-1rem] animate-[fade-in_1s_ease_forwards] bg-gradient-to-br from-black from-30% to-black/40 bg-clip-text py-6 text-5xl font-medium leading-none tracking-tighter text-transparent opacity-0 [animation-delay:200ms] sm:text-6xl md:text-7xl lg:text-8xl dark:from-white dark:to-white/40">
+          ReactSquad is the best way
+          <br className="hidden md:block" /> to hire senior React developers.
+        </h2>
 
-          <p className="mb-6 text-muted-foreground">
-            For direct requests or to discuss your specific needs, you can book
-            a call with me using the calendar below.
-          </p>
+        <p className="animate-fade-in mb-12 translate-y-[-1rem] text-balance text-lg tracking-tight text-muted-foreground opacity-0 [--animation-delay:400ms] md:text-xl">
+          Are you struggling to find qualified software developers, dealing with
+          high development costs,
+          <br className="hidden md:block" /> and frustrated by the poor quality
+          of freelancers or outsourcing agencies?
+        </p>
+      </section>
 
-          <div className="mx-auto max-w-3xl">
-            <Cal calLink="jan-hesters/meeting-with-jan" />
-          </div>
-        </div>
-      </div>
+      <section className="mx-auto grid max-w-screen-xl grid-cols-1 gap-8 px-4 md:grid-cols-2 md:px-8">
+        <Card className="col-span-1 row-span-1 overflow-hidden border bg-[#f7cf4c] transition-all">
+          <CardHeader className="relative text-center">
+            <CardTitle className="text-3xl font-bold text-black">
+              International
+            </CardTitle>
+
+            <CardDescription className="text-balance text-xl text-black">
+              Visit ReactSquad.io to augment your team with highly vetted and
+              senior React developers within 7 days.
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="flex items-center justify-center">
+            <Button
+              className="bg-[#445dd8] hover:bg-[#445dd8]/90"
+              asChild
+              size="lg"
+            >
+              <a href="https://reactsquad.io">ReactSquad.io</a>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="col-span-1 row-span-1 overflow-hidden border bg-[#f7cf4c] transition-all">
+          <CardHeader className="relative text-center">
+            <CardTitle className="text-3xl font-bold text-black">
+              DACH-Raum
+            </CardTitle>
+
+            <CardDescription className="text-balance text-xl text-black">
+              Greife direkt auf hochqualifizierte Senior React-Entwickler zu und
+              stelle sie innerhalb von 7 Tagen ein.
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="flex items-center justify-center">
+            <Button
+              className="bg-[#445dd8] hover:bg-[#445dd8]/90"
+              asChild
+              size="lg"
+            >
+              <a href="https://reactdevs.de">ReactDevs.de</a>
+            </Button>
+          </CardContent>
+        </Card>
+      </section>
     </main>
   );
 }
