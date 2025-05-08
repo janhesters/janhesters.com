@@ -23,7 +23,7 @@ export default function WorkWithJan() {
   return (
     <main className="min-h-[calc(100vh-6.5rem)] py-16">
       <section className="relative mx-auto max-w-[80rem] px-6 text-center md:px-8">
-        <div className="animate-fade-in group inline-flex h-7 translate-y-[-1rem] items-center justify-between gap-1 rounded-full border border-white/5 bg-white/10 px-3 text-xs text-white opacity-0 backdrop-blur-[12px] transition-all ease-in hover:bg-white/20 dark:text-black">
+        <div className="group inline-flex h-7 translate-y-[-1rem] animate-fade-in items-center justify-between gap-1 rounded-full border border-white/5 bg-white/10 px-3 text-xs text-white opacity-0 backdrop-blur-[12px] transition-all ease-in hover:bg-white/20 dark:text-black">
           <AnimatedShinyText
             className="inline-flex items-center justify-center"
             shimmerWidth={100}
@@ -52,7 +52,7 @@ export default function WorkWithJan() {
           <br className="hidden md:block" /> to hire senior React developers.
         </h2>
 
-        <p className="animate-fade-in mb-12 translate-y-[-1rem] text-balance text-lg tracking-tight text-muted-foreground opacity-0 [--animation-delay:400ms] md:text-xl">
+        <p className="mb-12 translate-y-[-1rem] animate-fade-in text-balance text-lg tracking-tight text-muted-foreground opacity-0 [--animation-delay:400ms] md:text-xl">
           Are you struggling to find qualified software developers, dealing with
           high development costs,
           <br className="hidden md:block" /> and frustrated by the poor quality
