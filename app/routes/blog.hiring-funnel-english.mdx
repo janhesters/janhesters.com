@@ -1,0 +1,246 @@
+---
+title: "The Ultimate Hiring Funnel For Senior Fullstack React Developers"
+datePublished: '2019-06-26'
+description: 'Execute queries and mutations by using the correct execution policy and polyfills.'
+thumbnailUrl: ''
+isDraft: true
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+
+Most companies make mistakes in their hiring process. These mistakes cost you money, time, and cause you to miss out on the best candidates.
+
+In this guide, you’ll learn how to find the top 1% of senior full-stack React developers and hire them for your company.
+
+The methods and lessons you’ll learn here I painstakingly gathered over more than 1,000 interviews with developers. You can skip ahead and build your hiring process immediately based on these nuggets.
+
+In March 2021 alone, I interviewed over 100 developers. How did that come about?
+
+### Hard-Learned Lessons
+
+I was the seventh employee and first React developer at [Hopin](https://en.wikipedia.org/wiki/Hopin_(company)). Hopin was a platform for virtual events between 2020 and 2023. Thanks to the pandemic, Hopin was at one point valued at over \$7.7 billion and had more than 1,000 employees.
+
+The pandemic forced all major event venues to close. Organizers had to move to the digital world-and Hopin hit the market at precisely the right time.
+
+We began developing the React app in January; the lockdowns started in February, and by the end of March we had over 50,000 inbound leads on the waitlist. We barely managed to launch the app on time at the end of March.
+
+But over the next two years, demand continued to soar. Hopin received hundreds of millions in funding, and the list of feature ideas - driven by customer questions - grew longer and longer. That’s why Hopin entered “hyper-growth” mode and started hiring dozens of developers every month.
+
+Among other things, I was responsible for designing and running this interview process.
+
+In that process, we got a lot right - some candidates (and later colleagues) were incredible. I learned so much from working with them.
+
+But when you interview as many candidates as we did during that period, you also make a lot of mistakes. And some developers who clearly didn’t fit slipped through. Either their coding skills weren’t sufficient, or their mindset was off and they never reached their potential at the company.
+
+After Hopin was sold in 2023 and I left the company, my co-founder Nikolas Chapoupis and I founded [ReactSquad](https://reactdevs.de). Our goal was to build exactly the company Hopin needed during its hyper-growth phase.
+
+What Hopin needed more than anything was a reliable source for hiring top developers quickly.
+
+ReactSquad uses a hiring process based on these lessons. It copies what worked - and fixes the mistakes we made. I can proudly say it’s, in my opinion, the most reliable hiring process for senior full-stack React developers I’ve ever seen.
+
+And now you can copy this process for your company.
+
+### The 4 Areas of the Hiring Funnel
+
+First, you need a “bird’s-eye view” of the hiring process.
+
+There are four areas that determine your outcome:
+
+1.  **What you offer:** salary, vacation days, flexible hours - whatever makes you attractive as an employer.  
+2.  **What you seek:** technical skills, relevant experience, the right mindset - everything that must fit into your team.  
+3.  **Where you look:** on job platforms, at industry events, or even the old-school way with newspaper ads.  
+4.  **How you filter:** with AI-powered tools, manual checks, and clear steps in your screening process.
+
+### 1. What You Offer
+
+The first mistake companies make is keeping their hiring process opaque.
+
+Put yourself in the shoes of a top developer. You’re in high demand. Recruiters call you every week with new jobs. Your LinkedIn inbox is flooded with DMs asking if you’re available.
+
+If you want to hire a top developer, you must clearly show what your company offers. The first contact a candidate will have with what to expect in their role is usually your job posting.
+
+Every relationship involves giving and taking.
+
+Let’s first look at what you give the candidate, and what they take.
+
+You should be crystal clear: what does the candidate get in terms of compensation & benefits?
+
+* **Salary range** - communicated transparently, with room to negotiate based on experience and role. This may feel painful because it can cause friction internally, but the truth is the best German developers often demand six-figure salaries. If they don’t see you offering that, they won’t apply.  
+* **Remote / hybrid hours** - flexible according to team structure and individual preference. Besides saving commuters’ time, a remote-friendly policy gives you access to a much larger talent pool.  
+* **Vacation days** - above the legal minimum so real rest is possible. Burned-out employees deliver only about 70% of their potential.  
+* **Flexible working hours** - flextime, trust-based hours, or individual agreements-whatever works for both sides.  
+* **Health insurance & other coverage** - can you help candidates choose and cover part of the premiums?  
+* **Office perks** - snacks, ping-pong tables, and other amenities that make the office a place you actually want to be. Especially attractive to younger candidates without families.  
+* **Equipment allowance** - a craftsman needs his hammer, a developer needs their computer. Ensure they get everything they need-both technically and logistically (laptop, desk, transit passes, etc.).  
+* **Mentorship** - personal growth through experienced colleagues and regular sparring sessions. Mentorship that creates a sense of secured growth can dramatically improve retention.  
+* **Career paths** - clear development tracks and internal career transitions. One main reason people change jobs is for more money or new challenges-if you can offer those, you win.  
+* **Training budget** - for courses, conferences, and anything that sharpens your team’s skills. In the end, the company benefits when developers improve.
+
+### 2. What You Seek
+
+Once you’ve made clear what you offer, you must define exactly what you’re looking for. To build a strong, innovative team, companies should look for these qualities:
+
+* **Technological expertise:** Developers who are experts in your stack. Expect deep specialization in your domain. They should understand the architecture of similar software projects so they can onboard quickly.  
+* **Proven problem-solving ability:** Demonstrated by building production applications that scale reliably under high load and large user bases.  
+* **High agency:** Initiative, decision-making, and proactive action. A good developer takes ownership-solving problems with know-how, creative resource use, and responsibility, without constant direction.  
+* **Hungry learners:** Someone who loves to learn and research new technologies-essential for tackling novel challenges.  
+* **Confidence with humility:** Developers should own their mistakes and stay humble, yet be confident enough to tackle challenges independently.  
+* **Strong communicators:** Able to explain complex tech issues clearly to both fellow developers and non-tech stakeholders.  
+* **Bonus:** Public evidence of mentoring, writing articles or courses, speaking at conferences, or contributing to open-source-signals exceptional engagement.
+
+Besides benefits, transparency about the role is equally crucial in your job posting:
+
+* **Company & team intro:** Brief overview (industry, founding year, location), mission, vision, values, and team info (size, reporting line, working style).  
+* **Specific responsibilities:** Detailed list of daily tasks vs. project work, planned features, cross-department interfaces, and success criteria (KPIs/OKRs).  
+* **Requirements & qualifications:**  
+  * **Hard skills:** Years of experience, specific languages/tools, certifications.  
+  * **Soft skills:** Communication, teamwork, self-organization, problem-solving.  
+  * **Nice-to-have:** Extra skills (mobile dev, foreign languages).  
+* **Tech stack:** Core languages, frameworks, libraries, Git model, infrastructure & collaboration tools (CI/CD, containers, cloud, monitoring, Confluence/Notion).  
+* **Application process:** Steps, expected timelines.  
+* **Contact & documents:** Hiring manager’s name/contact, required materials (references, portfolio), deadlines or rolling basis note.  
+* **Legal & privacy notice:** Equal opportunity statement (AGG) and data handling info.
+
+This builds trust and helps candidates prepare optimally.
+
+### 3. Where You Look
+
+Top talent often isn’t found on the obvious channels. Use a broad range of avenues. Think carefully where your target audience spends time and how to reach them.
+
+* **Referrals:** A well-maintained network remains the most effective source. Developers recommend only peers they trust. Build an employee referral program to incentivize your team and strengthen your employer brand. Include alumni networks - stay in touch with former employees if you parted on good terms.  
+* **Industry events:** Conferences, meetups, hackathons are ideal for meeting candidates in their element. Give a talk or workshop - or have a top team member do so - and use breaks for casual chats. You can also sponsor a meetup to gain insights into working styles and build trust.  
+* **LinkedIn:** More than a digital resume - use targeted posts, articles, and company updates to build reach. Use LinkedIn Recruiter to contact passive candidates and keep your company page fresh. Engage in relevant groups to position yourself as a thought leader.  
+* **Job boards:** Large portals give volume but with high noise. Craft precise ads with clear value propositions: what makes your culture unique? List benefits and process transparency. Combine general sites (StepStone, Indeed) with niche boards (Stack Overflow Jobs, GitHub Careers) to target tech talent.  
+* **Newspaper ads:** Diminished impact in the digital age-use only for hyper-local niches.  
+* **Social media:** Instagram, Facebook, TikTok require creative content and video skills. Partner with an agency or in-house marketing to produce short videos, employee interviews, or behind-the-scenes. Run targeted campaigns by skill or interest to reach relevant audiences.  
+* **Open-source communities:** Contribute on GitHub or GitLab, sponsor projects, or provide infrastructure. Open-source contributors demonstrate expertise, teamwork, and passion.  
+* **Forums & Slack groups:** Stack Overflow, Reddit (e.g. r/developerde), specialized Slack/Discord channels. Participate in discussions, answer questions, and naturally attract interest.
+
+### 4. How You Filter
+
+A large applicant pool is only valuable if you can effectively filter for the right candidates. This requires a clear, multi-stage screening process. AI tools can help with initial triage but sometimes filter out your best talent.
+
+Manual checks and well-structured interviews remain indispensable. The following sections will detail how such a filtering process can look and which mistakes to avoid.
+
+#### Common Hiring Mistakes - and How to Avoid Them
+
+Beyond opaque benefits and process, there are other cardinal mistakes that lead to poor hires or scare off top candidates.
+
+A key problem is **flawed assessment methods** sending the wrong signals.
+
+You should **never hire a developer without observing them code.** Interviewers without coding expertise can’t properly assess candidates either during the interview or later on the job.
+
+Instead, run **pair-programming sessions** during which interviewers work with candidates on real challenges. Preselect tasks representative of your daily work. These sessions should happen **on actual computers**, ideally via video call, to avoid travel costs before a shortlist is made. Whiteboard exercises have no place here.
+
+It’s crucial to have **candidates solve real-world problems.** Asking them to code on a whiteboard makes your company look outdated and ignorant of modern dev practices.
+
+Likewise, pure algorithm puzzles from computer science courses are counterproductive. They suggest the interviewer just left university and doesn’t grasp real-world challenges. While fundamental data-structure knowledge is valuable, rote whiteboard practice is unnecessary-search engines exist for that. **Often, fresh grads with no production experience ace these theoretical interviews**, precisely the outcome you want to avoid.
+
+### The ReactSquad Excellence System: A Unicorn-Proven Excellence Formula
+
+This tested hyper-growth strategy is designed to build world-class dev teams for high-performance remote tech environments. The **7 + 1 steps of the Excellence Formula** embody the lessons above and aim to avoid past mistakes while amplifying success factors.
+
+#### Step 1: CV & Cover Letter
+
+The process begins with a **thorough review of submitted materials**, filtering for **tech fit, experience fit, and basic communication skills.** Check whether the candidate is familiar with your technologies. With clear SOPs (standard operating procedures), you can even delegate this step.
+
+A checklist can guide you:
+
+* **Required:**  
+  * [x] At least 5 years of professional experience  
+  * [x] 4+ years with JavaScript  
+  * [x] 2+ years with React  
+  * [x] 1+ year with Next.js, Remix, or React Router  
+  * [x] Solid TypeScript and Redux knowledge  
+  * [x] At least 2 continuous years at a single company  
+  * [x] No overlapping jobs on resume or LinkedIn  
+* **Optional:**  
+  * [x] Testing-framework experience  
+  * [x] Remote and agile environment experience  
+
+Strong candidates **show** rather than tell. They highlight achievements and back them up with links to GitHub repos, portfolios, apps, conference talks, blogs, or publications. Designers might link to Behance or Dribbble. The best resumes concisely summarize successes and supply proof.
+
+Watch out for red flags like unusually short stints at past employers-address these later if the candidate doesn’t volunteer an explanation. A brief Loom video as part of the application can already showcase communication skills.
+
+#### Step 2: Loom Video Context
+
+Next, ask candidates to present their resume in a Loom (or similar) video, providing context. This evaluates communication skills and gives deeper insight into the bullet points on their resume-observing how they talk about their experiences. The Loom can be submitted alongside other materials.
+
+#### Step 3: Top-Grading & Reference Checks
+
+Then comes top-grading and reference checks. Contact some of the candidate’s references and past employers to gather insights:
+
+1. **Get consent** - always obtain explicit permission (written or verbal) before contacting references.  
+2. **Select references** - ask for three to five professional contacts (former managers, colleagues, clients) who know the candidate’s work well.  
+3. **Focus questions** - cover strengths/weaknesses, team and leadership behavior, honesty/integrity, and reasons for leaving.  
+4. **Document & compare** - systematically record responses and compare them to the candidate’s claims. Discrepancies or strong endorsements highlight areas to probe further.
+
+Reference checks confirm resume and video claims, uncover hidden issues, and prevent costly mistakes. Former employers reveal teamwork, culture fit, or red flags like unprofessional behavior. Multiple references paint a clear picture of initiative and collaboration.
+
+#### Step 4: Take-Home Exercise
+
+This step tests independent thinking and technical expertise. The exercise should be an **isolated, meaningful problem or ticket** from your actual codebase, requiring candidates to identify edge cases and think through them. If it takes significant time, compensate fairly so candidates invest their time confidently.
+
+For example, ask them to implement a free trial feature in your product, handling end-of-trial and tier-switch edge cases. Collaborate with your developers to design a relevant take-home task.
+
+#### Step 5: Live-Coding Challenge
+
+A live-coding session directly verifies technical skills. The problem should be simple enough not to trick candidates - it’s a cooperative evaluation, not a contest.
+
+The goal is to **confirm they can code and observe how they code.** Do this via pair programming over video. Allow realistic conditions, including the use of LLMs (e.g. ChatGPT) and search. Forcing manual solutions is unhelpful - professionals use tools daily.
+
+Design the challenge to finish in 60 minutes. Provide a CodeSandbox with unit tests and ask them to get it running. At the end, run and review the code. Different solutions often emerge; avoid penalizing correct, alternate approaches. Running the code objectively verifies requirements and can spark productive discussions about trade-offs.
+
+#### Step 6: Architecture Interview
+
+The sixth step filters for deep tech-stack knowledge and architectural understanding. It typically has three parts:
+
+**Part 1: Tech skills** - general questions on languages, frameworks, and packages you use.  
+**Part 2: Architecture & ecosystem** - ask how they’d solve specific architectural challenges. Include at least one question designed to stump them. This reveals if they know their limits-admitting “I don’t know” shows humility and coachability. It also lets you teach something on the spot and observe their learning agility.  
+**Part 3: Story time** - instead of another coding test, pick an interesting resume bullet and say, “Tell me what happened here.” This often uncovers more than technical tasks, showing problem-solving approach, teamwork, and drive. Listen actively and ask follow-ups.
+
+#### Step 7: Culture-Fit Interview
+
+The seventh step assesses whether the candidate fits your team culture and has the right character. Usually conducted by the CEO (in small companies) or the team manager. It’s a general “vibe check” covering various topics.
+
+Key points:
+
+* **Passion:** Ask “How excited are you about working with us?” or “What do you know about our company and what excites you?” Lack of enthusiasm is a warning sign.  
+* **Handling the past:** “Why did you leave your last role?” reveals emotional intelligence-good candidates turn challenges into learning stories without negativity.  
+* **Passion filter:** Ask how they got into software development. Ideally, their eyes light up and they can’t stop talking. A passionate hire will drive your company forward when given the right challenges.
+
+#### Step 8 (7 + 1): Probation Period-The Ultimate Filter
+
+The eighth and final filter follows the motto “hire fast, fire fast.” The first three months are critical. Minor mistakes should be forgiven and corrected with feedback; major issues-especially around respect and collaboration-require decisive action.
+
+Onboarding can take two to three months to fully absorb the codebase. The first weeks are vital: strong developers ask questions, while weaker ones dive in and make avoidable mistakes. Good developers’ questions grow deeper over time, signaling engagement. Senior devs often ask the most questions-a positive sign. Week-one progress is seen as surface-level queries (e.g. environment variables) evolving into deep-dive technical questions (e.g. specific features).
+
+**Ongoing evaluation** throughout probation is crucial. Assign projects and solicit feedback from everyone who interacts with the new hire. Evaluate behavior, code quality, bug rate, and cultural fit. Long-term success indicators include whether the new developer proactively suggests improvements, writes design docs, or proposes optimized processes and architectures.
+
+Watch for **red flags**: team friction, disruptive behavior, repeated mistakes after feedback, or lack of attention to detail (e.g. misimplemented designs).
+
+#### Timely Feedback - A Must
+
+Regardless of the outcome, give candidates prompt feedback. Let them know if they’re moving forward and what the next steps are, or if they’re not selected. If you have the resources, offering rejection feedback is a professional gesture that helps candidates learn and reflects well on your company.
+
+### Conclusion: Your Path to an Elite Dev Team
+
+Recruiting developers - especially the top 1% of senior full-stack React engineers - is both an art and a science. It takes more than posting job ads. It demands a thoughtful, transparent, and fair process rooted in real-world lessons.
+
+By mastering the “4 areas of the hiring funnel,” clearly defining your offer, knowing whom you seek, using the right channels, and applying a proven filter process like the “ReactSquad Excellence System,” you’ll avoid costly mistakes, save time and money, and secure the talent that will truly propel your company forward.
+
+Take these nuggets, copy the process, and build the high-performance team you deserve. Investing in an excellent hiring process is an investment in your company’s future.
+
