@@ -1,0 +1,496 @@
+---
+title: 'Strategy Paper - The Hidden Reasons Why Top Developers Are Demanding Higher Salaries or Switching Jobs, and How You as a SaaS Executive Can Solve the Problem'
+datePublished: '2024-09-03'
+description: "In this tutorial, you'll learn 12 testing best practices that every senior developer should know. You will see real-world JavaScript examples for Kent Beck's article \"Test Desiderata\"."
+thumbnailUrl: 'https://i.magecdn.com/ada680/d146b1_12_keys_write_senior_level_tests?f=webp,q.25,p.f,l.f'
+isDraft: true
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+The software industry has the [highest turnover rate of all industries](https://www.linkedin.com/business/talent/blog/talent-strategy/industries-with-the-highest-turnover-rates) at over 13%, driven by intense competition for talent and constantly growing demand.
+
+In concrete terms, this means: **out of 100 developers, more than 13 will leave their job within a year**. Many developers feel undervalued when employers fail to keep up with the market, their growing skills, or their expectations for recognition and modern working conditions. This leads top talent to frequently demand higher salaries or find the potential of a job change more attractive.
+
+Often, **factors other than salary** are the decisive reason for a change.
+
+The immediate work environment, a lack of appreciation, or missing development prospects often play a role - for example, **when developers don't feel comfortable in their team or feel like they're stagnating**.
+
+Many consciously choose positions where they can make a real difference. For example, as a **founding engineer in a young company**, where they can shape product development from the very beginning. Even if such roles come with financial trade-offs, for some, the **desire for purpose, responsibility, and genuine creative freedom** outweighs them.
+
+To retain developers for the long term, it's not enough to just lure them with salary or titles. If you want to keep top talent, there's only one way:
+
+> “**You have to understand your developers** - both professionally and personally.”
+
+When you understand developers, you can calibrate. Only those who understand can adapt, shape, and improve. And to understand, you need two things: **Theory** and **Measurability**.
+
+Good developers don't just quit; they slowly become disengaged. You want to build a personal connection with them (Measurability) - but more on that later. First, you need to learn about the general motivations of developers (Theory).
+
+When you know what motivates them, you can create an environment that not only promotes performance but also builds genuine loyalty. For this, it's worth looking at the central needs and values that are crucial for developers.
+
+### The 10 Pillars of the Employer Gold Standard for Developers
+
+Here are the most important factors that determine whether a developer stays, quiet quits, or leaves the company.
+
+1.  **Money** (and other compensation like stock, equipment, etc.)
+2.  **Recognition**, compliments, and appreciation (gratitude)
+3.  **Friendly colleagues**
+4.  **Fulfillment** (joy in the technology they work with) and fun
+5.  **Meaningful work** and positive impact
+6.  **Learning** (dopamine hits) and personal growth
+7.  **Mastering challenges** and creating something to be proud of
+8.  **Vacation** and time off
+9.  **Health benefits** (insurance)
+10. **Freedom** (remote work: location, hours)
+
+Later in this strategy paper, you will receive concrete tactics, examples, and recommendations for each of these points. For now, this list serves as an overview and framework. You can think of it as a mental checklist. The more of these points you fulfill, the stronger you and your company will be perceived as an **employer brand**.
+
+#### (Tip) Keep Your Finger on the Pulse: Know the Market
+
+Besides this theoretical foundation, you should also keep an eye on the current zeitgeist. What developers want today changes - sometimes slowly, sometimes quickly.
+**That's why it's worth regularly looking at major industry surveys**, such as the annual [Stack Overflow Developer Survey](https://survey.stackoverflow.co/2024/work/).
+
+You don't need weeks for this. **One to three hours a year** is often enough to get a good sense of new trends, expectations, and shifts in the developer world.
+
+This data helps you sharpen your gut feeling, better contextualize conversations, and make smarter decisions.
+
+### Solution: How to Retain Developers in Your Company
+
+Once you know what drives developers, you can start shaping the conditions so they don't even want to think about leaving.
+
+Because: **Only employers who stand out are remembered.**
+
+But what does that mean in practice? How do you get your developers to say:
+
+> **“This is the best job I've ever had. I want to stay here!”** - your developers (soon)
+
+The answer: You have to make your company a **unique experience** for every developer - something they can't find anywhere else.
+
+And there are two ways to do this:
+
+#### “Benefit Stack” vs. “Apex Advantage”
+
+For a developer to see their job at your company as the **best** job in the world, one they would never leave, it must be a **unique** position that only exists at your company. How do you achieve that?
+
+You can create uniqueness in two ways:
+
+*   **Apex Advantage:** You are the best in one aspect - e.g., the highest salary, extremely flexible working hours, unlimited PTO, or unparalleled learning opportunities.
+*   **Benefit Stack:** You combine various benefits in a way that is unbeatable for certain developers - tailor-made and valuable.
+
+And most importantly, the goal is for your developer to say:
+
+> **“This is something money can't buy.”**
+
+Each of the 10 pillars - when used correctly - can contribute to this uniqueness. And often, it just takes a little creativity to offer something other companies don't even think about.
+
+#### Individualization Instead of One-Size-Fits-All: Give Your Developers Freedom of Choice
+
+Not every developer wants the same thing. People are in different life stages, have different priorities, and react very differently to benefits. That's why you should consider introducing a **"pick-and-choose" model**.
+
+This gives every developer the opportunity to build their own benefits package tailored to their personal needs and values.
+
+This achieves two things:
+
+1.  **A sense of freedom and self-determination.**
+2.  **A higher perceived value of your offers** because they are individually relevant.
+
+Here are a few examples:
+
+*   A young mother or father with small children might want **more vacation days or flexible hours** to spend more time with their family.
+*   A young, adventurous developer might value **location-independent work** and **the freedom to travel** the most.
+*   An experienced, financially secure employee might place special emphasis on **meaningful tasks** or **influence on the product vision**.
+
+#### “Apex Advantage”: Be Better Than Everyone Else on One Thing
+
+For some benefits, it pays not just to be good - but to be **the best**. This means you offer something in one area that other companies don't (or won't) provide in that form. This could be:
+
+*   The highest salary in your market segment
+*   Unlimited vacation with an actual culture of using it
+*   An exceptional hardware or professional development budget
+*   Maximally flexible work-hour policies
+
+Many of these advantages are surprisingly inexpensive to implement. **Some are even free.**
+The reason: **Most companies don't think about it.** They just adopt the status quo. And this is exactly where your opportunity lies:
+
+**There's “free money” left on the table - you just have to pick it up.**
+
+#### Combine the Best of Both Worlds
+
+You become most effective when you offer **a strong Benefit Stack and additionally build real Apex Advantages in 1-2 areas**.
+This makes you difficult to copy and gives you a real "moat" in the employer market.
+
+### The 10 Pillars of the Employer Gold Standard Under the Microscope
+
+Here are the core elements of an effective retention strategy.
+
+#### 1. Money
+
+This point is obvious, and at the same time, the one **you'd prefer to change as little as possible**.
+
+Money is expensive. And once you increase it, there's rarely a way back.
+
+Nevertheless, it remains one of the most important factors in the perception of fairness and appreciation. The good news: **you can shape more in the "Money" category than you think - without simply increasing the base salary.**
+
+You can use bonuses, stock options, or long-term incentives. Ideally, these are tied to **clear, understandable goals or project successes**.
+
+**Example:** If a feature demonstrably brings the company \$100,000 in profit, you can easily pay out \$10,000 as a bonus and still have a 90% margin.
+
+**Important:** Define **realistic goals** with your leadership team that are achievable but remain ambitious. Get estimates from middle managers or even directly from developers, but without mentioning the bonus first to get honest assessments.
+
+When you tie salary adjustments to concrete progress, it feels **fairer and more transparent** to developers, e.g., for skill development, increased responsibility, or project ownership.
+
+You can also use tax advantages. Depending on the country and company structure, certain benefits can be **more tax-efficient** than pure salary increases:
+
+*   Employee discounts, benefits in kind, equipment (e.g., laptop, office furniture for remote work)
+*   Company pension plans or health allowances
+*   Stock or virtual stock options (VSOPs) - Stocks don't necessarily have a specific value. They might be worth only half as much on the day they are promised as they will be in a few years if the company grows healthily.
+
+It's best to talk to your tax advisor or CFO about this. There are often **hidden levers with high impact** here.
+
+**Security** is also a money topic. Not every developer thinks purely in numbers. **Job security, clear prospects, and stability** reduce stress levels and, in turn, the expectation of constant financial "upgrades."
+
+When a developer feels they can be **part of the company for the long term**, it automatically reduces their willingness to leave.
+
+#### 2. Recognition, Compliments, and Appreciation (Gratitude)
+
+Every developer loves to hear how much their work is valued. **Appreciation is one of the most emotionally powerful levers for employee retention**, costs nothing, and is still completely underestimated in many tech teams.
+
+> **“Praise in public, criticize in private.”**
+
+*   **Public praise** shows everyone on the team that contributions are seen and valued.
+*   **Private criticism** saves face and preserves trust.
+
+This is how you create an environment where employees feel safe and taken seriously.
+
+**The praise must come from the right person.** Praise from the wrong person is worthless or can even seem insincere.
+
+If you, as a manager, have no idea about code and praise the code, developers can't value it because you don't actually know how to evaluate it. But if a lead developer or someone else they look up to praises them, then the praise means a lot.
+
+**Developers are often emotionally invested in their code.** A sincere, technically well-founded compliment often hits deeper than any salary increase.
+
+**Practical Tip:** Create space for praise. Set up a dedicated channel in your communication tool, e.g., `#shout-outs`, `#kudos`, or `#wins`. A space where team members can **actively and publicly** give each other recognition.
+
+This creates a culture where **praise becomes part of everyday life** and doesn't just happen by chance.
+
+#### 3. Friendly Colleagues
+
+Colleagues can be **energy sources** or **energy vampires**.
+
+Developers appreciate team members who:
+
+*   communicate respectfully,
+*   are helpful, and
+*   **don't put themselves above others**, but want to grow together.
+
+The opposite of this? A **toxic work environment**. And that is a common reason for turnover.
+
+Ask yourself:
+
+> **“How well do you really know your company culture?”**
+
+As a leader, it's your job to feel the pulse of your team.
+
+*   Do you know which employees are considered team players and who might be struggling with a **negative reputation**?
+*   Are there **silent conflicts or tensions** that no one is addressing openly?
+*   How open do you feel you are to **honest feedback** about your team dynamics?
+
+If you don't know, it's highly likely that someone is **currently disengaging** or already thinking about leaving.
+
+**Promote team spirit through events or collaborative projects.** Strong team cohesion is the result of conscious work on relationships.
+
+*   Hold regular team rituals: standups, virtual coffee breaks, retrospective walks, or simply open Q&A sessions.
+*   Plan dedicated **offsite events or retreats**. This could be a 3-day work trip with space for focused work, but also for personal conversations, shared activities, and a real change of scenery.
+*   Developers, in particular, also enjoy participating in hackathons. You can use internal hackathons to develop prototypes for new products.
+*   Encourage **collaborative projects**, as they prevent siloed thinking.
+
+#### 4. Fulfillment (Joy in the technology they work with) and Fun
+
+Developers are tinkerers. They want to solve problems - and do it with tools they find exciting. For many, technology is not just a means to an end, but the actual fun of the job.
+
+This means: if a developer has to **work with the same stack long-term** without room for new things or creative solutions, they quickly lose interest in the work, even if the product is meaningful and the salary is good.
+
+> Good developers don't just want to function. They want to *invent*, *optimize*, and *build better than yesterday*.
+
+But be careful: you need balance here. Because developers have a natural tension between **safety** and **curiosity**.
+
+*   On one hand, they need stability: They want to work with a stack they know well. When the technology is familiar, they can focus on **solving the problem** and don't have to understand the tool at the same time.
+*   On the other hand, they need targeted uncertainty: the **exploration of new technologies**, frameworks, or patterns. Because this is often where the dopamine hit that drives developers lies.
+
+Many new tools or libraries are born out of frustration because developers want to finally solve something better. And this very desire for improvement is a huge opportunity for your company.
+
+Another, often underestimated aspect of technical fulfillment: **Technical debt.**
+
+When developers feel like they are fighting against an outdated or error-prone codebase every day, their motivation plummets.
+
+**"I hate this job"** often begins with: **"I hate this code."**
+
+Often, developers know exactly how to solve the problem, but they lack the **green light from management**. Instead, they're told: **"Just finish the feature first."**
+This creates frustration. And eventually, a resignation.
+
+Of course, it's important here that **your developers find the balance** between shipping and maintaining the code, otherwise, developers will just tinker with the beauty of the code without developing features.
+
+> If you want your team to deliver with joy, you must also allow them to maintain the foundation while keeping an eye on speed and focusing developers on business goals.
+>
+> See ReactSquad's Guide: **"How to Pay Down Technical Debt in 3-6 Months While Still Developing New Features"**
+
+So, regularly ask yourself the following questions:
+
+*   Are there areas where your team would like to use new tools but **never had the time or permission** to explore them?
+*   Are there ideas for technical innovation that have been postponed, even though they could significantly improve product quality in the long run?
+
+When you create space for exactly these conversations, true **win-win situations** emerge:
+Your team learns, grows, and stays motivated, and your product becomes better, faster, and more future-proof.
+
+#### 5. Meaningful Work and Positive Impact
+
+For many developers, it is crucial **whether their work makes a positive contribution and whether they can feel that contribution**.
+
+There are two main groups here:
+
+Some are **mission-driven**. They want to contribute to a product that aligns with their values - be it sustainability, education, social justice, or open technologies.
+An employer with a **clear ethical stance** will particularly attract these developers.
+
+**Example:** If you are active in sustainability or climate protection, you should not only show this in your marketing but also make it visible in your **daily business**, for example, through concrete product goals or internal initiatives.
+
+The others are less idealistic, but no less demanding: they want to understand **what exactly their work achieves**. Who uses what they build? What concrete difference does a feature, a fix, or an architectural decision make?
+
+Here you have a great opportunity: If you make the impact of your developers **visible and quantifiable**, you win twice.
+
+1.  Your developers understand that their work matters.
+2.  You better understand which initiatives truly have an impact.
+
+Set up processes that establish this connection, e.g., through metrics that show feature effects, through customer feedback in reviews, or through business impact dashboards that are also accessible to the dev team.
+
+And finally, there is a third, often overlooked aspect:
+**Fame.** Some developers are highly motivated by reputation. Be it within the company, in the open-source community, or even academically.
+
+If your company creates space for:
+
+*   Contributions to open source,
+*   Publications or whitepapers, and
+*   Talks at meetups or conferences
+
+then these very platforms **(and the "stars" on your team - Employee Advocacy)** can be a strong retention lever, especially for very ambitious or technically visible employees.
+
+#### 6. Learning (Dopamine Hits) and Personal Growth
+
+Good developers constantly want to **get better**. And the more they identify with their own development, the more energy they invest in their role.
+
+Of course, salary is also a form of growth. We already covered that in the section on money. But real growth goes further: **new skills, new knowledge, new ways of thinking.**
+
+If you invest here, you get a huge return. Both in productivity and in loyalty.
+
+In the following, you will learn how to promote targeted learning.
+
+Regularly ask yourself the question:
+
+> What skills does my team need in the future, and how do we get there together?
+
+This includes:
+
+*   **What new technologies does the team want to learn, and are they useful for the team to learn in order to build your product more effectively and provide your service more effectively?** Are there new tools or frameworks that interest the team and could make our product better in the long run?
+*   **What skills in your existing technology stack does your team still need to learn?** Where are the weaknesses in the current setup?
+*   **Where is the biggest weakness of your team itself?** Do they perhaps need to improve their communication skills? Do individual team members need to learn to think more independently? Does your team produce too many bugs and need to get better at writing automated tests?
+
+Once you have the answers, you can offer targeted formats, e.g., in the form of group workshops, 1:1 coaching, or regular learning sprints.
+
+Good training has many advantages. It:
+
+*   increases developer productivity and retention,
+*   reduces knowledge silos,
+*   improves the [bus factor](https://en.wikipedia.org/wiki/Bus_factor) and reduces succession risks,
+*   creates a more positive, helpful, and collaborative team culture,
+*   increases loyalty,
+*   boosts employee engagement and motivation, thereby dramatically improving financial results, and
+*   improves the identification and development pipeline for leaders.
+
+Team training can take place both in a group and 1:1.
+
+> **PS:** If you need support in the JavaScript or TypeScript ecosystem, or want to specifically develop your team's soft skills, **get in touch with ReactSquad**. We help you build a sustainable learning program for your developer teams.
+
+#### 7. Mastering Challenges & Creating Something to Be Proud Of
+
+This topic is similar to "meaningful work and positive impact," but it's subtly different, which is why it deserves its own point.
+
+Many developers draw their motivation from solving difficult problems and, in doing so, **creating something that lasts**.
+
+The central question here is:
+
+> “Are your developers sufficiently challenged, or are they just bored?”
+
+If someone completes every sprint on autopilot, no pride is generated. No growth. No sense of ownership.
+
+Your strongest developers, in particular, are often at risk of "invisibly" stagnating here.
+
+Ask yourself specifically:
+
+*   Who is the technically strongest developer on your team?
+*   Is this person still learning anything new, or are they just pushing tickets without being truly challenged?
+
+If the latter is true, you have two options:
+
+1.  Find new, demanding topics, even outside of code, such as in architecture design or through **involvement in strategic decisions**.
+2.  Give this developer **the challenge of training others**: through mentoring, pairing, or internal talks.
+
+This not only strengthens that developer's pride but **the entire team**.
+
+Give your developers responsibility - real responsibility.
+
+Not in the sense of "do this ticket," but: "Make the decision, implement it, and stand by it."
+
+*   Let them have a say in the tech stack.
+*   Involve them in strategic technical decisions.
+*   Give them the space to make decisions, even if they sometimes get it wrong.
+
+Of course, you need to know your employees well. Some need guidance and structure. Others are simply not suited to be leaders. And you have to recognize and accept that.
+
+**Make it easy for your developers to solve problems.** Ensure your team has the tools to solve problems instead of failing at the basics:
+
+*   Does everyone have a good laptop, monitor, desk, ergonomic chair?
+*   Is your codebase reasonably modern, understandable, and maintained?
+*   Is there solid documentation, not just in the code, but also for workflows, processes, and decision logic?
+
+Because nothing is more demotivating than having to solve a complex problem in a chaotic system.
+
+Sometimes, developers give their all, deliver great work, **and still no pride emerges. Why?**
+
+Because what they create **never properly reaches the customer**.
+
+If your marketing fails, your sales team underperforms, or your communication falls on deaf ears, the potential and thus the motivation of your developers will suffer in the end.
+
+**Technical success needs business success.** Only when developers see that their contribution has an impact can they feel true pride.
+
+#### 8. Vacation and Time Off
+
+Regeneration is operationally necessary. Anyone under constant pressure works less effectively, thinks more short-term, and loses their emotional connection to the company.
+
+Burnout costs you productivity, team morale, and eventually, the employee themself.
+
+Because burnt-out developers often demand more money to compensate for the stress. Or they leave your company for a quieter position, even if the salary is the same or even lower.
+
+**Flexible vacation policies** - whether in the number of days or in planning - send a strong signal of trust and appreciation.
+
+#### 9. Health Benefits (Insurance)
+
+**Physical and mental health are non-negotiable for top talent.**
+
+Especially in demanding tech roles, developers need to feel that their employer cares not just about their output, but about them as people.
+
+Good insurance, health benefits, or wellness programs show that the company is thinking about its developers for the long term.
+
+These include, for example:
+
+*   High-quality health insurance (also for family members)
+*   Access to therapy services or mental health apps
+*   Subsidies for sports, massages, or wellness
+*   Health days or annual check-ups
+
+The special thing is: **Health benefits often have a stronger emotional impact than a financial one.** They don't just say, "We'll pay you something," but: **"We want you to stay healthy and feel good."**
+
+This is a strong commitment and a clear competitive advantage, as other companies often neglect this point.
+
+#### 10. Freedom (Remote Work: Location, Hours)
+
+For many developers, **freedom is the real luxury**. Not having to commute daily. Working in peace from home or a favorite café. Structuring the workday to fit their life, not the other way around.
+
+Freedom means: **Trust in their own self-organization.**
+
+**Remote work** has long been more than a relic of the pandemic. For many developers, it is a **non-negotiable standard**. And it often goes hand in hand with **flexible working hours**: going to the gym in the morning, picking up kids in the afternoon - and still delivering results.
+
+A flexible work schedule allows your employees to adapt flexibly to the challenges of their daily lives.
+
+But remote work doesn't just bring benefits for developers; it also benefits you as an entrepreneur:
+
+1.  You significantly reduce your fixed costs: no office, no rent, no infrastructure costs.
+2.  You can recruit globally and hire strong talent from markets where **a \$50k salary feels like a \$200k package** in the US or EU market.
+
+### Measurability - How to Find Out What Your Employees Value Most Without a "Pick and Choose" System
+
+Talk to them.
+
+It sounds trivial. But it's by far the most effective lever for employee retention.
+
+#### 1:1s - Your Early Warning System Against Resignations
+
+When you sense that an employee is becoming distant or thinking about leaving, **don't wait**. Have an honest 1:1 conversation. Not in passing, but deliberately, with time, space, and calm.
+
+Ask questions like:
+
+*   "How are you feeling in your role right now?"
+*   "Are there things that are missing or weighing on you?"
+*   "What would need to happen for you to want to stay with us for a long time?"
+
+Only when you know the **real reason** can you react meaningfully. Not every potential resignation is about you or your company, but **you can prevent many of them** if you start the conversation early enough.
+
+A few typical reasons:
+
+*   **Money**: Another company has made a lucrative offer. Or your employee needs more security in the short term (e.g., due to a wedding, buying a house, or family challenges).
+*   **Technology**: The developer feels technically held back and wants to work with a more modern stack.
+*   **Family changes**: Childcare, caring for relatives, or other family obligations could play a role.
+*   **Health issues**: Physical or mental health problems can force your developers to rethink their job.
+
+You can only solve a problem **if you know the cause**.
+
+#### Build Trust
+
+Good developers don't quit overnight - they slowly drift away. And you often don't notice until it's too late. That's why you need more than just a professional relationship. **You need real trust, almost a friendly connection.** Only then will developers openly share their thoughts, doubts, and wishes with you. And only then can you calibrate in time.
+
+Does someone want more security right now because a baby is on the way? Does someone wish for more responsibility or involvement because they feel under-challenged? Is someone doubting the company's mission? Or are there tensions in the team that no one is talking about? If you know these things early, you can actively counteract them and shape the job so that your best people stay.
+
+In a large team, this can be difficult. You may have to delegate it. And if you feel your managers can't handle it, that might be a sign that the managers lack skills. A manager must not only be able to fire and plan but should also be able to understand and thus motivate.
+
+#### Digital Surveys
+
+In addition to personal conversations, you can also use **anonymous surveys** to gather structured feedback.
+
+Tools like **Typeform**, **Google Forms**, or specialized HR platforms allow you to regularly get a pulse on morale, e.g., once a quarter.
+
+Here's what a good survey looks like:
+
+*   Ask each developer to rate **each of the 10 pillars** on a scale of 1-10: *"How important is this area to you right now?"*
+*   Ask an open-ended follow-up question for each point: *"What would our company need to offer to better support you in this area?"*
+*   Always offer an **open-ended free-text question** at the end: *"Is there anything important to you that hasn't been asked yet?"*
+
+This way, you develop an ever-clearer picture of **what your team really needs**.
+
+### What It Costs You to Do Nothing - and How to Be Smart Instead
+
+If you just keep doing what you've always done, you'll eventually have to bite the bullet.
+
+**A good developer leaving can easily cost you 1-2 times their annual salary.** Why?
+
+*   Productivity loss
+*   Recruiting and onboarding costs
+*   Team dynamics suffer
+*   Client projects get delayed
+*   Know-how is lost
+
+And the worst part: **You could have prevented it.**
+
+#### The Risk-Free Alternative
+
+Instead of leaving your luck to chance, you can work with **specialized partners** who secure you for the long term.
+
+> Example: [ReactSquad](https://reactsquad.io/) connects you with vetted senior full-stack React developers with a **fixed-price guarantee over several years**.
+>
+> This lowers your risk, saves you time, and protects you from costly employee turnover.
+
+#### What You Should Take Away From This Guide:
+
+1.  **Get to know your developers.** Use personal conversations and anonymous surveys to find out what really matters to them.
+2.  **Actively shape their role.** Turn their position into a dream job they can't find anywhere else through individual benefits, real responsibility, and appreciation.
+
+**P.S.:** Do you have a specific problem, want to give feedback, or just want to chat?
+Message me directly on [LinkedIn](https://www.linkedin.com/in/jan-hesters/). I look forward to your message.
