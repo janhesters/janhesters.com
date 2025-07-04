@@ -1,0 +1,126 @@
+---
+title: "Free React Router SaaS Template"
+datePublished: '2026-08-25'
+description: "Grab this free template"
+thumbnailUrl: 'https://i.magecdn.com/ada680/c7d1f2_what_is_redux_yt_thumbnail_v1?f=webp,q.25,p.f,l.f'
+isDraft: true
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+This is a free React Router SaaS template. It contains everything you need to build your next SaaS idea:
+
+* like billing with support for multiple plans and a free trial,
+* member management with role-based access control,
+* and full responsiveness and accessibility.
+
+Usually, the only downside of using a template is that there's a lot of code you're afraid to break. But this template comes with complete test coverage.
+
+Over 500 unit, integration, and functional tests:
+
+```
+ Test Files  80 passed (80)
+      Tests  577 passed | 2 skipped | 1 todo (580)
+   Start at  20:45:42
+   Duration  139.16s (transform 2.82s, setup 6.78s, collect 76.97s, tests 16.31s, environment 10.01s, prepare 8.77s)
+```
+
+And close to 200 end-to-end tests:
+
+```
+  6 flaky
+    [chromium] › playwright/e2e/landing/contact-sales.e2e.ts:74:3 › contact sales page › given: a user submitting valid data, should: show success message 
+    [chromium] › playwright/e2e/onboarding/onboarding-organization.e2e.ts:153:5 › onboarding organization page › organization creation › given: a logged in user with name but no organization, should: allow organization creation with only name and redirect to organization page 
+    [chromium] › playwright/e2e/organizations/general-organization-settings.e2e.ts:153:5 › general organization settings › given: a logged in user who is onboarded and an owner › given: valid organization name and logo, should: update organization name and logo 
+    [chromium] › playwright/e2e/organizations/new-organization.e2e.ts:291:5 › new organization page › organization creation › given: a logged in onboarded user, who creates the new organization using the organization switcher: should: allow organization creation with only name and redirect to organization page 
+    [chromium] › playwright/e2e/user-authentication/login-confirm.e2e.ts:366:3 › /login/confirm API route › given: a valid token hash for a new user with an active email invite cookie, should: create their account, add them to the organization, show a success toast, and clear the email invite cookie 
+    [chromium] › playwright/e2e/user-authentication/register-confirm.e2e.ts:193:3 › /register/confirm API route › given: a new user with an active email invite cookie, should: create their account, add them to the organization, and show success toast 
+  2 skipped  
+  195 passed (3.1m)
+```
+
+... ensure that you won't break anything.
+
+So let's explore what you get in this free template in more detail.
+
+The landing page has some of the most common elements you'll need, like a marquee, a bento grid, and a CTA section.
+
+Authentication is handled by Supabase, and you can sign up either by email or with Google.
+
+Next, you get to the onboarding flow, which has two steps by default.
+
+First, it lets you complete your profile.
+
+And then you create your organization.
+
+If you look into the code, you'll see that it's easy to add more steps to your onboarding flow.
+
+BTW, all database queries are abstracted through Prisma and facades. So you can easily switch to a different database provider or ORM.
+
+Inside your app, you'll find a sidebar. As you can probably already see, the whole app is styled with TailwindCSS and Shadcn. It's also fully responsive and accessible. There are automatic checks in your E2E tests that can catch many basic accessibility issues for you.
+
+Your user nav lets you log out and customize your user account. File uploads are also handled by Supabase Storage, and there are S3-compatible helper functions in case you want to use a different provider.
+
+You can use the sidebar to create additional organizations and then switch between them.
+
+And these are the organization settings.
+
+In the general section, you can change your organization's name and logo.
+
+In the team members section, you can invite new members in two ways:
+
+You can generate an invite link and send that to your coworkers, which will automatically join your organization.
+
+Or you can send them an email with a personal invite link that lets you assign them a role too. Email sending is handled by Resend.
+
+Once they're a member of your organization, you can manage their roles or deactivate them.
+
+You also have billing managed by Stripe. By default, the app comes with a free trial. And once a user chooses a plan, they can easily upgrade, downgrade, or cancel their subscription.
+
+Last but not least, the app has a dark mode toggle.
+
+You might be asking yourself: how do all of these services work when you run tests?
+
+The app is configured to distinguish between:
+
+* Unit tests
+* Integration tests
+* Functional tests / React component tests
+* End-to-end tests
+
+And the template has MSW configured, which can mock all API calls on both the client and server sides when you run your integration or end-to-end tests.
+
+There are some more bonus features in the template, but for that, check out the repository. If you want to contribute, check out the issues. And if you have any questions, feel free to reach out to me on [X](https://x.com/janhesters).
+
+I love you very much. Thank you so much for watching. And now go watch this video next.
+
+--- 
+
+I love you very much. Thank you so much for watching. And now stop doomscrolling on LinkedIn and get back to work.
+
+---
+
+* React Router
+* Prisma
+* TypeScript
+* ESLint & Prettier
+* TailwindCSS
+* Shadcn
+* Vitest
+* Playwright
+* Supabase
+* Stripe
+* Resend
+
