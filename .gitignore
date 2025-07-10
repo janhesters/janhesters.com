@@ -1,13 +1,12 @@
-node_modules
+.DS_Store
+/node_modules/
+
+# React Router
+/.react-router/
+/build/
 
 /.cache
 /build
 .env
-
+/.vercel/
 estimates/
-
-# Playwright
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/

@@ -1,13 +1,13 @@
-/* eslint-disable unicorn/filename-case */
-import { Link, useLoaderData } from '@remix-run/react';
-import type { MetaFunction } from '@vercel/remix';
+import { Link } from 'react-router';
 
-import { buttonVariants } from '~/components/button';
+import { buttonVariants } from '~/components/ui/button';
 import { getAllPostsMetaSortedByDate } from '~/features/blog/blog-helpers.server';
 import { BlogPostCard } from '~/features/blog/blog-post-card';
 import { getSocialsMeta } from '~/lib/misc';
 
-export const meta: MetaFunction = () =>
+import type { Route } from './+types/blog_._index';
+
+export const meta: Route.MetaFunction = () =>
   getSocialsMeta({
     title: "Jan Hesters' Blog",
     description:
@@ -21,9 +21,7 @@ export async function loader() {
   return posts.filter(meta => !meta.isArchived && !meta.isDraft);
 }
 
-export default function BlogIndex() {
-  const loaderData = useLoaderData<typeof loader>();
-
+export default function BlogIndex({ loaderData }: Route.ComponentProps) {
   return (
     <main className="px-2 py-4">
       <h2 className="sr-only">Blog</h2>

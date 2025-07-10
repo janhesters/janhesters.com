@@ -1,6 +1,6 @@
-import { Link } from '@remix-run/react';
+import { Link } from 'react-router';
 
-import { buttonVariants } from '~/components/button';
+import { buttonVariants } from '~/components/ui/button';
 import { cn } from '~/lib/utils';
 
 import type { BlogPostMeta } from './blog-helpers.server';
@@ -22,7 +22,7 @@ export function BlogPostCardWithoutDescription(post: BlogPostMeta) {
       <div className={imageContainerClassName}>
         <img
           alt={post.title}
-          className={cn(imageClassName, 'mb-0 mt-0')}
+          className={cn(imageClassName, 'mt-0 mb-0')}
           loading="lazy"
           src={post.thumbnailUrl}
         />
@@ -50,7 +50,7 @@ export function BlogPostCard({
 
       <h3 className={titleClassName}>{post.title}</h3>
 
-      <p className="whitespace-pre-wrap text-muted-foreground">
+      <p className="text-muted-foreground whitespace-pre-wrap">
         {post.description}
       </p>
     </Link>

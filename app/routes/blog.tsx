@@ -1,5 +1,5 @@
-import { Outlet } from '@remix-run/react';
 import { useEffect, useState } from 'react';
+import { Outlet } from 'react-router';
 
 import { ScrollToTopButton } from '~/features/blog/scroll-to-top-button';
 import { cn } from '~/lib/utils';
@@ -32,7 +32,7 @@ export default function Blog() {
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
       <div className="mx-auto flex max-w-4xl flex-col">
-        <article className="prose mx-auto w-full max-w-2xl dark:prose-invert prose-p:before:hidden prose-p:after:hidden prose-code:before:hidden prose-code:after:hidden">
+        <article className="prose dark:prose-invert prose-p:before:hidden prose-p:after:hidden prose-code:before:hidden prose-code:after:hidden mx-auto w-full max-w-2xl">
           <Outlet />
         </article>
 

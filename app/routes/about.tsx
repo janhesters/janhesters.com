@@ -1,9 +1,9 @@
-import type { MetaFunction } from '@vercel/remix';
-
 import { PlatformsComponent } from '~/features/landing/platforms-component';
 import { getSocialsMeta } from '~/lib/misc';
 
-export const meta: MetaFunction = () =>
+import type { Route } from './+types/about';
+
+export const meta: Route.MetaFunction = () =>
   getSocialsMeta({
     title: 'About Jan Hesters',
     description: 'Learn more about Jan and his work.',
@@ -59,7 +59,7 @@ export default function About() {
             src="https://i.magecdn.com/ada680/79c207_jan_square?f=webp,q.25,p.f,l.f"
           />
 
-          <h2 className="text-center text-2xl font-semibold text-foreground md:text-start md:text-3xl">
+          <h2 className="text-foreground text-center text-2xl font-semibold md:text-start md:text-3xl">
             Hi, I&apos;m Jan Hesters, <br /> I&apos;m a fullstack developer.
           </h2>
 
@@ -70,17 +70,17 @@ export default function About() {
             hire developers or need training for your team.
           </div>
 
-          <p className="mt-3 text-muted-foreground md:text-lg">
+          <p className="text-muted-foreground mt-3 md:text-lg">
             By day, I&apos;m the CTO at{' '}
             <a
-              className="underline hover:text-primary"
+              className="hover:text-primary underline"
               href="https://www.reactsquad.io/jan"
             >
               ReactSquad
             </a>{' '}
             and{' '}
             <a
-              className="underline hover:text-primary"
+              className="hover:text-primary underline"
               href="https://www.getsocialkit.com/?utm_source=jan-website&utm_medium=referral"
             >
               SocialKit
@@ -92,10 +92,10 @@ export default function About() {
           <div className="mt-8 grid grid-cols-1 gap-8 md:mt-12">
             {timeline.map(item => (
               <div key={item.name}>
-                <div className="md:flex md:items-center md:justify-between md:border-b md:border-border md:pb-2">
+                <div className="md:border-border md:flex md:items-center md:justify-between md:border-b md:pb-2">
                   <time
                     dateTime={item.dateTime}
-                    className="text-md flex items-center font-semibold text-primary"
+                    className="text-md text-primary flex items-center font-semibold"
                   >
                     <svg
                       viewBox="0 0 4 4"
@@ -109,16 +109,16 @@ export default function About() {
 
                     <div
                       aria-hidden="true"
-                      className="absolute -ml-2 h-0.5 w-screen -translate-x-full bg-primary lg:w-auto lg:flex-auto lg:translate-x-0"
+                      className="bg-primary absolute -ml-2 h-0.5 w-screen -translate-x-full lg:w-auto lg:flex-auto lg:translate-x-0"
                     />
                   </time>
 
-                  <p className="mt-6 text-lg font-semibold leading-8 text-foreground md:mt-0">
+                  <p className="text-foreground mt-6 text-lg leading-8 font-semibold md:mt-0">
                     {item.name}
                   </p>
                 </div>
 
-                <p className="mt-1 leading-7 text-muted-foreground md:mt-3">
+                <p className="text-muted-foreground mt-1 leading-7 md:mt-3">
                   {item.description}
                 </p>
               </div>

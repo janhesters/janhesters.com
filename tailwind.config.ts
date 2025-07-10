@@ -1,17 +1,16 @@
+// tailwind.config.ts
 import typographyPlugin from '@tailwindcss/typography';
 import type { Config } from 'tailwindcss';
 import animate from 'tailwindcss-animate';
 
 import { typographyStyles } from './typography';
 
-export default {
+const config: Config = {
   content: ['./app/**/{**,.client,.server}/**/*.{js,jsx,ts,tsx}'],
-  plugins: [animate, typographyPlugin],
   theme: {
     extend: {
       colors: {
         primary: {
-          // DEFAULT: 'hsl(var(--primary))',
           DEFAULT: 'hsl(var(--primary))',
           hover: 'rgb(var(--primary-hover))',
           foreground: 'hsl(var(--primary-foreground))',
@@ -70,11 +69,10 @@ export default {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
+      // @ts-expect-error - typographyStyles is a valid Tailwind theme value
       typography: typographyStyles,
       keyframes: {
-        shimmer: {
-          '100%': { backgroundPosition: '100% 0' },
-        },
+        shimmer: { '100%': { backgroundPosition: '100% 0' } },
         'fade-in': {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
@@ -95,4 +93,7 @@ export default {
       },
     },
   },
-} satisfies Config;
+  plugins: [animate, typographyPlugin],
+};
+
+export default config satisfies Config;

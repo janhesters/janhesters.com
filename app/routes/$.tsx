@@ -1,5 +1,7 @@
 /* eslint-disable unicorn/no-null */
-import { LoaderFunctionArgs, redirect } from '@vercel/remix';
+import { redirect } from 'react-router';
+
+import type { Route } from './+types/$';
 
 /**
  * A mapping of target paths to arrays of source paths for redirects.
@@ -7,9 +9,7 @@ import { LoaderFunctionArgs, redirect } from '@vercel/remix';
  * The keys represent the target paths, and the values are arrays of source
  * paths that should redirect to the corresponding target path.
  */
-type RedirectMapping = {
-  [path: string]: string[];
-};
+type RedirectMapping = Record<string, string[]>;
 
 /**
  * A mapping of target paths to arrays of source paths for redirects.
@@ -124,7 +124,7 @@ const redirectMapping: RedirectMapping = {
   '/archive': ['/bonus', '/bonus/'],
 };
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const path = url.pathname;
 

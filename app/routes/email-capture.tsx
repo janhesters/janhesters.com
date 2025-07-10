@@ -1,38 +1,37 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { ActionFunctionArgs } from '@remix-run/node';
-import { useFetcher } from '@remix-run/react';
-import { json } from '@vercel/remix';
 import { Check, Loader2, Mail } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
+import { data as json, useFetcher } from 'react-router';
 import { z } from 'zod';
 
-import { Button } from '~/components/button';
+import { Button } from '~/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '~/components/card';
+} from '~/components/ui/card';
 import {
   FormControl,
   FormField,
   FormItem,
   FormMessage,
   FormProvider,
-} from '~/components/form';
-import { Input } from '~/components/input';
-import {
-  subscribeToBlog,
-  SubscriptionStatus,
-} from '~/features/blog/beehiiv.server';
+} from '~/components/ui/form';
+import { Input } from '~/components/ui/input';
+import type { SubscriptionStatus } from '~/features/blog/beehiiv.server';
+import { subscribeToBlog } from '~/features/blog/beehiiv.server';
+
+import type { Route } from './+types/email-capture';
 
 export const emailCaptureClientSchema = z.object({
   email: z.string().email(),
 });
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const data = Object.fromEntries(formData.entries());
 
@@ -59,16 +58,17 @@ export function EmailCapture() {
 
   const isSubscribing = fetcher.state === 'submitting';
 
-  // @ts-expect-error JsonifyObject causes trouble here.
-  const state: 'idle' | 'error' | SubscriptionStatus = fetcher?.data?.error
-    ? 'error'
-    : // @ts-expect-error JsonifyObject causes trouble here.
-      fetcher?.data?.subscriptionStatus || 'idle';
-  const successRef = useRef<HTMLHeadingElement>(null);
+  const state: 'idle' | 'error' | SubscriptionStatus =
+    fetcher?.data && 'errors' in fetcher.data
+      ? 'error'
+      : fetcher?.data && 'subscriptionStatus' in fetcher.data
+        ? fetcher.data.subscriptionStatus
+        : 'idle';
+  const successReference = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     if (state === 'active' || state === 'validating') {
-      successRef.current?.focus();
+      successReference.current?.focus();
     }
   }, [state]);
 
@@ -80,7 +80,7 @@ export function EmailCapture() {
   });
 
   const onSubmit = form.handleSubmit(data => {
-    fetcher.submit(data, { action: '/email-capture', method: 'post' });
+    void fetcher.submit(data, { action: '/email-capture', method: 'post' });
   });
 
   return (
@@ -90,7 +90,7 @@ export function EmailCapture() {
           <CardHeader>
             <CardTitle
               className="flex items-center"
-              ref={successRef}
+              ref={successReference}
               tabIndex={-1}
             >
               <Check aria-hidden="true" className="size-6" />

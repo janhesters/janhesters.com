@@ -1,6 +1,6 @@
 import { getSocialsMeta } from '~/lib/misc';
 
-import { BlogPostMeta } from './blog-helpers.server';
+import type { BlogPostMeta } from './blog-helpers.server';
 
 export const getSocialsMetaForBlogPost = (
   meta: Omit<BlogPostMeta, 'slug'> & { url: string },

@@ -1,173 +1,112 @@
-import eslint from '@eslint/js';
-import tseslint from '@typescript-eslint/eslint-plugin';
-import tsParser from '@typescript-eslint/parser';
-import eslintConfigPrettier from 'eslint-config-prettier';
-import importPlugin from 'eslint-plugin-import';
-import jsxA11y from 'eslint-plugin-jsx-a11y';
-import playwrightPlugin from 'eslint-plugin-playwright';
-import prettierPlugin from 'eslint-plugin-prettier';
-import reactPlugin from 'eslint-plugin-react';
-import reactHooksPlugin from 'eslint-plugin-react-hooks';
-import simpleImportSort from 'eslint-plugin-simple-import-sort';
-import testingLibrary from 'eslint-plugin-testing-library';
-import unicornPlugin from 'eslint-plugin-unicorn';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-export default [
-  // Base config for all files
+import { includeIgnoreFile } from '@eslint/compat';
+import eslint from '@eslint/js';
+import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
+import eslintPluginUnicorn from 'eslint-plugin-unicorn';
+import tseslint from 'typescript-eslint';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const gitignorePath = path.resolve(__dirname, '.gitignore');
+
+export default tseslint.config(
+  includeIgnoreFile(gitignorePath),
+  eslint.configs.recommended,
+  tseslint.configs.recommendedTypeChecked,
+  tseslint.configs.stylisticTypeChecked,
+  eslintPluginUnicorn.configs['flat/recommended'],
   {
-    files: ['**/*.{js,jsx,ts,tsx,mjs,cjs}'],
-    ignores: [
-      '**/node_modules/**',
-      '**/build/**',
-      '**/.cache/**',
-      '!**/.server',
-      '!**/.client',
-    ],
     languageOptions: {
-      ecmaVersion: 'latest',
-      sourceType: 'module',
       parserOptions: {
-        ecmaFeatures: {
-          jsx: true,
-        },
-      },
-      globals: {
-        window: 'readonly',
-        process: 'readonly',
-        module: 'readonly',
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
       },
     },
-    linterOptions: {
-      reportUnusedDisableDirectives: true,
-    },
+  },
+  {
+    files: ['**/*.{js,ts,jsx,tsx}'],
     plugins: {
       'simple-import-sort': simpleImportSort,
-      import: importPlugin,
-      unicorn: unicornPlugin,
-      prettier: prettierPlugin,
     },
     rules: {
-      ...eslint.configs.recommended.rules,
-      ...unicornPlugin.configs.recommended.rules,
-      ...importPlugin.configs.recommended.rules,
-      ...prettierPlugin.configs.recommended.rules,
+      '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          args: 'all',
+          argsIgnorePattern: '^_',
+          caughtErrors: 'all',
+          caughtErrorsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        },
+      ],
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        {
+          prefer: 'type-imports', // Enforces `import type` for type-only imports
+          fixStyle: 'separate-type-imports', // Autofixes to use separate `import type` statements
+          disallowTypeAnnotations: true, // Disallows `import { type }` in type annotations
+        },
+      ],
+      '@typescript-eslint/no-misused-promises': [
+        'error',
+        { checksVoidReturn: { attributes: false } },
+      ],
+      '@typescript-eslint/only-throw-error': [
+        'error',
+        {
+          allow: [
+            // For your custom DataWithResponseInit type
+            {
+              from: 'file',
+              name: 'DataWithResponseInit',
+            },
+            {
+              from: 'file',
+              name: 'ErrorResponse',
+            },
+            // For the built-in Response type from lib.dom.d.ts
+            {
+              from: 'lib',
+              name: 'Response',
+            },
+          ],
+        },
+      ],
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
-      'unicorn/no-array-callback-reference': 'off',
-      'unicorn/no-array-for-each': 'off',
+      'unicorn/better-regex': 'warn',
+      'unicorn/no-process-exit': 'off',
       'unicorn/no-array-reduce': 'off',
+      'unicorn/no-array-callback-reference': 'off',
       'unicorn/prevent-abbreviations': [
         'error',
         {
-          allowList: {
-            e2e: true,
-            'remix.env.d': true,
-          },
           replacements: {
-            env: false,
-            props: false,
-            ref: false,
+            args: false,
             params: false,
+            props: false,
+            utils: false,
           },
         },
       ],
-    },
-    settings: {
-      'import/internal-regex': '^~/',
-      'import/resolver': {
-        node: {
-          extensions: ['.ts', '.tsx'],
+      'unicorn/filename-case': [
+        'error',
+        {
+          case: 'kebabCase',
+          ignore: [
+            /.*\._index\.(tsx|ts)$/, // Files ending with ._index.tsx
+            /.*\$[A-Za-z]+Slug(\.[A-Za-z]+)*\.(tsx,ts)$/, // Files with $SomethingSlug.tsx (e.g., $organizationSlug)
+            /.*_\.[A-Za-z]+\.(tsx|ts)$/, // Files with _.something.tsx (e.g., projects_.active.tsx)
+          ],
         },
-        typescript: {
-          alwaysTryTypes: true,
-        },
-      },
-    },
-  },
-
-  // React files
-  {
-    files: ['**/*.{jsx,tsx}'],
-    plugins: {
-      react: reactPlugin,
-      'jsx-a11y': jsxA11y,
-      'react-hooks': reactHooksPlugin,
-    },
-    settings: {
-      react: {
-        version: 'detect',
-      },
-      formComponents: ['Form'],
-      linkComponents: [
-        { name: 'Link', linkAttribute: 'to' },
-        { name: 'NavLink', linkAttribute: 'to' },
       ],
     },
-    rules: {
-      ...reactPlugin.configs.recommended.rules,
-      ...reactPlugin.configs['jsx-runtime'].rules,
-      ...reactHooksPlugin.configs.recommended.rules,
-      ...jsxA11y.configs.recommended.rules,
-      'react/prop-types': 'off',
-    },
   },
-
-  // TypeScript files
-  {
-    files: ['**/*.{ts,tsx}'],
-    languageOptions: {
-      parser: tsParser,
-      parserOptions: {
-        project: './tsconfig.json',
-      },
-    },
-    plugins: {
-      '@typescript-eslint': tseslint,
-    },
-    rules: {
-      ...tseslint.configs.recommended.rules,
-    },
-  },
-
-  // Node config files
-  {
-    files: ['eslint.config.js'],
-    languageOptions: {
-      globals: {
-        module: 'readonly',
-        require: 'readonly',
-        process: 'readonly',
-        __dirname: 'readonly',
-        __filename: 'readonly',
-      },
-    },
-  },
-
-  // Test files
-  {
-    files: ['**/*.test.{js,jsx,ts,tsx}'],
-    plugins: {
-      'testing-library': testingLibrary,
-    },
-    rules: {
-      ...testingLibrary.configs.react.rules,
-    },
-  },
-
-  // Playwright files
-  {
-    files: ['*.spec.ts'],
-    plugins: {
-      playwright: playwrightPlugin,
-    },
-    rules: {
-      ...playwrightPlugin.configs.recommended.rules,
-      'playwright/require-top-level-describe': 'error',
-      'unicorn/no-null': 'off',
-      'playwright/no-conditional-expect': 'off',
-    },
-  },
-
-  // Prettier config (must be last)
-  eslintConfigPrettier,
-];
+  eslintPluginPrettierRecommended,
+);

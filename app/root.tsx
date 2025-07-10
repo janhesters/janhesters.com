@@ -1,5 +1,7 @@
-import './styles/tailwind.css';
+import './app.css';
 
+import { Menu, MoveLeft } from 'lucide-react';
+import type { ComponentProps, ReactNode } from 'react';
 import {
   isRouteErrorResponse,
   Link,
@@ -11,20 +13,18 @@ import {
   ScrollRestoration,
   useLocation,
   useRouteError,
-} from '@remix-run/react';
-import type { LinksFunction, MetaFunction } from '@vercel/remix';
-import { Menu, MoveLeft } from 'lucide-react';
-import type { ComponentProps, ReactNode } from 'react';
+} from 'react-router';
 
-import { Button, buttonVariants } from '~/components/button';
-import { Sheet, SheetContent, SheetTrigger } from '~/components/sheet';
-
+import type { Route } from './+types/root';
+import { Button, buttonVariants } from './components/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from './components/ui/sheet';
+import { getColorScheme } from './features/color-scheme/color-scheme.server';
+import { ColorSchemeScript } from './features/color-scheme/color-scheme-script';
+import { useColorScheme } from './features/color-scheme/use-color-scheme';
 import { getSocialsMeta } from './lib/misc';
 import { cn } from './lib/utils';
 
-export const config = { runtime: 'edge' };
-
-export const links: LinksFunction = () => [
+export const links: Route.LinksFunction = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
   {
     rel: 'preconnect',
@@ -41,7 +41,7 @@ export const links: LinksFunction = () => [
   },
 ];
 
-export const meta: MetaFunction = () => [
+export const meta: Route.MetaFunction = () => [
   ...getSocialsMeta({
     description: 'Learn how to become a senior fullstack developer.',
     keywords:
@@ -71,6 +71,11 @@ const navLinks = [
   { to: '/about', label: 'About' },
 ];
 
+export async function loader({ request }: Route.LoaderArgs) {
+  const colorScheme = await getColorScheme(request);
+  return { colorScheme };
+}
+
 export function Layout({ children }: { children: ReactNode }) {
   const location = useLocation();
 
@@ -79,10 +84,21 @@ export function Layout({ children }: { children: ReactNode }) {
   const showBlogLinkInFooter = location.pathname.includes('/blog');
 
   const url = new URL(location.pathname, 'https://www.janhesters.com');
+  const colorScheme = useColorScheme();
 
   return (
-    <html lang="en">
+    <html
+      className={colorScheme}
+      lang="en"
+      // When the user a.) has their system color scheme set to "dark", and b.)
+      // picks "system" in the theme toggle, the color scheme is undefined from
+      // the root loader, but "dark" in the client. There won't be a flash
+      // because the `ColorSchemeScript` will set the correct class name using
+      // `useLayoutEffect`.
+      suppressHydrationWarning
+    >
       <head>
+        <ColorSchemeScript />
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
@@ -98,10 +114,10 @@ export function Layout({ children }: { children: ReactNode }) {
       </head>
 
       <body>
-        <header className="border-b border-border">
+        <header className="border-border border-b">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-2">
             <Link to="/">
-              <h1 className="text-xl font-bold text-foreground hover:text-primary">
+              <h1 className="text-foreground hover:text-primary text-xl font-bold">
                 Jan Hesters
               </h1>
             </Link>
@@ -139,7 +155,7 @@ export function Layout({ children }: { children: ReactNode }) {
                 </Button>
               </SheetTrigger>
 
-              <SheetContent side="left">
+              <SheetContent className="p-6" side="left">
                 <nav className="grid gap-6 text-lg font-medium">
                   {navLinks.map(link => (
                     <NavLink
@@ -163,9 +179,9 @@ export function Layout({ children }: { children: ReactNode }) {
 
         {children}
 
-        <footer className="border-t border-border">
+        <footer className="border-border border-t">
           <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 px-4 py-4 sm:h-12 sm:flex-row">
-            <div className="flex items-center gap-6 text-sm font-medium text-muted-foreground">
+            <div className="text-muted-foreground flex items-center gap-6 text-sm font-medium">
               <a
                 className="hover:text-foreground"
                 href="https://github.com/janhesters/janhesters.com"
@@ -174,7 +190,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
                 <GitHubIcon
                   aria-hidden="true"
-                  className="size-6 fill-muted-foreground transition hover:fill-foreground"
+                  className="fill-muted-foreground hover:fill-foreground size-6 transition"
                 />
               </a>
 
@@ -193,7 +209,7 @@ export function Layout({ children }: { children: ReactNode }) {
                 <NavLink
                   className={({ isActive }) =>
                     cn(
-                      'flex items-center hover:text-foreground',
+                      'hover:text-foreground flex items-center',
                       isActive && 'text-primary',
                     )
                   }
@@ -206,7 +222,7 @@ export function Layout({ children }: { children: ReactNode }) {
               )}
             </div>
 
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               &copy; {new Date().getFullYear()} janhesters.com. All rights
               reserved.
             </p>
@@ -237,12 +253,12 @@ function ErrorPage({
     // 146px is the height of the header and footer together on mobile.
     // 102px is the height of both together on tablet and desktop.
     <div className="flex min-h-[calc(100vh-146px)] flex-col items-center justify-center px-4 text-center md:min-h-[calc(100vh-102px)]">
-      <h2 className="mb-4 text-4xl font-bold text-foreground">{title}</h2>
+      <h2 className="text-foreground mb-4 text-4xl font-bold">{title}</h2>
 
-      <p className="mb-2 text-xl text-muted-foreground">{message}</p>
+      <p className="text-muted-foreground mb-2 text-xl">{message}</p>
 
       {subMessage && (
-        <p className="mb-8 text-xl text-muted-foreground">{subMessage}</p>
+        <p className="text-muted-foreground mb-8 text-xl">{subMessage}</p>
       )}
 
       <Link

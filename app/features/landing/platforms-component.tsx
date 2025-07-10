@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unresolved */
 import { ArrowDown } from 'lucide-react';
 
 import logoInstagram from '/svgs/instagram.svg?url';
@@ -6,8 +5,8 @@ import logoLinkedIn from '/svgs/linkedin.svg?url';
 import logoTikTok from '/svgs/tiktok.svg?url';
 import logoX from '/svgs/x.svg?url';
 import logoYouTube from '/svgs/youtube.svg?url';
-import { buttonVariants } from '~/components/button';
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/card';
+import { buttonVariants } from '~/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import { cn } from '~/lib/utils';
 
 type Platform = {
@@ -89,18 +88,18 @@ export function PlatformsComponent() {
                 <dl className="flex flex-auto flex-wrap gap-x-2">
                   <dt className="sr-only">Platform</dt>
 
-                  <dd className="w-full flex-none text-sm font-medium text-foreground">
+                  <dd className="text-foreground w-full flex-none text-sm font-medium">
                     {platform.platformName}
                   </dd>
 
                   <dt className="sr-only">Type of content</dt>
 
-                  <dd className="text-xs text-muted-foreground">
+                  <dd className="text-muted-foreground text-xs">
                     {platform.description}
                   </dd>
                 </dl>
 
-                <div className="flex items-center justify-center text-primary">
+                <div className="text-primary flex items-center justify-center">
                   {platform.cta}
                 </div>
               </a>

@@ -1,12 +1,13 @@
-import { Link, useLoaderData } from '@remix-run/react';
-import type { MetaFunction } from '@vercel/remix';
+import { Link } from 'react-router';
 
-import { buttonVariants } from '~/components/button';
+import { buttonVariants } from '~/components/ui/button';
 import { getAllPostsMetaSortedByDate } from '~/features/blog/blog-helpers.server';
 import { getSocialsMeta } from '~/lib/misc';
 import { cn } from '~/lib/utils';
 
-export const meta: MetaFunction = () =>
+import type { Route } from './+types/archive_._index';
+
+export const meta: Route.MetaFunction = () =>
   getSocialsMeta({
     title: "Jan Hesters' Blog's Archive",
     description: "Read and enjoy Jan Hesters's old posts.",
@@ -19,14 +20,12 @@ export async function loader() {
   return posts.filter(meta => meta.isArchived && !meta.isDraft);
 }
 
-export default function BlogIndex() {
-  const loaderData = useLoaderData<typeof loader>();
-
+export default function ArchiveIndex({ loaderData }: Route.ComponentProps) {
   return (
     <main className="px-2 py-4">
       <h2 className="sr-only">Archive</h2>
 
-      <p className="mx-auto mb-4 max-w-5xl text-muted-foreground">
+      <p className="text-muted-foreground mx-auto mb-4 max-w-5xl">
         You&apos;ve found my archive. Enjoy reading my old posts.
       </p>
 
@@ -36,7 +35,7 @@ export default function BlogIndex() {
             <Link
               className={cn(
                 buttonVariants({ variant: 'ghost' }),
-                'flex h-auto flex-col items-start whitespace-normal rounded-2xl p-2',
+                'flex h-auto flex-col items-start rounded-2xl p-2 whitespace-normal',
               )}
               to={`/blog/${post.slug}`}
             >

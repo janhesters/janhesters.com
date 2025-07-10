@@ -1,7 +1,6 @@
 import mdx from '@mdx-js/rollup';
-// import { transformerCopyButton } from '@rehype-pretty/transformers';
-import { vitePlugin as remix } from '@remix-run/dev';
-import { vercelPreset } from '@vercel/remix/vite';
+import { reactRouter } from '@react-router/dev/vite';
+import tailwindcss from '@tailwindcss/vite';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypeKatex from 'rehype-katex';
 import type { Options, Theme } from 'rehype-pretty-code';
@@ -40,20 +39,8 @@ export default defineConfig({
         rehypeAutolinkHeadings,
       ],
     }),
-    remix({
-      future: {
-        v3_fetcherPersist: true,
-        v3_relativeSplatPath: true,
-        v3_throwAbortReason: true,
-        unstable_singleFetch: true,
-        unstable_lazyRouteDiscovery: true,
-        unstable_optimizeDeps: true,
-      },
-      presets: [vercelPreset()],
-    }),
+    tailwindcss(),
+    reactRouter(),
     tsconfigPaths(),
   ],
-  ssr: {
-    noExternal: ['tailwind-merge'],
-  },
 });

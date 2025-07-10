@@ -1,10 +1,9 @@
-import { useLoaderData } from '@remix-run/react';
-
 import { getAllPostsMetaSortedByDate } from '~/features/blog/blog-helpers.server';
 import { BlogPostCard } from '~/features/blog/blog-post-card';
 import { HeroComponent } from '~/features/landing/hero-component';
 import { PlatformsComponent } from '~/features/landing/platforms-component';
 
+import type { Route } from './+types/_index';
 import { EmailCapture } from './email-capture';
 
 export async function loader() {
@@ -12,8 +11,8 @@ export async function loader() {
   return posts.filter(meta => !meta.isArchived && !meta.isDraft).slice(0, 3);
 }
 
-export default function Index() {
-  const blogPosts = useLoaderData<typeof loader>();
+export default function Index({ loaderData }: Route.ComponentProps) {
+  const blogPosts = loaderData;
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">

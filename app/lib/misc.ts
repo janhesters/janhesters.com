@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 /**
  * Extracts the slug from a blog URL.
  *
@@ -88,14 +90,35 @@ export const getSocialsMeta = ({
  * @returns The domain URL as a string.
  * @throws {Error} If the host cannot be determined from the request headers.
  */
-export function getDomainUrl(request: Request) {
-  const host =
-    request.headers.get('X-Forwarded-Host') ?? request.headers.get('host');
+const environmentOrigin = process.env.VERCEL_URL
+  ? // Vercel: VERCEL_URL is like "my-site.vercel.app" or with protocol
+    process.env.VERCEL_URL.startsWith('http')
+    ? process.env.VERCEL_URL
+    : `https://${process.env.VERCEL_URL}`
+  : process.env.SITE_ORIGIN; // e.g. "http://localhost:5173"
 
-  if (!host) {
-    throw new Error('Could not determine domain URL.');
+export function getDomainUrl(request: Request): string {
+  // 1) Env var override
+  if (environmentOrigin) {
+    return removeTrailingSlash(environmentOrigin);
   }
 
+  // 2) Derive from the request URL (works in prerender & real requests)
+  try {
+    return new URL(request.url).origin;
+  } catch {
+    // ignore parse errors
+  }
+
+  // 3) Fallback to headers
+  const host =
+    request.headers.get('X-Forwarded-Host') ?? request.headers.get('host');
+  if (!host) {
+    throw new Error(
+      'Could not determine domain URL. ' +
+        'Set VERCEL_URL (on Vercel) or SITE_ORIGIN (locally) if needed.',
+    );
+  }
   const protocol = host.includes('localhost') ? 'http' : 'https';
   return `${protocol}://${host}`;
 }

@@ -1,6 +1,9 @@
-import type { PluginUtils } from 'tailwindcss/types/config';
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import type { PluginAPI } from 'tailwindcss/plugin';
 
-export function typographyStyles({ theme }: PluginUtils) {
+// eslint-disable-next-line @typescript-eslint/unbound-method
+export function typographyStyles({ theme }: PluginAPI) {
   return {
     invert: {
       css: {
@@ -33,7 +36,7 @@ export function typographyStyles({ theme }: PluginUtils) {
         '--tw-prose-invert-table-border': 'hsl(var(--border))',
         '--tw-prose-invert-a-text-decoration-thickness': '1px',
 
-        // Base
+        /* Base */
         p: {
           fontSize: theme('fontSize.xl')[0],
           fontFamily:
@@ -42,7 +45,7 @@ export function typographyStyles({ theme }: PluginUtils) {
           lineHeight: theme('lineHeight.8'),
         },
 
-        // Headings
+        /* Headings */
         h2: {
           fontSize: theme('fontSize.4xl')[0],
           marginBottom: theme('spacing.8'),
@@ -57,7 +60,7 @@ export function typographyStyles({ theme }: PluginUtils) {
           fontSize: theme('fontSize.xl')[0],
         },
 
-        // Images
+        /* Images */
         img: {
           border: '1px solid',
           borderColor: 'var(--tw-prose-pre-border)',
@@ -66,10 +69,9 @@ export function typographyStyles({ theme }: PluginUtils) {
           marginRight: 'auto',
         },
 
-        // Inline elements
+        /* Inline elements */
         a: {
           fontWeight: 'var(--tw-prose-p-font-weight)',
-          // Change the underline width.
           textDecorationThickness:
             'var(--tw-prose-a-text-decoration-thickness)',
         },
@@ -86,14 +88,8 @@ export function typographyStyles({ theme }: PluginUtils) {
           paddingLeft: theme('spacing.1'),
           paddingRight: theme('spacing.1'),
         },
-        // 'a code': {
-        //   color: 'inherit',
-        // },
-        //   ':is(h2, h3) code': {
-        //     fontWeight: theme('fontWeight.bold'),
-        //   },
 
-        // Quotes
+        /* Quotes */
         blockquote: {
           borderInlineStartWidth: theme('borderWidth.0'),
           borderLeftColor: 'var(--foreground)',
@@ -103,23 +99,16 @@ export function typographyStyles({ theme }: PluginUtils) {
           paddingLeft: theme('spacing.5'),
         },
 
-        // Figures
+        /* Figures */
         figcaption: {
           border: '1px solid',
           borderColor: 'var(--tw-prose-pre-border)',
           borderBottom: '0',
         },
-        // 'figcaption > p': {
-        //   margin: 0,
-        // },
 
-        // Lists
-        ul: {
-          listStyleType: 'disc',
-        },
-        ol: {
-          listStyleType: 'decimal',
-        },
+        /* Lists */
+        ul: { listStyleType: 'disc' },
+        ol: { listStyleType: 'decimal' },
         li: {
           fontFamily:
             'source-serif-pro, Georgia, Cambria, "Times New Roman", Times, serif',
@@ -127,17 +116,14 @@ export function typographyStyles({ theme }: PluginUtils) {
           fontWeight: 'var(--tw-prose-p-font-weight)',
           lineHeight: theme('lineHeight.8'),
         },
-        'ol > li::marker': {
-          color: 'hsl(var(--foreground))',
-        },
-        'ul > li::marker': {
+        'ol > li::marker, ul > li::marker': {
           color: 'hsl(var(--foreground))',
         },
         '& input[type="checkbox"]': {
           accentColor: theme('colors.primary.DEFAULT'),
         },
 
-        // Code blocks
+        /* Code blocks */
         pre: {
           backgroundColor: 'hsl(var(--code-background))',
           border: '1px solid',
@@ -148,12 +134,12 @@ export function typographyStyles({ theme }: PluginUtils) {
           overflowX: 'auto',
         },
 
-        // Horizontal rules
+        /* Horizontal rules */
         hr: {
           borderColor: 'hsl(var(--border))',
         },
 
-        // Tables
+        /* Tables */
         table: {
           backgroundColor: 'hsl(var(--code-background))',
           border: '1px solid',
@@ -191,45 +177,6 @@ export function typographyStyles({ theme }: PluginUtils) {
           paddingLeft: theme('spacing.3'),
           paddingRight: theme('spacing.3'),
         },
-        // 'thead th': {
-        //   color: 'var(--tw-prose-headings)',
-        //   fontWeight: theme('fontWeight.semibold'),
-        //   verticalAlign: 'bottom',
-        //   paddingBottom: theme('spacing.2'),
-        // },
-        // 'thead th:not(:first-child)': {
-        //   paddingLeft: theme('spacing.2'),
-        // },
-        // 'thead th:not(:last-child)': {
-        //   paddingRight: theme('spacing.2'),
-        // },
-        // 'tbody tr': {
-        //   borderBottomWidth: '1px',
-        //   borderBottomColor: 'var(--tw-prose-td-borders)',
-        // },
-        // 'tbody tr:last-child': {
-        //   borderBottomWidth: 0,
-        // },
-        // 'tbody td': {
-        //   verticalAlign: 'baseline',
-        // },
-        // tfoot: {
-        //   borderTopWidth: '1px',
-        //   borderTopColor: 'var(--tw-prose-th-borders)',
-        // },
-        // 'tfoot td': {
-        //   verticalAlign: 'top',
-        // },
-        // ':is(tbody, tfoot) td': {
-        //   paddingTop: theme('spacing.2'),
-        //   paddingBottom: theme('spacing.2'),
-        // },
-        // ':is(tbody, tfoot) td:not(:first-child)': {
-        //   paddingLeft: theme('spacing.2'),
-        // },
-        // ':is(tbody, tfoot) td:not(:last-child)': {
-        //   paddingRight: theme('spacing.2'),
-        // },
       },
     },
   };

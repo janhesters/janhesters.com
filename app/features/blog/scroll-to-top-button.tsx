@@ -1,12 +1,12 @@
 import { CircleChevronUp } from 'lucide-react';
 
-import { Button } from '~/components/button';
+import { Button } from '~/components/ui/button';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '~/components/tooltip';
+} from '~/components/ui/tooltip';
 
 export function ScrollToTopButton() {
   return (
@@ -14,7 +14,7 @@ export function ScrollToTopButton() {
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
-            className="hidden items-center justify-center rounded-full text-muted-foreground md:flex"
+            className="text-muted-foreground hidden items-center justify-center rounded-full md:flex"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             size="icon"
             variant="ghost"
