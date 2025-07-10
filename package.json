@@ -67,5 +67,6 @@
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc"
   },
-  "type": "module"
+  "type": "module",
+  "version": "2.0.0"
 }
