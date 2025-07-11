@@ -59,12 +59,18 @@ const redirectMapping: RedirectMapping = {
     '/creating-graphql-batch-operations-for-aws-amplify',
     '/creating-graphql-batch-operations-for-aws-amplify/',
   ],
-  '/blog/updater-functions-in-setstate': ['/updater-functions-in-setstate'],
+  '/blog/updater-functions-in-setstate': [
+    '/updater-functions-in-setstate',
+    '/updater-functions-in-setstate/',
+  ],
   '/blog/tracking-and-email-reminders-in-aws-amplify': [
     '/tracking-and-email-reminders-in-aws-amplify',
     '/tracking-and-email-reminders-in-aws-amplify/',
   ],
-  '/blog/localization-with-aws-amplify': ['/localization-with-aws-amplify'],
+  '/blog/localization-with-aws-amplify': [
+    '/localization-with-aws-amplify',
+    '/localization-with-aws-amplify/',
+  ],
   '/blog/sorting-queries-with-aws-amplifys-key-directive': [
     '/sorting-queries-with-aws-amplifys-key-directive',
     '/sorting-queries-with-aws-amplifys-key-directive/',
@@ -72,6 +78,8 @@ const redirectMapping: RedirectMapping = {
   '/blog/query-more-items-using-scans-in-aws-amplify': [
     '/query-more-items-using-scans-in-aws-amplify',
     '/query-more-items-using-scans-in-aws-amplify/',
+    '/query-all-items-using-scans-in-aws-amplify',
+    '/query-all-items-using-scans-in-aws-amplify/',
   ],
   '/blog/how-to-use-aws-appsync-in-lambda-functions': [
     '/how-to-use-aws-appsync-in-lambda-functions',
@@ -88,6 +96,8 @@ const redirectMapping: RedirectMapping = {
   '/blog/lambda-triggers-and-read-only-permissions': [
     '/lambda-triggers-and-read-only-permissions',
     '/lambda-triggers-and-read-only-permissions/',
+    '/lamda-triggers-and-read-only-permissions',
+    '/lamda-triggers-and-read-only-permissions/',
   ],
   '/blog/multiple-environments-with-aws-amplify': [
     '/multiple-environments-with-aws-amplify',
@@ -100,6 +110,8 @@ const redirectMapping: RedirectMapping = {
   '/blog/end-to-end-testing-amplify-apps': [
     '/end-to-end-testing-amplify-apps',
     '/end-to-end-testing-amplify-apps/',
+    '/e2e-testing-amplify-apps',
+    '/e2e-testing-amplify-apps/',
   ],
   '/blog/conditional-rendering': [
     '/conditional-rendering',
