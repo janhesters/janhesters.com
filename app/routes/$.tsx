@@ -152,6 +152,11 @@ export function loader({ request }: Route.LoaderArgs) {
   throw new Response(null, { status: 404, statusText: 'Not Found' });
 }
 
+export function action({ request }: Route.ActionArgs) {
+  // Handle POST requests to non-existent routes with 404
+  throw new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
 export default function CatchAll() {
   return null;
 }

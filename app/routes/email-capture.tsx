@@ -80,7 +80,9 @@ export function EmailCapture() {
   });
 
   const onSubmit = form.handleSubmit(data => {
-    void fetcher.submit(data, { action: '/email-capture', method: 'post' });
+    const formData = new FormData();
+    formData.append('email', data.email);
+    void fetcher.submit(formData, { action: '/email-capture', method: 'post' });
   });
 
   return (
