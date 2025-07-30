@@ -1,0 +1,190 @@
+---
+title: "How to Solve Any Problem"
+datePublished: '2019-06-26'
+description: 'Execute queries and mutations by using the correct execution policy and polyfills.'
+thumbnailUrl: ''
+isDraft: true
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+There was once an employee who caused a problem.
+
+Something really big happened and it was a big news story.
+
+And it cost the company 100 million dollars.
+
+The employee was in charge of a division that caused the problem, when he reads the news and he sees it he goes right up to the president.
+
+He knocks on the door.
+
+CEO: "Step in."
+
+Employee: "I got something I got to tell you."
+
+Employee: "Ok, so this is what happened. Here’s the news and this is what happened. About six months ago, X, Y, Z happened and we brought this team in and that, this, and this, and that, and the other thing."
+
+And he said: "Now, I should have caught it right then. I should have caught it six months ago.
+
+I mean, it’s understandable, right? That was one of those things that it was pretty ambiguous, but I could have and I probably should have caught it back then, but I didn’t."
+
+Employee: "And then three months ago. This other thing happened and I noticed that and I fixed that, but I didn’t tie it back to what the source of the core problem was.
+
+And that’s when I really should have got it.
+
+And then this other thing happened and. This is where we’re at today.
+
+Now, I did notice this, and here’s the changes that I’ve already put in place to start to fix this. This was before the story broke. And so what I did is I switched this guy out for that guy, and then I did this, and I changed this over, and I changed the evaluation process so we now look for XYZ instead of ABC.
+
+That way, this won’t happen again. Now, what happened in the news, that was already in motion. And when I put the new stuff in place, it was already too late to solve that problem. But that’s how it happened.
+
+And here’s what we can do to fix this. Now, here’s how I would fix the bigger issue. You know, because I’ve already put measures in place to prevent it from happening again. So start with that and then talk about how, how we’ve already fixed the problem. And this is something that popped up after the fact, and that we’re doing this, and we’re doing that, and we’re doing the other thing. Now, if you give me this other team over here, I can fix this problem that’s happening now by correcting it, giving refunds, doing all this other stuff."
+
+And so he had this complete plan. Right off the bat, he just laid it all out, didn’t pull any punches. He just was: "this is what happened. This is what I did. This broke, that broke. I fixed this. This happened, that happened. Here’s what I can do to do even better." And just laid it all out.
+
+And the CEO was sort of like: "Okay. Do it."
+
+And the dude kept his job. The dude kept his job. And later he was even promoted.
+
+Ownership Culture or Face-It-and-Fix-It Culture vs. Avoid Blame Culture
+
+People avoid EOD messages because they're afraid to get blamed if a problem is found. But instead, we should just fix it.
+
+---
+
+If you have somebody who can think for themselves like that, you're no longer giving them a contractor. You're lending them a consultant.
+
+In order to handle that, to get them to think for themselves, they have to own the problem.
+
+And to take ownership of it.
+
+Okay, well, this is my problem to solve.
+
+Most of the cultures where the contractors come from are avoid blame cultures.
+
+If something went wrong, I had nothing to do with it.
+
+I'm the one who can fix this.
+
+I can take charge of this and fix it.
+
+And I'm the best and I'm more valuable because I can do that.
+
+I think, you know, people would say pass the buck, whatever the buck is like pass the buck.
+
+No, the buck stops here.
+
+If you've got a problem, don't keep dumping it on other people.
+
+Give it to me and I'll solve it.
+
+The more you can get help to fix flaws or things that aren't working right, the better you're going to be, the more valuable you're going to be and the more money you can make.
+
+I’d take a two‑context approach: first, fully acknowledge and validate their home culture; then, create a separate “online” context where a different rule applies. When they’re out in Ghana or Nigeria, they remain in familiar territory—no one points out every little mistake. But as soon as they open their laptops, they enter Europe (or America), where the rule is: the more you spot and fix flaws, the more valuable you become and the more you can earn.
+
+You’re not trying to change their entire cultural identity—just setting the frame that “online = European/American norms.” Pick whichever region fits their preconceptions best, lean on those existing beliefs (“In America, we do it like this”), and then fine‑tune. Most have never worked outside their country, so they’ll accept “this is how it’s done over here,” even if it doesn’t match local practice. From there, you simply provide concrete examples—stories of someone at my last company, say—and show step by step, “Here’s what you’d do in that context,” making the new rules feel natural in that separate frame.
+
+There was a high‑up guy. And there were. Uh, I don’t remember what problem it was, but this guy was like a VP or even a president of an area. And something really big happened. And it was a big news story. And it was a big problem. And it cost the company like, you know, \$100 million. The guy who was in charge of that division—he goes right up to the CEO. Have I told you this story? Feel free to tell it again. He knocks on the door.
+
+VP: Yeah, I got something I got to tell you.
+VP: OK, so this is what happened. Right. This this. You know, here’s the news and this is what happened.
+VP: So what happened was. About six months ago, X, Y, Z happened and we brought this team in and that, this, and this, and that, and the other thing.
+VP: Now. I should have caught it right then. I should have caught it six months ago. Right? But it was—I mean, it’s understandable, right? That was one of those things that it was pretty ambiguous, but I could have and I probably should have caught it back then, but I didn’t.
+VP: And then three months ago. This other thing happened and I noticed that and I fixed that, but I didn’t tie it back to what the source of the core problem was. Right. And that’s when I really should have got it. And then this other thing happened and. This is where we’re at today.
+VP: Now, I did notice this, and here’s the changes that I’ve already put in place to start to fix this. This was before the story broke. And so what I did is I switched this guy out for that guy, and then I did this, and I changed this over, and I changed the evaluation process so we now look for XYZ instead of ABC. That way, this won’t happen again. Now, what happened in the news, that was already in motion. And when I put the new stuff in place, it was already too late to solve that problem. But that’s how it happened.
+VP: And here’s what we can do to fix this. Now, here’s how I would fix the bigger issue, right? The, you know, because I’ve already put measures in place to prevent it from happening again. So start with that and then talk about how, how we’ve already fixed the problem. And this is something that popped up after the fact, and that we’re doing this, and we’re doing that, and we’re doing the other thing. Now, if you give me this other team over here, I can fix this problem that’s happening now by correcting it, giving refunds, doing all this other stuff.
+
+And so he had this complete plan. Right off the bat, he just laid it all out, didn’t pull any punches. He just was, this is what happened. This is what I did. This broke, that broke. I fixed this. This happened, that happened. Here’s what I can do to do even better. And just laid it all out.
+
+CEO: Okay. Do it.
+
+And the dude kept his job. The dude kept his job.
+
+Story two is about It’s going to be something about calibrating. They’re asking questions that they should have known. Yeah. Long time ago. This happens with forms of autism and ADD. And that’s how I know about it. And my guess is the developers that are good enough to work for you probably have some features of that already. Yeah. I’m not sure about this. Maybe it’s just a cultural thing. But what happens is they can’t put the narrative together. They can’t put the narrative. They can’t. Okay, this and this and this. What do they all imply together? They have no ability to make inferences. You have one data point. You have two data points. Okay, what do they mean together? You have three data points. What has to be true for all three of these to be true? Yeah. You and I can do this. We can create a narrative. We can create a trend, a pattern recognition. Now, that’s where they’re failing. They’re failing on the pattern recognition in the interpersonal, not interpersonal, but the verbal narrative. Yeah. Not the quantitative data set. But the verbal analytical narrative, that’s where they’re failing. And that’s all it is. It’s just talking about how you can find these different data points and ask what has to be true for both. If both of these data points happen, if the person says you need a contract address. And you need. And people are talking about. I don’t even know anything about what you were doing, but. And we need an app that requires authentication. What has to be true if you need both of those things? What has to be true. And then if you add more data points, okay, well, if they’re—um, I’m trying to look at your list here to see if there’s, you know—um—you get the general plan. When you add the data points, you have to check, okay, what encompasses all of these, what is true based on all of these exist. And it’ll be weird because they will look at you like you’re crazy because they can’t keep four things in their head at once to create a single narrative around all four things. They can’t do it. They can’t do it. And so you give them that process. And the process, again, is just starting with one, starting adding the second one, what has to be true. Adding a third, what now has to be true? Adding a fourth, what now has to be true? And then they start to develop those muscles of inference. It’s extremely difficult because most people in the tech world can only chunk down. They cannot chunk up. And that’s what they’re doing. That’s what we’re doing here. If you have these three data points, what’s the next chunk up? And they can’t do it. Interesting. In fact, most tech people have that problem. Yeah, yeah, it’s true. Which is why the ones that can chunk up usually make mad money because that’s very helpful. You also know how to program and you can do that. Yeah.
+
+Third part, if you’ve come up with a solution, think about: does this satisfy what they’re trying to do with it? Yeah. Because all they’re trying to do is deliver code. Okay. Uh, if you deliver this code, will they make money? If you deliver this code, will it work for all of the cases that they want to use it for? Yeah, right? If you think about what they’re trying to accomplish, yeah. Float over, look over their shoulder at yourself: what is it that they need? And again, this is very difficult because they’re far away. They have minimal visibility into what people are trying to do. They’re not at the water cooler having these conversations. It’s hard. It’s very hard. And plus there’s the, you know, cultural… so it’s not an easy thing to develop. But that’s the third thing that I would do. I would have them think, okay, so you are now—imagine that you are the team lead and you need to deliver this so that your company makes money. If you deliver this and you deliver it on time but it doesn’t work, or if it has lower quality, is that something you’d be happy receiving? And if not, and you can’t do it the way they ask, then what’s your approach? You have a conversation about it. You have a negotiation about it. You say, “Well, I think this would be really hard to deliver at this speed. We—we can’t—we just can’t do it any faster than we already have without losing some quality control.”
+
+In meetings, take notes. Write the requirements down. Use an AI note-taker to capture a transcript and AI generated notes. Take 5 minutes to compare your own notes to the AI generated notes.
+
+The algorithm how to solve any problem.
+
+1. Start with the directive.
+
+2. What MUST occur to do this?
+
+3. What options are available to do that?
+
+4. What advantages / disadvantages does each inherently have?
+
+5. What constraints apply to #2?
+
+6. Choose a method and implement.
+
+7. How well did it work? What result did I get?
+
+1. Start with a directive -> e.g. align ideas
+
+So he has to do that yeah now there's a bunch of different components of that I saw but I only noticed that after I had to dissect it for him because in my mind this is just one chunk, this is just getting on a call and talking, and for him it was like so many steps.
+
+If you tell somebody who doesn't know how to ride a bicycle, well, hop on your bicycle and come over.
+
+He won't know how to do it exactly yeah And he will try, but he will have no idea.
+
+He'll walk the bicycle over to your house, right?
+
+Because he won't know how to do it.
+
+Um, You must. Break it. Out. Into subtasks.
+
+
+2. You must **break it out into subtasks** that are mandatory. Not in the sense that somebody's making you do it, but just what absolutely has to happen for for this to do.
+
+How can you learn or teach people to find those subtasks dynamically?
+
+Answer the question: what absolutely must occur in order for this to happen?
+
+E.g. In order to align on the ideas. What absolutely must happen?
+
+One of the obvious answers is there must be some communication.
+
+Answer One is: Communication must occur.
+
+Answer two is: they must agree. Answer three: They must have sufficient guidance.
+
+What constraints apply to number 2?
+
+E.g. Does it have to be fast? Who has to be there?
+
+What options are available to do that?
+
+You have text messages, voice call, video, etc.
+
+What advantages and disadvantages does each inherently have?
+
+e.g. fast but limited, fast but invasive (might be difficult to schedule)
+
+6. Implement
+
+This is also testing your implementation. 
+
+7. How well did it work? What result did I create?
+
+In my A-player video, I've shown a template that judges the values that your actions produce for your team. But the problem was: A lot of people will never be able to plug the situations into that because they don't get templates. They need procedures. It's kind of like object oriented programming vs. functional programming.
+
+This algorithm is verb-based, it's action-based, it's a process. (verb-process vs. noun-thing)
+
+The template was object, thing, noun. It described things as matching other things. But for some people, no thing is like any other thing.
+
+Coachable - Look for genuine curiosity, self‑awareness, and a hunger for feedback. Coachable hires ask “how can I do better?” rather than defend every mistake.

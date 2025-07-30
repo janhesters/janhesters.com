@@ -1,0 +1,234 @@
+---
+title: "How to Solve Any Problem"
+datePublished: '2019-06-26'
+description: 'Execute queries and mutations by using the correct execution policy and polyfills.'
+thumbnailUrl: ''
+isDraft: true
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+First, I'll give you the algorithm to solve any problem.
+
+Then, since it's a bit abstract, I'll break it down with a real-world example.
+
+1. Start with the directive.
+
+2. What MUST occur to do this?
+
+3. What options are available to do that?
+
+4. What advantages / disadvantages does each inherently have?
+
+5. What constraints apply to #2?
+
+6. Choose a method and implement.
+
+7. How well did it work? What result did I get?
+
+<details>
+  <summary>Why do some people need procedures instead of templates?</summary>
+
+  In my article ["How to Become the Most Valuable Member of Any Team,"](https://janhesters.com/blog/become-the-most-valuable-member-in-any-team) I've shown you a template for evaluating how your actions create value for your team.
+
+  But the problem was: a lot of people will never be able to plug their situations into that because they don't get templates.
+
+  Many people need procedures.
+
+  It's kind of like object-oriented programming vs. functional programming.
+
+  This article's algorithm is verb-based. It's action-based; it's a process (verb-process vs. noun-thing).
+
+  The template was object, thing, noun. It described things as matching other things. But for some people, no thing is like any other thing.
+</details>
+
+You need a strategy for determining if something has been done or not. Let's break this down.
+
+### 1. Start with a directive
+
+For example: “align ideas”.
+
+Let's say, your manager tells you: “Align with your team members on this.”
+
+There's a bunch of different components to that. I only noticed that after I dissected the task, because in my mind it's just one chunk. But for process-oriented people, there's a lot of different components to that.
+
+If you tell somebody who doesn't know how to ride a bicycle, “Well, hop on your bicycle and come over” - they won't know how to do it. And they'll try, but they'll have no idea.
+
+They'll walk the bicycle over to your house, right? Because they won't know how to do it.
+
+You must. Break it. Out. Into subtasks.
+
+### 2. What MUST occur to do this?
+
+You must **break it out into subtasks that are _mandatory_** — not in the sense that somebody's making you do it, but in the sense of: *this literally won't work unless these things happen*.
+
+So how do you learn — or teach others — to identify those subtasks dynamically?
+
+You must answer the question: what absolutely must occur in order for this to happen?
+
+In our example, in order to align on the ideas, what absolutely must happen?
+
+Well, first, there has to be communication.
+
+Second, they need to reach agreement.
+
+Third, they have to be guided well enough to actually align.
+
+### 3. What options are available to do that?
+
+Depending on the problem, this is sometimes hard to answer. But in our example, it's very easy.
+
+1. Text messages
+2. Voice calls
+3. Video calls
+4. In-person meetings
+
+### 4. What advantages / disadvantages does each inherently have?
+
+Take every option and think about the advantages and disadvantages.
+
+1. Text messages
+   - Advantages
+     - Fast for short, simple exchanges.
+     - Asynchronous - no need for both people to be available at the same time.
+     - Easy to refer back to later.
+     - Low pressure - allows time to think before replying.
+   - Disadvantages
+     - Limited context - tone and intent can be misunderstood.
+     - Takes time to wait for response in case the person doing other things in between the messages.
+     - Insufficient for emotionally sensitive discussions.
+2. Voice calls
+   - Advantage:
+     - Thorough & real-time - allows quick clarification and follow-up questions.
+     - Richer communication through tone and pace.
+     - Can be recorded or summarized for later reference.
+   - Disadvantages
+     - May require scheduling or coordination.
+     - Time-blocking — both people must be available simultaneously.
+     - No visual cues (e.g., body language or screen sharing).
+3. Video calls
+   - Advantages
+     - Thorough & real-time - allows quick clarification and follow-up questions.
+     - Can be recorded or summarized for later reference.
+     - Combines verbal and visual communication — includes facial expressions and body language.
+     -Great for collaboration, screen sharing, and explaining visual ideas
+   - Disadvantages
+     - May require scheduling or coordination.
+     - Time-blocking — both people must be available simultaneously.
+     - Requires stable high-bandwidth internet and appropriate tech setup.
+     - Can feel awkward or formal for quick or minor interactions.
+4. In-person meetings: 
+   - Advantages
+     - Highest bandwidth communication — full range of non-verbal cues.
+     - Better for brainstorming, team bonding, or emotionally complex topics.
+   - Disadvantages
+     - Location-dependent — requires physical presence.
+     - Scheduling and logistics can be difficult.
+     - Time-consuming (includes commute, preparation, etc.).
+     - Less flexibility — hard to reschedule or move quickly.
+     - Can feel inefficient for topics that could be handled via other channels.
+
+### 5. What constraints apply to #2?
+
+- Communication must occur: Does it have to be fast? Who has to be there? 
+- They must agree: Is there a deadline by which agreement must be reached? Who has the last say?
+- They must have sufficient guidance: What context and background information is needed?
+
+### 6. Choose a method and implement.
+
+### 7. How well did it work? What result did I get?
+
+What constraints apply to number 2?
+
+E.g. Does it have to be fast? Who has to be there?
+
+I picked video. Someone says I can't make it before 3 o'clock today. Another person said, I can't make it before 3 o'clock today. It won't work.
+
+---
+
+Third part, if you’ve come up with a solution, think about: does this satisfy what they’re trying to do with it? Yeah. Because all they’re trying to do is deliver code. Okay. Uh, if you deliver this code, will they make money? If you deliver this code, will it work for all of the cases that they want to use it for? Yeah, right? If you think about what they’re trying to accomplish, yeah. Float over, look over their shoulder at yourself: what is it that they need? And again, this is very difficult because they’re far away. They have minimal visibility into what people are trying to do. They’re not at the water cooler having these conversations. It’s hard. It’s very hard. And plus there’s the, you know, cultural… so it’s not an easy thing to develop. But that’s the third thing that I would do. I would have them think, okay, so you are now—imagine that you are the team lead and you need to deliver this so that your company makes money. If you deliver this and you deliver it on time but it doesn’t work, or if it has lower quality, is that something you’d be happy receiving? And if not, and you can’t do it the way they ask, then what’s your approach? You have a conversation about it. You have a negotiation about it. You say, “Well, I think this would be really hard to deliver at this speed. We—we can’t—we just can’t do it any faster than we already have without losing some quality control.”
+
+In meetings, take notes. Write the requirements down. Use an AI note-taker to capture a transcript and AI generated notes. Take 5 minutes to compare your own notes to the AI generated notes.
+
+The algorithm how to solve any problem.
+
+1. Start with the directive.
+
+2. What MUST occur to do this?
+
+3. What options are available to do that?
+
+4. What advantages / disadvantages does each inherently have?
+
+5. What constraints apply to #2?
+
+6. Choose a method and implement.
+
+7. How well did it work? What result did I get?
+
+1. Start with a directive -> e.g. align ideas
+
+So he has to do that yeah now there's a bunch of different components of that I saw but I only noticed that after I had to dissect it for him because in my mind this is just one chunk, this is just getting on a call and talking, and for him it was like so many steps.
+
+If you tell somebody who doesn't know how to ride a bicycle, well, hop on your bicycle and come over.
+
+He won't know how to do it exactly yeah And he will try, but he will have no idea.
+
+He'll walk the bicycle over to your house, right?
+
+Because he won't know how to do it.
+
+Um, You must. Break it. Out. Into subtasks.
+
+
+2. You must **break it out into subtasks** that are mandatory. Not in the sense that somebody's making you do it, but just what absolutely has to happen for for this to do.
+
+How can you learn or teach people to find those subtasks dynamically?
+
+Answer the question: what absolutely must occur in order for this to happen?
+
+E.g. In order to align on the ideas. What absolutely must happen?
+
+One of the obvious answers is there must be some communication.
+
+Answer One is: Communication must occur.
+
+Answer two is: they must agree. Answer three: They must have sufficient guidance.
+
+What constraints apply to number 2?
+
+E.g. Does it have to be fast? Who has to be there?
+
+What options are available to do that?
+
+You have text messages, voice call, video, etc.
+
+What advantages and disadvantages does each inherently have?
+
+e.g. fast but limited, fast but invasive (might be difficult to schedule)
+
+6. Implement
+
+This is also testing your implementation. 
+
+7. How well did it work? What result did I create?
+
+In my A-player video, I've shown a template that judges the values that your actions produce for your team. But the problem was: A lot of people will never be able to plug the situations into that because they don't get templates. They need procedures. It's kind of like object oriented programming vs. functional programming.
+
+This algorithm is verb-based, it's action-based, it's a process. (verb-process vs. noun-thing)
+
+The template was object, thing, noun. It described things as matching other things. But for some people, no thing is like any other thing.
+
+Put yourself into the shoes of ...
