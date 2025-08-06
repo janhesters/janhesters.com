@@ -133,6 +133,10 @@ const redirectMapping: RedirectMapping = {
     '/blog/how-to-set-up-nextjs-15-for-production-in-2024',
     '/blog/how-to-set-up-nextjs-15-for-production-in-2024/',
   ],
+  '/blog/the-ultimate-guide-to-remote-work-communication': [
+    '/master-communication',
+    '/master-communication/',
+  ],
   '/archive': ['/bonus', '/bonus/'],
 };
 

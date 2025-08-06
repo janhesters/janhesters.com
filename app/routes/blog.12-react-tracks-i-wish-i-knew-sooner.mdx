@@ -1,0 +1,49 @@
+---
+title: "12 React Tracks I Wish I Knew Sooner"
+datePublished: '2025-07-30'
+description: ""
+thumbnailUrl: 'https://i.magecdn.com/ada680/766252_unleash_javascripts_potential_with_functional_programming?f=webp,q.25,p.f,l.f'
+isDraft: true
+---
+
+### Use `key` to force a component to unmount and remount
+
+```tsx
+import React, { useState } from 'react';
+
+function Counter() {
+  // This internal state will get reset to 0 any time the Counter
+  // component is remounted (i.e. when its key changes)
+  const [count, setCount] = useState(0);
+
+  return (
+    <div style={{ border: '1px solid #ccc', padding: 16, marginTop: 8 }}>
+      <p>Internal count: {count}</p>
+      <button onClick={() => setCount(c => c + 1)}>
+        Increment inside Counter
+      </button>
+    </div>
+  );
+}
+
+export default function App() {
+  // We'll bump this value to force a full remount of <Counter />
+  const [resetKey, setResetKey] = useState(0);
+
+  return (
+    <div style={{ padding: 24 }}>
+      <button onClick={() => setResetKey(k => k + 1)}>
+        Reset Counter Component
+      </button>
+
+      {/* Because key={resetKey} changes, React will unmount the old
+          <Counter> and mount a fresh one each time. */}
+      <Counter key={resetKey} />
+    </div>
+  );
+}
+```
+
+### How Shadcn creates compnoents
+
+The last one is actually it's own video.
