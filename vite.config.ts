@@ -20,6 +20,7 @@ const options: Options = {
     dark: 'night-owl',
     light: nightOwlLight as unknown as Theme,
   },
+  defaultColorScheme: 'light',
   // transformers: [transformerCopyButton()],
 };
 

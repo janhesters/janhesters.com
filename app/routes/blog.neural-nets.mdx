@@ -1,0 +1,35 @@
+---
+title: "Neural Nets"
+datePublished: "2025-08-08"
+description: "Neural nets are a type of machine learning model that are used to learn from data. They are a type of artificial neural network that are used to learn from data."
+thumbnailUrl: ""
+isDraft: true
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+## Prerequisites
+
+You only need to understand addition, subtraction, multiplication, and division.
+
+$$
+\begin{align*}
+\text{Addition:} && 3 + 2 &= 5 \\
+\text{Subtraction:} && 7 - 4 &= 3 \\
+\text{Multiplication:} && 6 \times 3 &= 18 \\
+\text{Division:} && 12 \div 4 &= 3
+\end{align*}
+$$
+

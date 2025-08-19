@@ -1,7 +1,18 @@
-code[data-theme*=" "],
-code[data-theme*=" "] span {
+/* Styles for code blocks with inline Shiki CSS variables */
+/* Use !important to override Tailwind typography styles */
+figure[data-rehype-pretty-code-figure] pre[data-theme] {
+  background-color: var(--shiki-light-bg) !important;
+  color: var(--shiki-light) !important;
+}
+
+figure[data-rehype-pretty-code-figure] code[data-theme] {
+  background-color: transparent !important;
+  color: inherit;
+}
+
+/* Individual spans use their own inline CSS variables */
+figure[data-rehype-pretty-code-figure] code[data-theme] span {
   color: var(--shiki-light);
-  background-color: var(--shiki-light-bg);
 }
 
 pre code[data-theme*=" "] span[data-highlighted-line] {
@@ -29,14 +40,37 @@ figure[data-rehype-pretty-code-figure]:has(>[data-rehype-pretty-code-title]) pre
   background-color: rgba(251, 251, 251, 0.5);
 }
 
+/* Dark theme styles */
+.dark figure[data-rehype-pretty-code-figure] pre[data-theme] {
+  background-color: var(--shiki-dark-bg) !important;
+  color: var(--shiki-dark) !important;
+}
+
+.dark figure[data-rehype-pretty-code-figure] code[data-theme] span {
+  color: var(--shiki-dark);
+}
+
+.dark pre code[data-theme] span[data-highlighted-line] {
+  background-color: rgba(130, 170, 255, 0.10);
+  border-left: 0.1875rem solid rgba(130, 170, 255, 0.9);
+}
+
+.dark [data-rehype-pretty-code-title] {
+  background-color: rgba(1, 22, 39, 0.25);
+}
+
+/* Fallback for systems using prefers-color-scheme */
 @media (prefers-color-scheme: dark) {
-  code[data-theme*=" "],
-  code[data-theme*=" "] span {
-    color: var(--shiki-dark);
-    background-color: var(--shiki-dark-bg);
+  figure[data-rehype-pretty-code-figure] pre[data-theme] {
+    background-color: var(--shiki-dark-bg) !important;
+    color: var(--shiki-dark) !important;
   }
 
-  pre code[data-theme*=" "] span[data-highlighted-line] {
+  figure[data-rehype-pretty-code-figure] code[data-theme] span {
+    color: var(--shiki-dark);
+  }
+
+  pre code[data-theme] span[data-highlighted-line] {
     background-color: rgba(130, 170, 255, 0.10);
     border-left: 0.1875rem solid rgba(130, 170, 255, 0.9);
   }
