@@ -134,8 +134,12 @@ const redirectMapping: RedirectMapping = {
     '/blog/how-to-set-up-nextjs-15-for-production-in-2024/',
   ],
   '/blog/the-ultimate-guide-to-remote-work-communication': [
-    '/master-communication',
-    '/master-communication/',
+    '/blog/master-communication',
+    '/blog/master-communication/',
+  ],
+  '/blog/how-to-set-up-express-5-for-production-in-2025': [
+    '/blog/express-testing',
+    '/blog/express-testing/',
   ],
   '/archive': ['/bonus', '/bonus/'],
 };
@@ -156,7 +160,7 @@ export function loader({ request }: Route.LoaderArgs) {
   throw new Response(null, { status: 404, statusText: 'Not Found' });
 }
 
-export function action({ request }: Route.ActionArgs) {
+export function action({ request: _request }: Route.ActionArgs) {
   // Handle POST requests to non-existent routes with 404
   throw new Response(null, { status: 404, statusText: 'Not Found' });
 }

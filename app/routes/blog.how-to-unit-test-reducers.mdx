@@ -1,0 +1,291 @@
+---
+title: "How To Unit Test Reducers"
+datePublished: '2025-09-05'
+description: "Ensure the reducer returns a valid initial state. Test actions together with their selectors and set these tests up with factory functions."
+thumbnailUrl: ''
+isArchived: true
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+Pure functions are simple and so should be their tests (when using the correct techniques). Reducers, action creators, and selectors are pure functions. After you read this article, when you apply these techniques, you'll simplify your tests and improve your code.
+
+The tests in the examples are written with Vitest's `toEqual` assertion because it is perfect for testing pure functions by performing a deep equality check.
+
+I'll let you read the code now first, and afterwards we analyse the structure of the tests.
+
+```javascript title="src/features/reminders/reminders-reducer.js"
+import { pipe, prop, values } from 'ramda';
+
+export const sliceName = 'reminders';
+
+const initialState = {
+  reminders: {
+    'hardcoded-first-reminder': {
+      id: 'hardcoded-first-reminder',
+      message: 'You got this! 💪',
+      dateCreated: '2024-10-01T00:00:00.000Z',
+    },
+    'hardcoded-second-reminder': {
+      id: 'hardcoded-second-reminder',
+      message: 'Learn Redux at a senior-level.',
+      dateCreated: '2024-10-02T00:00:00.000Z',
+    },
+  },
+};
+
+export const reminderDeleted = reminderId => ({
+  type: `${sliceName}/reminderDeleted`,
+  payload: reminderId,
+});
+
+export const reducer = (state = initialState, { type, payload } = {}) => {
+  switch (type) {
+    case reminderDeleted().type: {
+      const { [payload]: _, ...remainingReminders } = state.reminders;
+      return { ...state, reminders: remainingReminders };
+    }
+    default: {
+      return state;
+    }
+  }
+};
+
+const selectRemindersSlice = prop(sliceName);
+
+export const selectRemindersArray = pipe(
+  selectRemindersSlice,
+  prop('reminders'),
+  values,
+);
+```
+
+```javascript title="src/redux/root-reducer.js"
+import { combineReducers } from '@reduxjs/toolkit';
+import {
+  reducer as remindersReducer,
+  sliceName as remindersSliceName,
+} from '../features/reminders/reminders-reducer';
+
+export const rootReducer = combineReducers({
+  [remindersSliceName]: remindersReducer,
+});
+
+// Used in tests to get the initial state in a way that's
+// compatible with all reducer creation patterns.
+export const rootState = rootReducer(undefined, { type: '' });
+```
+
+```javascript title="src/features/reminders/reminders-reducer.test.js"
+import { rootReducer } from '../../redux/root-reducer';
+import { reminderDeleted, selectRemindersArray } from './reminders-reducer';
+
+describe('reminders reducer', () => {
+  describe('selectRemindersArray() selector', () => {
+    test('given the initial state: returns the default reminders array', () => {
+      const state = rootReducer();
+
+      const actual = selectRemindersArray(state);
+      const expected = [
+        {
+          id: 'hardcoded-first-reminder',
+          message: 'You got this! 💪',
+          dateCreated: '2024-10-01T00:00:00.000Z',
+        },
+        {
+          id: 'hardcoded-second-reminder',
+          message: 'Learn Redux at a senior-level.',
+          dateCreated: '2024-10-02T00:00:00.000Z',
+        },
+      ];
+
+      expect(actual).toEqual(expected);
+    });
+
+    test('given a reminder deleted action: deletes the reminder and returns the correct array', () => {
+      const reminderId = 'hardcoded-first-reminder';
+      const state = rootReducer(undefined, reminderDeleted(reminderId));
+
+      const actual = selectRemindersArray(state);
+      const expected = [
+        {
+          id: 'hardcoded-second-reminder',
+          message: 'Learn Redux at a senior-level.',
+          dateCreated: '2024-10-02T00:00:00.000Z',
+        },
+      ];
+
+      expect(actual).toEqual(expected);
+    });
+  });
+});
+```
+
+In the example above, the code would live in at least three files (`reminders-reducer.js`, `reminders-reducer.test.js` and `root-reducer.js`):
+
+```
+src/
+├── ...
+├── features/
+│   ├── ...
+│   └── reminders/
+│       ├── ...
+│       └── reminders-reducer.js
+│       └── reminders-reducer.test.js
+├── redux/
+│   ├── root-reducer.js
+│   ├── root-saga.js
+│   └── store.js
+└── index.js
+```
+
+The first test ensures the selector works correctly against the initial state. You should avoid exporting the `initialState` object from your reducer file and using it directly in your test's assertion.
+
+```javascript title="❌ Avoid exporting your initial state for tests"
+// 👇 Avoid exporting your initial state for tests 🚫
+export const initialState = {
+  wrongKey: 'foo',
+  correctKey: 'wrong value'
+  /* missing keys ... */
+};
+ 
+test('given no arguments: returns the valid initial state', () => {
+  const state = reducer();
+  // 😣 Missed errors 👎
+  expect(state).toEqual(initialState);
+});
+```
+
+If you export `initialState` and use it in your assertion, an error might slip through. The initial state could have wrong keys, the wrong initial values for correct keys, or be missing keys, and your test would still pass. A better approach is to test the initial state through your selector, which forces you to assert on the actual data shape your application will consume.
+
+Notice how the tests are structured inside a `describe` block for the selector itself. This is the core of the technique: you test your slice's entire public API—its action creators and selectors—together.
+
+Action creators and selectors are like pairs of getters and setters. They are the only interface you should use to interact with your Redux store, and therefore it is best practice to test them together.
+
+The second test demonstrates this perfectly. It tests the `reminderDeleted` action creator by invoking it and passing the result to the `rootReducer`. Then, it uses the `selectRemindersArray` selector to assert that the state was modified as intended.
+
+Using action creators in conjunction with your selectors and your `rootReducer` in your tests gives you confidence that:
+
+1.  You hooked up your slice's reducer to your `rootReducer`, and you did it correctly.
+2.  Your action creators modify your state in the way that you intended.
+3.  Your selectors return the correct value from the modified state.
+
+You should test selectors with at least two cases: one with the default state, and one with a state modified by an action.
+
+For the default state, you can simply call `rootReducer()` to get the global initial state. However, some reducer patterns (like those created with Redux Toolkit's `createSlice`) don't return an initial state when called without arguments. To guard against this, it's best to create and export a `rootState` variable from your `root-reducer.js` file.
+
+```javascript title="src/redux/root-reducer.js"
+// ...
+export const rootReducer = combineReducers({
+  [remindersSliceName]: remindersReducer,
+});
+ 
+export const rootState = rootReducer(undefined, { type: '' });
+```
+
+You can then import and use `rootState` as the starting point for your tests.
+
+To test a selector's behavior with a more complex state, you can create an `actions` array and reduce over it to build up the state. This technique works well even if your selector depends on several pieces of state controlled by multiple actions.
+
+```javascript title="Testing with multiple actions"
+test('given multiple actions: returns the correct final state', () => {
+  const actions = [
+    reminderAdded({ message: 'New reminder!' }),
+    reminderAdded({ message: 'Another one!' }),
+    reminderDeleted('hardcoded-first-reminder'),
+  ];
+
+  const state = actions.reduce(rootReducer, rootState);
+  const actual = selectRemindersArray(state);
+  const expected = [/* ... expected array of reminders ... */];
+  
+  expect(actual).toEqual(expected);
+});
+```
+
+Finally, to make setting up test data easier, especially for complex state shapes, use factory functions. A factory makes it easy to generate fixtures—predefined data for your tests—so you only need to override what's relevant for a specific test case.
+
+```javascript title="src/features/reminders/reminders-factories.js"
+import { faker } from '@faker-js/faker';
+import { createId } from '@paralleldrive/cuid2';
+
+export const createReminder = ({
+  id = createId(),
+  message = '',
+  dateCreated = new Date().toISOString(),
+} = {}) => ({ message, id, dateCreated });
+
+export const createPopulatedReminder = ({
+  id = createId(),
+  message = faker.word.words(),
+  dateCreated = faker.date.recent().toISOString(),
+} = {}) => createReminder({ id, message, dateCreated });
+```
+
+Using `createPopulatedReminder` in your tests makes them more robust and easier to read because it abstracts away the creation of realistic test data, letting you focus on the behavior you're testing.
+
+The usefulness of factories doesn't stop with testing. Sometimes people also like using factories in their actions to ensure the shape of the entities that reach the reducer. This can give you type safety even in JavaScript.
+
+```javascript title="Using factories in your actions"
+import { createReminder } from './reminders-factories';
+import { createId } from '@paralleldrive/cuid2';
+
+// ... other imports & code ...
+
+const reminderAdded = reminder => ({
+  type: `${sliceName}/reminderAdded`,
+  payload: createReminder(reminder),
+});
+
+// ... other code
+```
+
+Putting it all together, your test for a more complex scenario can combine factories with the reduce pattern for a clean and readable setup:
+
+```javascript title="Testing with multiple actions using factories"
+import { createPopulatedReminder } from './reminders-factories';
+// ... other imports
+
+test('given multiple actions using factories: returns correct final state', () => {
+  // 1. Setup with factories
+  const reminder1 = createPopulatedReminder();
+  const reminder2 = createPopulatedReminder();
+
+  // 2. Define the sequence of actions
+  const actions = [
+    reminderAdded(reminder1),
+    reminderAdded(reminder2),
+    reminderDeleted('hardcoded-first-reminder'),
+  ];
+
+  // 3. Build the state
+  const state = actions.reduce(rootReducer, rootState);
+
+  // 4. Assert against the final state
+  const actual = selectRemindersArray(state);
+  const expected = [
+    // The remaining reminder from the initial state
+    {
+      id: 'hardcoded-second-reminder',
+      message: 'Learn Redux at a senior-level.',
+      dateCreated: '2024-10-02T00:00:00.000Z',
+    },
+    reminder1,
+    reminder2,
+  ];
+
+  expect(actual).toEqual(expected);
+});
+```

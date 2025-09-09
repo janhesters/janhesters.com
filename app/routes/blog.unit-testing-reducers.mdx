@@ -20,6 +20,8 @@ export const meta = ({ data }) => getSocialsMetaForBlogPost({
 
 ## {frontmatter.title}
 
+> ❗️ Note: There is a newer article that is more up to date and includes better examples & techniques. [How To Unit Test Reducers](https://janhesters.com/blog/how-to-unit-test-reducers).
+
 Pure functions are simple and so should be their tests (when using the correct techniques). Reducers, action creators (which aren't thunks) and selectors are pure functions. After you read this article, when you apply these techniques, you'll simplify your tests and improve your code.
 
 The tests in the examples are written with [RITEway](https://medium.com/javascript-scene/rethinking-unit-test-assertions-55f59358253f) because it has a genius API that forces you to write good tests. RITEway only exposes an equality assertion, which is perfect for testing [pure functions](https://medium.com/javascript-scene/master-the-javascript-interview-what-is-a-pure-function-d1c076bec976).

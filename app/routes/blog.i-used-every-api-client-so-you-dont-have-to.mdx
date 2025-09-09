@@ -1,0 +1,195 @@
+---
+title: "I Used Every API Client So You Don't Have To"
+datePublished: '2025-08-25'
+description: "I used every API client so you don't have to. I'll show you the best ones for each use case."
+thumbnailUrl: 'https://i.magecdn.com/ada680/766252_unleash_javascripts_potential_with_functional_programming?f=webp,q.25,p.f,l.f'
+isDraft: true
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+I tested Postman, Insomnia, Bruno, and Requestly head-to-head across real-world scenarios. By the end of this post, you'll know exactly which one fits your workflow and your team's size.
+
+Each of these tools comes with trade-offs that only surface when you least expect them: right in the middle of critical development work.
+
+These tools are constantly shipping new features, so if you haven't revisited your setup recently, you might be missing out on significant improvements.
+
+For context, I'm Jan Hesters, CTO of ReactSquad. I manage a team of over 20 frontend and full-stack developers who work with complex REST and GraphQL APIs every single day. I spent weeks putting these tools through real-world scenarios, so you don't have to. Here's what I found.
+
+### What I Tested
+
+To ensure a fair comparison, I used the following scenarios across all four tools:
+
+- **Basic CRUD requests** against [ReactSquad's Express starter app](https://janhesters.com/blog/how-to-set-up-express-5-for-production-in-2025) (GET, POST, PUT, and DELETE). I evaluated the ease of creating requests, reading responses, and inspecting headers.
+- **Authentication flows**: Basic Auth, OAuth tokens, and API keys. Some clients handle token management automatically, while others require manual configuration.
+- **Advanced features** such as request chaining, environment variables, custom scripts, and API mocking. I explored how each tool enables data reuse between requests and test automation.
+- **Collaboration and storage**: Whether collections are stored locally or in the cloud, security implications, and how easy it is to share them with teammates.
+- **Performance**: startup time, memory footprint, and stability under heavy responses. I recorded approximate RAM usage on my laptop (32 GB RAM, Apple M1 Pro with macOS) and noted any crashes or freezes (spoiler: none).
+
+With those criteria in mind, here’s a tool‑by‑tool rundown.
+
+### Bruno
+
+Bruno is a fully offline, open-source API client built around a plain-text markup language called Bru. Collections are stored as individual files in your project directory, making them easy to version with Git. There's no login required, no cloud dependency, and no vendor lock-in.
+
+#### Getting started
+
+After launching, Bruno greets you with a minimal interface: a tree view of your Bru files on the left and request/response panes on the right. Creating a request is as simple as adding a `.bru` file with YAML-like syntax. Because everything is stored locally, you can use standard Git commands to commit changes and collaborate through pull requests (`commit`, `push`, `pull`, etc.). There's no login prompt and no telemetry collection.
+
+When it comes to security, Bruno is offline-first and account-free by design. Collections are plain text `.bru` files in your project, so versioning, access control, and auditability ride on your existing Git workflows rather than a vendor cloud.
+
+Bruno ships a first-class CLI for running any collection in your CI/CD runners. Run `bru run` against a collection, folder, or single request.
+
+#### Unique features
+
+- **File-based storage** – requests and collections are plain text `.bru` files saved directly in a folder. This means you can diff, merge, and review API requests like any other code. Bruno even provides a VS Code extension for syntax highlighting.
+- **Offline by design** – the application doesn't require an internet connection to start or run. All API calls originate from your machine, not through a proprietary proxy.
+- **Security & Privacy** – fully offline by design. No telemetry, no cloud accounts. All data stays on your machine, which can be a non-negotiable requirement for teams in high-security environments.
+- **Unlimited collections and runs** – there are no artificial limits on how many times you can execute a collection. Paid plans simply add convenience features such as a GUI for Git operations and secret management.
+
+#### Trade-offs
+
+Because Bruno is relatively young, it lacks some advanced features. There's no built-in mocking or request interception, and collaboration happens entirely through Git. Scripts are written in JavaScript but are limited compared with Postman's sandbox. If you're comfortable with Git and want full control over your API definitions, though, Bruno is a joy to use.
+
+### Postman
+
+Postman is the established leader in this space and bills itself as a full API development platform. The feature list is enormous: a visual client for REST/GraphQL/SOAP requests, mocked endpoints, monitoring, API documentation, and even AI agents. The free plan supports up to three users and 25 collection runs per month and includes the core API client and a visual workflow editor called Flows. More advanced plans add unlimited seat counts, mock server quotas, private API networks, and role-based access control.
+
+#### Installation and first impressions
+
+Postman offers both a desktop app and a web client. I installed the desktop version and was immediately prompted to sign up. While you can skip account creation and use the lightweight API Client locally, you'll need an account for workspaces, sync, mocks, monitors, and collaboration. Once inside, the interface feels like an IDE: tabs, sidebars, and pop-up modals compete for attention. Importing a collection from a JSON file is straightforward, and the built-in code generation feature can export your requests to cURL or various languages. Postman's Postbot assistant (AI) can generate tests and documentation, but after 50 free actions per month you'll need to pay.
+
+Postman takes a cloud-first but flexible approach to security, letting you work completely offline in its lightweight API Client so everything stays local until you sign in. Secrets can also remain on device via Postman Vault, which does not sync. If you opt into the cloud, data is encrypted in transit (TLS) and at rest (AES-256-GCM), and Enterprise plans add BYOK so encryption keys are customer managed.
+
+If you need headless runs, Postman's Newman CLI lets you execute any Postman collection from the terminal and wire it into CI easily. Typical flow: `newman run collection.json -e env.json`, or fetch the latest collection via the Postman API and run it in your pipeline. Newman exits with proper status codes, supports rich reporters (JUnit, HTML), and advanced flags for timeouts, SSL, and data files. Postman also offers a separate Postman CLI if that fits your team better.
+
+#### Pros
+
+- **Comprehensive feature set** – supports REST, GraphQL, SOAP, WebSockets, and more; includes mocks, monitors, and an AI assistant.
+- **Collaboration** – workspaces, commenting, and real-time sync make it easy for teams to share collections and track changes.
+- **Scripting and automation** – powerful JavaScript sandbox for pre-request and post-response scripts. And the Newman CLI-runner allows you to integrate your API tests into your CI/CD pipelines.
+- **IDE integration** – Official VS Code extension to send requests and manage collections from your editor (sign-in required).
+
+#### Cons
+
+- **Resource heavy** – the desktop app consumed ~450 MB of RAM during my tests and felt sluggish with large collections; the web version isn't much lighter.
+- **Cloud-first design** – collections and secrets are stored in Postman's servers by default. Offline usage is limited and some features require constant connectivity.
+- **Pricing** – the free plan is restrictive (3 users, 25 collection runs/month). Hitting these limits and needing more advanced features quickly pushes you into more expensive paid tiers.
+
+### Requestly
+
+When you open Requestly for the first time, it's different from the other API clients. That's because Requestly nudges you into its mocking capabilities.
+
+If Postman/Insomnia/Bruno feel like "API clients first, everything else second," Requestly flips that script: it leads with **interception and mocking**. On first run you're gently pushed to connect an app (e.g., *a browser*, *an app running on your computer*, or even an *external device*) because the core idea is to **intercept & change traffic on the fly** to unblock frontend work.
+
+#### Getting started
+
+You've got to install both the browser extension and the desktop app of Requestly.
+
+* The **Browser extension (Chrome/Firefox/Edge)** allows you to intercept and modify requests right in the browser. You can tweak headers, swap hosts, override response bodies, or stub GraphQL responses while you code. No local proxy setup needed.
+* The **Desktop app (Mac/Windows/Linux)** is an open-source local proxy that can intercept traffic from **any** desktop app (or even mobile simulators) and can be set to system-wide mode. You use it to intercept non-browser traffic to debug APIs from native apps, emulators, or multiple browsers at once.
+
+Requestly starts local and only goes cloud when you ask it to. Local Workspaces keep rules, collections, and environments on your device; Team Workspaces add sync for collaboration. The desktop proxy and much of the tooling are open source, and the company publishes SOC 2 Type II compliance for teams that need formal assurances.
+
+If you want to integrate Requestly into your CI/CD pipeline, you have to understand that Requestly is rule-driven rather than a traditional “collection runner.” This means you can automate it in two useful ways:
+
+1. The **Public API** to create, update, and fetch rules and mocks before tests run in CI.
+2. The **Automation SDK** (@requestly/rq-automation) to load the extension and apply your rules inside headless browsers with Playwright, Selenium, or Puppeteer. You can also route terminal and system traffic through the desktop proxy when you need interception outside the browser.
+
+#### What stood out in my tests
+
+* **Client-side & system-wide mocking**: Override responses in the browser via the extension or at the OS level via the desktop proxy. You can set custom status codes, headers, delays, and entire JSON bodies, and even bulk-generate mocks from recorded sessions. GraphQL is first-class: you can modify queries/mutations or mock them outright.
+* **A real API client, not just an interceptor**: Organize **Collections**, manage **Environments**, import **cURL**, and use **pre-request/post-response scripts**. Team workspaces exist if you want cloud collaboration; otherwise you can stay fully local.
+* **Open-core model**: The **desktop app is open source** on GitHub; you can use it locally and opt into paid cloud features only if you need them.
+* **Performance (anecdotal)**: On my machine (M1 Pro, 32 GB RAM), the desktop app hovered around **\~67 MB** during basic rule testing.
+* **UX**: Subjective, but to me the UI feels the most modern and coherent, especially when jumping between rules, API Client, and history.
+
+#### Where it shines
+
+* **Frontend dev speed**: Toggle rules to simulate backend states, switch hosts between prod/stage/local, inject experimental scripts, or throttle/delay calls to test spinners and error paths—without touching your app code.
+* **GraphQL teams**: Need to reshape a query or force an error response? It’s a two-minute rule instead of a backend change.
+* **Beyond the browser**: Debug traffic from Electron apps, native apps, or simulators via the desktop proxy.
+
+#### Trade-offs
+
+* **Not an API-lifecycle suite**: You get a capable API Client plus elite interception/mocking, but not the deep API-design/governance layers (private API networks, audit trails, etc.) that Postman markets to large enterprises. (That said, Requestly *does* offer team workspaces and cloud sync if you want them.)
+* **Rule-centric mental model**: If your muscle memory is “open client → send request,” Requestly’s *rule first* workflow can feel unusual for pure API exploration—until you start leaning on mocks and rewrites to speed up frontend work.
+
+### Insomnia
+
+Insomnia has long been the lean, developer-friendly alternative to Postman. In the past, it has been my go-to tool for API testing because I like that it only does a few things, but it does them well. After being acquired by Kong, it now offers a polished desktop client that supports REST, GraphQL, gRPC, and WebSockets. It remains fully open source with optional cloud sync and Git integration for team sharing.
+
+#### Installation and setup
+
+Insomnia's installer is roughly 140 MB, and no account is required for local use. I downloaded the build from their site and was up and running in seconds. The UI is clean—a left pane for your requests and environments, a middle pane for request details, and tabs for response, headers, and timeline. Adding an environment variable is as simple as typing `{{base_url}}` and defining it in the environment editor. Insomnia also supports multi-protocol requests; creating a WebSocket request uses the same workflow as a REST call.
+
+Insomnia leans into user choice for data storage: pick "Local Vault" to keep everything on device, "Git Sync" to version in your own repo, or "Cloud Sync" with end-to-end encryption. With E2EE, encryption happens client-side and the passphrase is never stored server-side, so losing it means the encrypted data cannot be recovered.
+
+If you want to integrate Insomnia into your CI/CD pipeline, Insomnia’s Inso CLI can run collections and unit tests headlessly, lints OpenAPI, and generates docs.
+
+#### Strengths
+
+- **Plugin ecosystem** – Insomnia exposes a robust plugin API with hooks and template tags. You can install community plugins from the Insomnia Plugin Hub or write your own to add custom authentication, pre-request logic, or even theme the interface.
+- **Git/Cloud storage** – choose to store your collections locally, sync with Insomnia's cloud or connect to a Git repository. This flexibility is ideal for teams with strict security requirements.
+
+#### Limitations
+
+- **Collaboration** – while you can sync with Git or their cloud, there's no built-in commenting or role-based access control. Large organizations may require more governance than Insomnia provides.
+- **Enterprise features** – API design and documentation are available, but advanced analytics, role management, and single sign-on require an enterprise plan.
+
+### Comparison
+
+| Feature/Criterion           | Postman                                                                               | Insomnia                                                                       | Bruno                                                           | Requestly                                                                                                           |
+| --------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **Pricing**                 | Free; Basic \$14/user/mo (annual), Professional \$29, Enterprise \$49. ([Postman][1]) | Hobby \$0; Pro \$12/user/mo; Enterprise \$45/user/mo (annual). ([Insomnia][2]) | Free OSS; Pro \$6/user/mo (annual). ([usebruno.com][3])         | **Free**; Lite \$8, Basic \$15, Professional \$23 per user/mo (annual); API client \$10/user/mo (somewhat hidden behind the "API client" toggle on pricing page). ([app.requestly.io][4], [requestly.com][5]) |
+| **Storage/Collaboration**   | Cloud workspaces, easy link/team sharing.                                             | Local, Git, or Cloud; team collab.                                             | File-based, Git-native workflow.                                | Desktop + browser extension; cloud/team workspaces.                                                                 |
+| **UI/UX**                   | Polished but dense.                                                                   | Clean, quick to navigate.                                                      | Minimalist, fast startup.                                       | Browser/desktop integrated; great for in-app debugging.                                                             |
+| **Scripting/Automation**    | Pre/post-request JS; Newman CLI.                                                      | Full JS pre/post scripts.                                                      | Bru format + JS tests.                                          | Rules, scripts, API testing; request/response modification.                                                         |
+| **Supported Protocols**     | REST, GraphQL, SOAP, WebSockets, gRPC. ([Postman][6], [Postman Docs][7])              | REST, GraphQL, gRPC, WebSockets, SOAP, SSE. ([Insomnia][8])                    | REST, GraphQL, SOAP (gRPC/WebSocket planned). ([Bruno Docs][9]) | HTTP/HTTPS interception; REST & GraphQL API client/mocking. ([requestly.com][10])                                   |
+| **Performance**             | Heavier on huge collections.                                                          | Lightweight desktop app.                                                       | Very fast, low footprint.                                       | Light on resources; desktop app efficient.                                                                          |
+| **Best For**                | Teams building production APIs.                                                       | Solo devs and teams iterating fast.                                            | OSS + Git-flow fans.                                            | Frontend/backend devs debugging and mocking.                                                                        |
+| **My Rating (out of 10)** | 7/10                                                                                  | 9/10                                                                           | 8/10                                                            | 9/10                                                                                                                |
+
+When you make a decision, you should consider the total cost of ownership (TCO). Seats are only part of the bill. Budget for run quotas and add-ons (collection runs, AI, mocks and monitors), CI minutes and artifact storage, and any compliance needs like EU residency or BYOK that can push you into enterprise tiers. Local-first saves on vendor overages but shifts cost to process: backups for local workspaces, managing E2EE passphrases, and a bit of glue code to keep rule-driven mocks stable in CI. In short, hosted convenience costs money each month, Git-first costs you maintenance time, so do the math on runs per day, suite length, and mock volume for your team.
+
+### Final thoughts
+
+I'm looking into these tools from the perspective of a manager for frontend and fullstack React developers. The truth is, when it comes to just sending API requests and storing collections, they all do more or less the same and they all do it well.
+
+But, after extensive testing, my choice for the ReactSquad team is **Requestly**. This decision, however, is highly dependent on our specific constraints and priorities.
+
+The deciding factor was **solving our most significant development bottleneck around API clients: waiting on the backend**. Requestly’s seamless interception and mocking capabilities directly address this pain point in a way no other tool does as effectively. The ability for a developer to unblock themselves by modifying an in-flight API response - without code changes or complex setup - is a massive productivity booster.
+
+In general, I wasn’t fully convinced by any of the CLI tools these apps provide. That might just be because of how our teams usually work with APIs. Most of our projects already use testing frameworks like Playwright or Vitest with Supertest, and we run API tests as part of our E2E or integration test suites.
+
+That said, Requestly’s Chrome extension works inside Playwright, which means you could skip setting up MSW and mock requests using Requestly if you don’t need it elsewhere. And, if your project doesn’t have a proper testing setup in place, using something like Postman’s Newman or Requestly’s public API can be a quick and practical alternative.
+
+Here is my recommended decision tree to help you choose:
+
+- If your team already has a preference, **listen to your team.** In the end, your team has to be happy with your choice.
+- If you are an open-source purist, **choose Bruno.** It offers a 100% offline, Git-native workflow, and prioritizes performance and simplicity above a sprawling feature set.
+- **Choose Requestly** if you are a frontend or full-stack developer, and your biggest frustration is being blocked by API availability. If you need powerful, easy-to-use mocking and interception integrated with a solid API client, Requestly is in a class of its own.
+- And finally, if you need all of the enterprise features of Postman, like a single, all-in-one platform for API design, governance, monitoring, and collaboration, and you are comfortable with a cloud-first, account-mandatory model, **choose Postman.**
+
+[1]: https://www.postman.com/pricing/
+[2]: https://insomnia.rest/pricing
+[3]: https://www.usebruno.com/pricing
+[4]: https://app.requestly.io/
+[5]: https://requestly.com/pricing/
+[6]: https://www.postman.com/product/what-is-postman/
+[7]: https://learning.postman.com/docs/getting-started/introduction/
+[8]: https://insomnia.rest/products/insomnia
+[9]: https://docs.usebruno.com/
+[10]: https://requestly.com/
