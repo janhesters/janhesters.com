@@ -1,0 +1,147 @@
+---
+title: "This New Cursor Feature Changes Everything (Slash Commands)"
+datePublished: '2025-09-18'
+description: 'Learn how to use Cursor Slash Commands to automate tasks, chain prompts, and boost your workflow.'
+thumbnailUrl: 'https://i.magecdn.com/ada680/b35d1c_cursor_slash_commands_yt_thumbnail_v1?f=webp,q.25,p.f,l.f'
+---
+
+import { getUrl } from '../lib/misc';
+import { getSocialsMetaForBlogPost } from '../features/blog/blog-helpers';
+
+export function loader({ request }) {
+  return getUrl(request);
+}
+
+export const meta = ({ data }) => getSocialsMetaForBlogPost({
+  ...frontmatter,
+  url: data,
+});
+
+## {frontmatter.title}
+
+This is a Cursor slash command.
+
+![Cursor Slash Commands: `/log`](https://i.magecdn.com/ada680/0fe451_slash_commands?f=webp,q.75,p.f,l.t)
+
+You're going to learn how to use Slash commands to automate tasks, chain them, and pass inputs.
+
+<iframe
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  allowFullScreen
+  className="aspect-video w-full"
+  frameBorder="0"
+  referrerPolicy="strict-origin-when-cross-origin"
+  src="https://www.youtube.com/embed/TAsWoEeqH8o?si=MISP-QWofgqyL8LO"
+  title="This New Cursor Feature Changes Everything (Slash Commands)"
+></iframe>
+
+You might be thinking: "I don't need this. I'll just use Cursor rules." But this article will also show you _exactly_ how Slash commands are different from Cursor rules.
+
+For example, here is how you can write that Slash command for auto-generating a changelog for your repository.
+
+````md title=".cursor/commands/log.md"
+# log
+
+Act as a senior software engineer to log changes to the repository using the following template:
+
+```
+## $date
+
+- $emoji - $change1
+- $emoji -$change2
+```
+
+# Emojis
+
+Use the following emoji to represent the change:
+
+- 🚀 - new feature
+- 🐛 - bug fix
+- 📝 - documentation
+- 🔄 - refactor
+- 📦 - dependency update
+- 🎨 - design
+- 📱 - UI/UX
+- 📊 - analytics
+- 🔒 - security
+
+Constraints {
+  Always use reverse chronological order.
+  Add most recent changes to the top.
+  Never log about logging. Avoid logging meta-work. Instead, log salient, user-impacting changes.
+  For each change, follow conventional commit messages:
+    ```
+    feat(scope): description
+
+    body
+    ```
+  You must include a body.
+}
+
+
+gitChanges() {
+  git add .
+  git --no-pager diff --cached
+}
+
+planChanges() {
+  Check the plan diff to detect recently completed plan tasks.
+}
+
+detectChanges() {
+  gitChanges |> planChanges |> logDetectedChanges
+}
+````
+
+This command is written in SudoLang.
+
+[SudoLang](https://github.com/paralleldrive/sudolang-llm-support/tree/main) is a programming language specifically designed to collaborate with AI language models.
+
+Using SudoLang saves tokens and improves how accurately LLMs follow your instructions.
+
+And remember, keep your Slash commands short to manage your context efficiently. Aim for fewer than 150 lines of code.
+
+There is really a lot more to writing good prompts, so if you want a SudoLang crash course article, [send me DM on X](https://x.com/janhesters).
+
+You can also chain Slash commands together.
+
+Let's create another Slash command for committing your changes to the repository.
+
+```md title=".cursor/commands/commit.md"
+# Commit
+
+Act as a senior software engineer to commit changes to the repository in non-interactive modes ONLY, using the following template:
+
+"$type${[(scope)]}{[!]}: $description":where `[]` is optional and `!` is a breaking change
+
+Types: fix|feat|chore|docs|refactor|test|perf|build|ci|style|revert|$other
+
+If we haven't logged the latest changes yet, use @log.md to log changes before committing.
+
+Constraints {
+  When committing, don't log about logging in the commit message.
+  Use multiple -m flags, one for each log entry.
+  Limit the first commit message line length to 50 characters.
+  Use conventional commits with a scope, title and body.
+}
+```
+
+If you now run this `/commit` command in the same window where you ran the `/log` command, it will commit your changes to the repository for you with a beautiful commit message.
+
+![Cursor Slash Commands: /commit](https://i.magecdn.com/ada680/3dd73c_slash_commands_2?f=webp,q.7,p.f,l.t)
+
+You might be asking yourself:
+
+> "Is there any difference in invoking a slash command vs @'ing the file?"
+
+The slash command is a user-defined prompt, which could include references to different files or folders.
+
+Slash commands are also different from Cursor rules.
+
+The agent appends Cursor rules automatically. But Slash commands **are** your prompt, so they carry more weight and the LLM will follow them more closely.
+
+You can also pass things to your Slash commands.
+
+For example, if you have a slash command for writing tests, you can pass it the file containing the function implementation.
+
+![Cursor Slash Commands: /unit-tests](https://i.magecdn.com/ada680/c6049b_slash_commands_3?f=webp,q.7,p.f,l.t)
