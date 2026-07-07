@@ -1,13 +1,12 @@
-@config "../tailwind.config.ts";
-
 /* 1. Import your custom CSS and the new Tailwind CSS module */
-@import './styles/pretty-code.css';
-@import 'tailwindcss';
+@import "./styles/pretty-code.css";
+@import "tailwindcss";
 /* If you use tailwindcss-animate, uncomment the line below */
-@import 'tw-animate-css';
+@import "tw-animate-css";
+
+@config "../tailwind.config.ts";
 @plugin "@tailwindcss/typography";
 @plugin "tailwindcss-animate";
-
 
 /* 2. Define a custom variant for dark mode using a .dark class */
 @custom-variant dark {
@@ -24,14 +23,14 @@
   }
 }
 
-
 /*
   3. (Optional but recommended) Define base tokens like fonts in a @theme block.
      You can customize this to match your project's fonts.
 */
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
-    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-sans:
+    "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
 /* Base HTML and Body styles remain similar */
@@ -118,7 +117,7 @@ body {
 */
 .dark {
   color-scheme: dark;
-  
+
   --background: hsl(222.2 84% 4.9%);
   --foreground: hsl(210 40% 98%);
   --card: hsl(222.2 84% 4.9%);

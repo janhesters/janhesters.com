@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import "dotenv/config";
 
 /**
  * Extracts the slug from a blog URL.
@@ -7,11 +7,11 @@ import 'dotenv/config';
  * @returns The blog post slug as a string.
  */
 export function getSlugFromUrl(url: string) {
-  const parts = url.split('/');
-  const blogIndex = parts.indexOf('blog');
+  const parts = url.split("/");
+  const blogIndex = parts.indexOf("blog");
 
   if (blogIndex === -1 || blogIndex === parts.length - 1) {
-    throw new Error('Invalid blog URL: No slug found');
+    throw new Error("Invalid blog URL: No slug found");
   }
 
   return parts[blogIndex + 1];
@@ -36,12 +36,12 @@ export function getSlugFromUrl(url: string) {
 export const getSocialsMeta = ({
   title,
   description,
-  imageUrl = 'https://i.magecdn.com/ada680/f47d21_og?f=webp,q.100,p.f,l.t',
+  imageUrl = "https://i.magecdn.com/ada680/f47d21_og?f=webp,q.100,p.f,l.t",
   url,
-  type = 'website',
-  siteName = 'Jan Hesters',
-  locale = 'en_US',
-  twitterHandle = '@janhesters',
+  type = "website",
+  siteName = "Jan Hesters",
+  locale = "en_US",
+  twitterHandle = "@janhesters",
   publishedTime,
   keywords,
   isUnlisted = false,
@@ -58,29 +58,29 @@ export const getSocialsMeta = ({
   keywords?: string;
   isUnlisted?: boolean;
 }) => [
-  ...(isUnlisted ? [{ name: 'robots', content: 'noindex' }] : []),
+  ...(isUnlisted ? [{ content: "noindex", name: "robots" }] : []),
   { title },
-  { name: 'title', content: title },
-  { name: 'description', content: description },
-  { name: 'image', content: imageUrl },
-  ...(keywords ? [{ name: 'keywords', content: keywords }] : []),
-  { property: 'og:title', content: title },
-  { property: 'og:description', content: description },
-  { property: 'og:image', content: imageUrl },
-  { property: 'og:url', content: url },
-  { property: 'og:type', content: type },
-  { property: 'og:site_name', content: siteName },
-  { property: 'og:locale', content: locale },
+  { content: title, name: "title" },
+  { content: description, name: "description" },
+  { content: imageUrl, name: "image" },
+  ...(keywords ? [{ content: keywords, name: "keywords" }] : []),
+  { content: title, property: "og:title" },
+  { content: description, property: "og:description" },
+  { content: imageUrl, property: "og:image" },
+  { content: url, property: "og:url" },
+  { content: type, property: "og:type" },
+  { content: siteName, property: "og:site_name" },
+  { content: locale, property: "og:locale" },
   ...(publishedTime
-    ? [{ property: 'og:article:published_time', content: publishedTime }]
+    ? [{ content: publishedTime, property: "og:article:published_time" }]
     : []),
-  { name: 'twitter:title', content: title },
-  { name: 'twitter:description', content: description },
-  { name: 'twitter:image', content: imageUrl },
-  { name: 'twitter:card', content: 'summary_large_image' },
-  { name: 'twitter:image:alt', content: title },
-  { name: 'twitter:site', content: twitterHandle },
-  { name: 'twitter:creator', content: twitterHandle },
+  { content: title, name: "twitter:title" },
+  { content: description, name: "twitter:description" },
+  { content: imageUrl, name: "twitter:image" },
+  { content: "summary_large_image", name: "twitter:card" },
+  { content: title, name: "twitter:image:alt" },
+  { content: twitterHandle, name: "twitter:site" },
+  { content: twitterHandle, name: "twitter:creator" },
 ];
 
 /**
@@ -92,7 +92,7 @@ export const getSocialsMeta = ({
  */
 const environmentOrigin = process.env.VERCEL_URL
   ? // Vercel: VERCEL_URL is like "my-site.vercel.app" or with protocol
-    process.env.VERCEL_URL.startsWith('http')
+    process.env.VERCEL_URL.startsWith("http")
     ? process.env.VERCEL_URL
     : `https://${process.env.VERCEL_URL}`
   : process.env.SITE_ORIGIN; // e.g. "http://localhost:5173"
@@ -112,14 +112,14 @@ export function getDomainUrl(request: Request): string {
 
   // 3) Fallback to headers
   const host =
-    request.headers.get('X-Forwarded-Host') ?? request.headers.get('host');
+    request.headers.get("X-Forwarded-Host") ?? request.headers.get("host");
   if (!host) {
     throw new Error(
-      'Could not determine domain URL. ' +
-        'Set VERCEL_URL (on Vercel) or SITE_ORIGIN (locally) if needed.',
+      "Could not determine domain URL. " +
+        "Set VERCEL_URL (on Vercel) or SITE_ORIGIN (locally) if needed.",
     );
   }
-  const protocol = host.includes('localhost') ? 'http' : 'https';
+  const protocol = host.includes("localhost") ? "http" : "https";
   return `${protocol}://${host}`;
 }
 
@@ -130,7 +130,7 @@ export function getDomainUrl(request: Request): string {
  * @returns The URL without a trailing slash.
  */
 export function removeTrailingSlash(url: string) {
-  return url.endsWith('/') ? url.slice(0, -1) : url;
+  return url.endsWith("/") ? url.slice(0, -1) : url;
 }
 
 /**

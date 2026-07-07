@@ -1,58 +1,58 @@
-import { ArrowDown } from 'lucide-react';
+import { ArrowDown } from "lucide-react";
 
-import logoInstagram from '/svgs/instagram.svg?url';
-import logoLinkedIn from '/svgs/linkedin.svg?url';
-import logoTikTok from '/svgs/tiktok.svg?url';
-import logoX from '/svgs/x.svg?url';
-import logoYouTube from '/svgs/youtube.svg?url';
-import { buttonVariants } from '~/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
-import { cn } from '~/lib/utils';
+import logoInstagram from "/svgs/instagram.svg?url";
+import logoLinkedIn from "/svgs/linkedin.svg?url";
+import logoTikTok from "/svgs/tiktok.svg?url";
+import logoX from "/svgs/x.svg?url";
+import logoYouTube from "/svgs/youtube.svg?url";
+import { buttonVariants } from "~/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { cn } from "~/lib/utils";
 
 type Platform = {
   platformName: string;
   description: string;
   logo: string;
-  cta: 'Follow' | 'Subscribe';
+  cta: "Follow" | "Subscribe";
   url: string;
 };
 
 export function PlatformsComponent() {
   const platforms: Platform[] = [
     {
-      platformName: 'YouTube',
-      description: 'Long form tutorials',
+      cta: "Subscribe",
+      description: "Long form tutorials",
       logo: logoYouTube,
-      cta: 'Subscribe',
-      url: 'https://www.youtube.com/@janhesters?sub_confirmation=1',
+      platformName: "YouTube",
+      url: "https://www.youtube.com/@janhesters?sub_confirmation=1",
     },
     {
-      platformName: 'X',
-      description: 'Coding quick tips',
+      cta: "Follow",
+      description: "Coding quick tips",
       logo: logoX,
-      cta: 'Follow',
-      url: 'https://x.com/janhesters',
+      platformName: "X",
+      url: "https://x.com/janhesters",
     },
     {
-      platformName: 'LinkedIn',
-      description: 'Long form tutorials',
+      cta: "Follow",
+      description: "Long form tutorials",
       logo: logoLinkedIn,
-      cta: 'Follow',
-      url: 'https://www.linkedin.com/in/jan-hesters/',
+      platformName: "LinkedIn",
+      url: "https://www.linkedin.com/in/jan-hesters/",
     },
     {
-      platformName: 'Instagram',
-      description: 'Coding quick tips',
+      cta: "Follow",
+      description: "Coding quick tips",
       logo: logoInstagram,
-      cta: 'Follow',
-      url: 'https://www.instagram.com/janhesters/',
+      platformName: "Instagram",
+      url: "https://www.instagram.com/janhesters/",
     },
     {
-      platformName: 'TikTok',
-      description: 'Coding quick tips',
+      cta: "Follow",
+      description: "Coding quick tips",
       logo: logoTikTok,
-      cta: 'Follow',
-      url: 'https://www.tiktok.com/@janhesters',
+      platformName: "TikTok",
+      url: "https://www.tiktok.com/@janhesters",
     },
   ];
 
@@ -68,20 +68,20 @@ export function PlatformsComponent() {
 
       <CardContent>
         <ol className="space-y-2">
-          {platforms.map(platform => (
+          {platforms.map((platform) => (
             <li key={platform.platformName}>
               <a
                 className={cn(
-                  buttonVariants({ variant: 'ghost' }),
-                  '-mx-4 flex items-center gap-4 py-6',
+                  buttonVariants({ variant: "ghost" }),
+                  "-mx-4 flex items-center gap-4 py-6",
                 )}
                 href={platform.url}
               >
                 <div className="relative flex size-10 flex-none items-center justify-center rounded-md">
                   <img
                     alt={platform.platformName}
-                    src={platform.logo}
                     className="size-10"
+                    src={platform.logo}
                   />
                 </div>
 
