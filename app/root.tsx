@@ -1,7 +1,7 @@
-import './app.css';
+import "./app.css";
 
-import { Menu, MoveLeft } from 'lucide-react';
-import type { ComponentProps, ReactNode } from 'react';
+import { Menu, MoveLeft } from "lucide-react";
+import type { ComponentProps, ReactNode } from "react";
 import {
   isRouteErrorResponse,
   Link,
@@ -13,62 +13,62 @@ import {
   ScrollRestoration,
   useLocation,
   useRouteError,
-} from 'react-router';
+} from "react-router";
 
-import type { Route } from './+types/root';
-import { Button, buttonVariants } from './components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from './components/ui/sheet';
-import { getColorScheme } from './features/color-scheme/color-scheme.server';
-import { ColorSchemeScript } from './features/color-scheme/color-scheme-script';
-import { useColorScheme } from './features/color-scheme/use-color-scheme';
-import { getSocialsMeta } from './lib/misc';
-import { cn } from './lib/utils';
+import type { Route } from "./+types/root";
+import { Button, buttonVariants } from "./components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "./components/ui/sheet";
+import { getColorScheme } from "./features/color-scheme/color-scheme.server";
+import { ColorSchemeScript } from "./features/color-scheme/color-scheme-script";
+import { useColorScheme } from "./features/color-scheme/use-color-scheme";
+import { getSocialsMeta } from "./lib/misc";
+import { cn } from "./lib/utils";
 
 export const links: Route.LinksFunction = () => [
-  { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+  { href: "https://fonts.googleapis.com", rel: "preconnect" },
   {
-    rel: 'preconnect',
-    href: 'https://fonts.gstatic.com',
-    crossOrigin: 'anonymous',
+    crossOrigin: "anonymous",
+    href: "https://fonts.gstatic.com",
+    rel: "preconnect",
   },
   {
-    rel: 'stylesheet',
-    href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
+    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+    rel: "stylesheet",
   },
   {
-    rel: 'stylesheet',
-    href: 'https://use.typekit.net/cyo5jva.css',
+    href: "https://use.typekit.net/cyo5jva.css",
+    rel: "stylesheet",
   },
 ];
 
 export const meta: Route.MetaFunction = () => [
   ...getSocialsMeta({
-    description: 'Learn how to become a senior fullstack developer.',
+    description: "Learn how to become a senior fullstack developer.",
     keywords:
-      'Learn React, Learn Next.js, Learn Remix, Learn Tailwind, Learn Javascript, Learn Typescript, Learn Engineering Management, Become A Senior Developer, Become A Senior Fullstack Developer, Tutorials, Guides, Courses, React, Next.js, Remix, Tailwind, Javascript, Typescript, Engineering Management',
-    title: 'Jan Hesters',
-    url: 'https://www.janhesters.com',
+      "Learn React, Learn Next.js, Learn Remix, Learn Tailwind, Learn Javascript, Learn Typescript, Learn Engineering Management, Become A Senior Developer, Become A Senior Fullstack Developer, Tutorials, Guides, Courses, React, Next.js, Remix, Tailwind, Javascript, Typescript, Engineering Management",
+    title: "Jan Hesters",
+    url: "https://www.janhesters.com",
   }),
-  { name: 'robots', content: 'index,follow' },
-  { name: 'googlebot', content: 'index,follow' },
+  { content: "index,follow", name: "robots" },
+  { content: "index,follow", name: "googlebot" },
 ];
 
-function GitHubIcon(props: ComponentProps<'svg'>) {
+function GitHubIcon(props: ComponentProps<"svg">) {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
+    <svg aria-hidden="true" viewBox="0 0 24 24" {...props}>
       <path
-        fillRule="evenodd"
         clipRule="evenodd"
         d="M12 2C6.475 2 2 6.588 2 12.253c0 4.537 2.862 8.369 6.838 9.727.5.09.687-.218.687-.487 0-.243-.013-1.05-.013-1.91C7 20.059 6.35 18.957 6.15 18.38c-.113-.295-.6-1.205-1.025-1.448-.35-.192-.85-.667-.013-.68.788-.012 1.35.744 1.538 1.051.9 1.551 2.338 1.116 2.912.846.088-.666.35-1.115.638-1.371-2.225-.256-4.55-1.14-4.55-5.062 0-1.115.387-2.038 1.025-2.756-.1-.256-.45-1.307.1-2.717 0 0 .837-.269 2.75 1.051.8-.23 1.65-.346 2.5-.346.85 0 1.7.115 2.5.346 1.912-1.333 2.75-1.05 2.75-1.05.55 1.409.2 2.46.1 2.716.637.718 1.025 1.628 1.025 2.756 0 3.934-2.337 4.806-4.562 5.062.362.32.675.936.675 1.897 0 1.371-.013 2.473-.013 2.82 0 .268.188.589.688.486a10.039 10.039 0 0 0 4.932-3.74A10.447 10.447 0 0 0 22 12.253C22 6.588 17.525 2 12 2Z"
+        fillRule="evenodd"
       />
     </svg>
   );
 }
 
 const navLinks = [
-  { to: '/blog', label: 'Blog' },
-  { to: '/work-with-jan', label: 'Hire Senior React Devs' },
-  { to: '/about', label: 'About' },
+  { label: "Blog", to: "/blog" },
+  { label: "Hire Senior React Devs", to: "/work-with-jan" },
+  { label: "About", to: "/about" },
 ];
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -80,10 +80,10 @@ export function Layout({ children }: { children: ReactNode }) {
   const location = useLocation();
 
   const showImprintLink =
-    location.pathname === '/about' || location.pathname === '/imprint';
-  const showBlogLinkInFooter = location.pathname.includes('/blog');
+    location.pathname === "/about" || location.pathname === "/imprint";
+  const showBlogLinkInFooter = location.pathname.includes("/blog");
 
-  const url = new URL(location.pathname, 'https://www.janhesters.com');
+  const url = new URL(location.pathname, "https://www.janhesters.com");
   const colorScheme = useColorScheme();
 
   return (
@@ -100,16 +100,16 @@ export function Layout({ children }: { children: ReactNode }) {
       <head>
         <ColorSchemeScript />
         <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta content="width=device-width, initial-scale=1" name="viewport" />
         <Meta />
-        <link rel="canonical" href={url.href} />
-        <link rel="alternate" href={url.href} hrefLang="en" />
+        <link href={url.href} rel="canonical" />
+        <link href={url.href} hrefLang="en" rel="alternate" />
         <link
-          rel="stylesheet"
+          crossOrigin="anonymous"
           href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
           integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+"
-          crossOrigin="anonymous"
-        ></link>
+          rel="stylesheet"
+        />
         <Links />
       </head>
 
@@ -123,16 +123,16 @@ export function Layout({ children }: { children: ReactNode }) {
             </Link>
 
             <nav className="hidden gap-2 md:flex">
-              {navLinks.map(link => (
+              {navLinks.map((link) => (
                 <NavLink
-                  key={link.to}
-                  to={link.to}
                   className={({ isActive }) =>
                     cn(
-                      buttonVariants({ variant: 'ghost' }),
-                      isActive && 'text-primary',
+                      buttonVariants({ variant: "ghost" }),
+                      isActive && "text-primary",
                     )
                   }
+                  key={link.to}
+                  to={link.to}
                 >
                   {link.label}
                 </NavLink>
@@ -145,9 +145,9 @@ export function Layout({ children }: { children: ReactNode }) {
             <Sheet>
               <SheetTrigger asChild>
                 <Button
-                  variant="outline"
-                  size="icon"
                   className="shrink-0 md:hidden"
+                  size="icon"
+                  variant="outline"
                 >
                   <Menu className="h-5 w-5" />
 
@@ -157,16 +157,16 @@ export function Layout({ children }: { children: ReactNode }) {
 
               <SheetContent className="p-6" side="left">
                 <nav className="grid gap-6 text-lg font-medium">
-                  {navLinks.map(link => (
+                  {navLinks.map((link) => (
                     <NavLink
-                      key={link.to}
-                      to={link.to}
                       className={({ isActive }) =>
                         cn(
-                          'text-muted-foreground hover:text-foreground',
-                          isActive && 'text-primary',
+                          "text-muted-foreground hover:text-foreground",
+                          isActive && "text-primary",
                         )
                       }
+                      key={link.to}
+                      to={link.to}
                     >
                       {link.label}
                     </NavLink>
@@ -197,7 +197,7 @@ export function Layout({ children }: { children: ReactNode }) {
               {showImprintLink && (
                 <NavLink
                   className={({ isActive }) =>
-                    cn('hover:text-foreground', isActive && 'text-primary')
+                    cn("hover:text-foreground", isActive && "text-primary")
                   }
                   to="/imprint"
                 >
@@ -209,8 +209,8 @@ export function Layout({ children }: { children: ReactNode }) {
                 <NavLink
                   className={({ isActive }) =>
                     cn(
-                      'hover:text-foreground flex items-center',
-                      isActive && 'text-primary',
+                      "hover:text-foreground flex items-center",
+                      isActive && "text-primary",
                     )
                   }
                   to="/blog"
@@ -262,11 +262,11 @@ function ErrorPage({
       )}
 
       <Link
-        to="/"
         className={cn(
-          buttonVariants({ variant: 'default', size: 'lg' }),
-          'mt-3 font-semibold',
+          buttonVariants({ size: "lg", variant: "default" }),
+          "mt-3 font-semibold",
         )}
+        to="/"
       >
         Go back home
       </Link>
@@ -281,25 +281,25 @@ export function ErrorBoundary() {
     if (error.status === 404) {
       return (
         <ErrorPage
-          title="404 - Page Not Found"
           message="Oops! The page you're looking for doesn't exist."
+          title="404 - Page Not Found"
         />
       );
     }
 
     return (
       <ErrorPage
-        title="Oops! An Error Occurred"
         message={`Status: ${error.status}`}
         subMessage={error.statusText}
+        title="Oops! An Error Occurred"
       />
     );
   }
 
   return (
     <ErrorPage
-      title="500 - Unexpected Error"
       message="An unknown error has occurred. Please try again later."
+      title="500 - Unexpected Error"
     />
   );
 }

@@ -1,14 +1,13 @@
-import { getAllPostsMetaSortedByDate } from '~/features/blog/blog-helpers.server';
-import { BlogPostCard } from '~/features/blog/blog-post-card';
-import { HeroComponent } from '~/features/landing/hero-component';
-import { PlatformsComponent } from '~/features/landing/platforms-component';
-
-import type { Route } from './+types/_index';
-import { EmailCapture } from './email-capture';
+import type { Route } from "./+types/_index";
+import { EmailCapture } from "./email-capture";
+import { getAllPostsMetaSortedByDate } from "~/features/blog/blog-helpers.server";
+import { BlogPostCard } from "~/features/blog/blog-post-card";
+import { HeroComponent } from "~/features/landing/hero-component";
+import { PlatformsComponent } from "~/features/landing/platforms-component";
 
 export async function loader() {
   const posts = await getAllPostsMetaSortedByDate();
-  return posts.filter(meta => !meta.isArchived && !meta.isDraft).slice(0, 3);
+  return posts.filter((meta) => !meta.isArchived && !meta.isDraft).slice(0, 3);
 }
 
 export default function Index({ loaderData }: Route.ComponentProps) {
@@ -21,7 +20,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
       <div className="mt-16 grid grid-cols-1 gap-10 md:grid-cols-2">
         {/* Blog posts */}
         <ul className="-mx-2 -my-2 grid grid-cols-1 gap-4">
-          {blogPosts.map(post => (
+          {blogPosts.map((post) => (
             <li key={post.slug}>
               <BlogPostCard {...post} />
             </li>

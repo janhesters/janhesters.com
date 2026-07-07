@@ -1,17 +1,16 @@
-import { getSocialsMeta } from '~/lib/misc';
-
-import type { BlogPostMeta } from './blog-helpers.server';
+import type { BlogPostMeta } from "./blog-helpers.server";
+import { getSocialsMeta } from "~/lib/misc";
 
 export const getSocialsMetaForBlogPost = (
-  meta: Omit<BlogPostMeta, 'slug'> & { url: string },
+  meta: Omit<BlogPostMeta, "slug"> & { url: string },
 ) =>
   getSocialsMeta({
     description: meta.description,
     isUnlisted: meta.isDraft,
-    keywords: meta.tags?.join(', '),
+    keywords: meta.tags?.join(", "),
     ...(meta.isArchived ? {} : { imageUrl: meta.thumbnailUrl }),
     publishedTime: meta.datePublished,
     title: meta.title,
-    type: 'article',
+    type: "article",
     url: meta.url,
   });

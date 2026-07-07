@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react';
-import { Outlet } from 'react-router';
+import { useEffect, useState } from "react";
+import { Outlet } from "react-router";
 
-import { ScrollToTopButton } from '~/features/blog/scroll-to-top-button';
-import { cn } from '~/lib/utils';
-
-import { EmailCapture } from './email-capture';
+import { EmailCapture } from "./email-capture";
+import { ScrollToTopButton } from "~/features/blog/scroll-to-top-button";
+import { cn } from "~/lib/utils";
 
 export default function Blog() {
   const [isVisible, setIsVisible] = useState(false);
@@ -20,12 +19,12 @@ export default function Blog() {
       }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
     handleScroll();
 
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, [isVisible]);
 
@@ -38,10 +37,10 @@ export default function Blog() {
 
         <div
           className={cn(
-            'sticky bottom-4 self-end transition-all duration-300 motion-reduce:transition-none',
+            "sticky bottom-4 self-end transition-all duration-300 motion-reduce:transition-none",
             isVisible
-              ? 'translate-y-0 opacity-100'
-              : 'pointer-events-none translate-y-4 opacity-0 motion-reduce:pointer-events-auto motion-reduce:translate-y-0 motion-reduce:opacity-100',
+              ? "translate-y-0 opacity-100"
+              : "pointer-events-none translate-y-4 opacity-0 motion-reduce:pointer-events-auto motion-reduce:translate-y-0 motion-reduce:opacity-100",
           )}
         >
           <ScrollToTopButton />

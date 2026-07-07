@@ -9,9 +9,9 @@ export const slugify = (text: string): string =>
   text
     .toLowerCase()
     .trim()
-    .replaceAll(/[^\s\w-]/g, '')
-    .replaceAll(/[\s_-]+/g, '-')
-    .replaceAll(/^-+|-+$/g, '');
+    .replaceAll(/[^\s\w-]/g, "")
+    .replaceAll(/[\s_-]+/g, "-")
+    .replaceAll(/^-+|-+$/g, "");
 
 /**
  * Extracts the slug from a file path.
@@ -20,17 +20,17 @@ export const slugify = (text: string): string =>
  * @returns The extracted slug or an empty string if no slug is found.
  */
 export const mapFilePathToSlug = (filePath: string): string => {
-  const blogPrefix = 'blog.';
-  const mdxSuffix = '.mdx';
+  const blogPrefix = "blog.";
+  const mdxSuffix = ".mdx";
 
-  const fileName = filePath.split('/').pop() ?? '';
+  const fileName = filePath.split("/").pop() ?? "";
 
   if (!fileName.startsWith(blogPrefix) || !fileName.endsWith(mdxSuffix)) {
-    return '';
+    return "";
   }
 
   const slugCandidate =
-    fileName.slice(blogPrefix.length, -mdxSuffix.length).split('.').pop() ?? '';
+    fileName.slice(blogPrefix.length, -mdxSuffix.length).split(".").pop() ?? "";
 
   return slugify(slugCandidate);
 };
@@ -69,8 +69,8 @@ export const getMetaFromFileEntries = (
 ): BlogPostMeta[] =>
   fileEntries.map(([filePath, { frontmatter }]) => ({
     ...frontmatter,
-    slug: mapFilePathToSlug(filePath),
     isArchived: frontmatter.isArchived ?? false,
+    slug: mapFilePathToSlug(filePath),
   }));
 
 /**
@@ -79,7 +79,7 @@ export const getMetaFromFileEntries = (
  * @returns A promise resolving to an array of file entries.
  */
 export const loadBlogFiles = async (): Promise<FileEntry[]> => {
-  const files = import.meta.glob('/app/routes/blog*.mdx') as Record<
+  const files = import.meta.glob("/app/routes/blog*.mdx") as Record<
     string,
     () => Promise<{ frontmatter: BlogFrontmatter }>
   >;

@@ -1,34 +1,32 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Check, Loader2, Mail } from 'lucide-react';
-import { useEffect, useRef } from 'react';
-import { useForm } from 'react-hook-form';
-import { data as json, useFetcher } from 'react-router';
-import { z } from 'zod';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Check, Loader2, Mail } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { useForm } from "react-hook-form";
+import { data as json, useFetcher } from "react-router";
+import { z } from "zod";
 
-import { Button } from '~/components/ui/button';
+import type { Route } from "./+types/email-capture";
+import { Button } from "~/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '~/components/ui/card';
+} from "~/components/ui/card";
 import {
   FormControl,
   FormField,
   FormItem,
   FormMessage,
   FormProvider,
-} from '~/components/ui/form';
-import { Input } from '~/components/ui/input';
-import type { SubscriptionStatus } from '~/features/blog/beehiiv.server';
-import { subscribeToBlog } from '~/features/blog/beehiiv.server';
-
-import type { Route } from './+types/email-capture';
+} from "~/components/ui/form";
+import { Input } from "~/components/ui/input";
+import type { SubscriptionStatus } from "~/features/blog/beehiiv.server";
+import { subscribeToBlog } from "~/features/blog/beehiiv.server";
 
 export const emailCaptureClientSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
 });
 
 export async function action({ request }: Route.ActionArgs) {
@@ -40,7 +38,7 @@ export async function action({ request }: Route.ActionArgs) {
   if (!result.success) {
     return json(
       {
-        errors: { email: { message: result.error.message, type: 'manual' } },
+        errors: { email: { message: result.error.message, type: "manual" } },
       },
       { status: 400 },
     );
@@ -56,65 +54,63 @@ export async function action({ request }: Route.ActionArgs) {
 export function EmailCapture() {
   const fetcher = useFetcher<typeof action>();
 
-  const isSubscribing = fetcher.state === 'submitting';
+  const isSubscribing = fetcher.state === "submitting";
 
-  const state: 'idle' | 'error' | SubscriptionStatus =
-    fetcher?.data && 'errors' in fetcher.data
-      ? 'error'
-      : fetcher?.data && 'subscriptionStatus' in fetcher.data
+  const state: "idle" | "error" | SubscriptionStatus =
+    fetcher?.data && "errors" in fetcher.data
+      ? "error"
+      : fetcher?.data && "subscriptionStatus" in fetcher.data
         ? fetcher.data.subscriptionStatus
-        : 'idle';
+        : "idle";
   const successReference = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
-    if (state === 'active' || state === 'validating') {
+    if (state === "active" || state === "validating") {
       successReference.current?.focus();
     }
   }, [state]);
 
   const form = useForm<z.infer<typeof emailCaptureClientSchema>>({
-    resolver: zodResolver(emailCaptureClientSchema),
-    defaultValues: { email: '' },
+    defaultValues: { email: "" },
     // @ts-expect-error JsonifyObject causes trouble here.
     errors: fetcher.data?.errors,
+    resolver: zodResolver(emailCaptureClientSchema),
   });
 
-  const onSubmit = form.handleSubmit(data => {
+  const onSubmit = form.handleSubmit((data) => {
     const formData = new FormData();
-    formData.append('email', data.email);
-    void fetcher.submit(formData, { action: '/email-capture', method: 'post' });
+    formData.append("email", data.email);
+    void fetcher.submit(formData, { action: "/email-capture", method: "post" });
   });
 
   return (
     <Card>
-      {state === 'active' || state === 'validating' || state === 'unknown' ? (
-        <>
-          <CardHeader>
-            <CardTitle
-              className="flex items-center"
-              ref={successReference}
-              tabIndex={-1}
-            >
-              <Check aria-hidden="true" className="size-6" />
+      {state === "active" || state === "validating" || state === "unknown" ? (
+        <CardHeader>
+          <CardTitle
+            className="flex items-center"
+            ref={successReference}
+            tabIndex={-1}
+          >
+            <Check aria-hidden="true" className="size-6" />
 
-              <span className="ml-3">
-                {state === 'active'
-                  ? "You're already subscribed!"
-                  : state === 'unknown'
-                    ? 'Oops! Something went wrong.'
-                    : 'Thank you for subscribing!'}
-              </span>
-            </CardTitle>
+            <span className="ml-3">
+              {state === "active"
+                ? "You're already subscribed!"
+                : state === "unknown"
+                  ? "Oops! Something went wrong."
+                  : "Thank you for subscribing!"}
+            </span>
+          </CardTitle>
 
-            <CardDescription>
-              {state === 'active'
-                ? 'Your already receive the latest content. Did you mean to sign up with a different email?'
-                : state === 'unknown'
-                  ? 'Something is wrong with the status of your email. Please try again.'
-                  : "Please check your email to confirm your subscription. You'll receive an email when I publish new content."}
-            </CardDescription>
-          </CardHeader>
-        </>
+          <CardDescription>
+            {state === "active"
+              ? "Your already receive the latest content. Did you mean to sign up with a different email?"
+              : state === "unknown"
+                ? "Something is wrong with the status of your email. Please try again."
+                : "Please check your email to confirm your subscription. You'll receive an email when I publish new content."}
+          </CardDescription>
+        </CardHeader>
       ) : (
         <>
           <CardHeader>
@@ -126,7 +122,7 @@ export function EmailCapture() {
 
             <CardDescription>
               Subscribe to my newsletter for weekly updates on new videos,
-              articles, and courses. You&apos;ll also get{' '}
+              articles, and courses. You&apos;ll also get{" "}
               <b>exclusive bonus content</b> and discounts.
             </CardDescription>
           </CardHeader>
@@ -157,7 +153,7 @@ export function EmailCapture() {
                     )}
                   />
 
-                  <Button type="submit" disabled={isSubscribing}>
+                  <Button disabled={isSubscribing} type="submit">
                     {isSubscribing ? (
                       <>
                         <Loader2

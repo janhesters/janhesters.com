@@ -1,13 +1,12 @@
-/* eslint-disable unicorn/no-null */
-import type { BlogPostMeta } from './blog-helpers.server';
-import { BlogPostCardWithoutDescription } from './blog-post-card';
+import type { BlogPostMeta } from "./blog-helpers.server";
+import { BlogPostCardWithoutDescription } from "./blog-post-card";
 
 type ReadNextProps = {
   posts: BlogPostMeta[];
 };
 
 export function ReadNext({ posts }: ReadNextProps) {
-  if (posts.every(post => post.isDraft)) return null;
+  if (posts.every((post) => post.isDraft)) return null;
 
   return (
     <section className="mt-10">
@@ -16,7 +15,7 @@ export function ReadNext({ posts }: ReadNextProps) {
       </h2>
 
       <ul className="mb-0 grid list-none grid-cols-1 gap-6 pl-0 sm:grid-cols-2">
-        {posts.slice(0, 2).map(post =>
+        {posts.slice(0, 2).map((post) =>
           post.isDraft ? null : (
             <li className="mt-0 mb-0 pl-0" key={post.slug}>
               <BlogPostCardWithoutDescription {...post} />

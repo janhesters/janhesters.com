@@ -22,13 +22,13 @@ Does your code work the way YOU want to?
 Everything else will follow.
 
 Make your code do what you want & you will naturally learn TDD, FP etc.`,
-    date: '2025-02-12',
-    xUrl: 'https://x.com/janhesters/status/1889786994106011965',
+    date: "2025-02-12",
+    xUrl: "https://x.com/janhesters/status/1889786994106011965",
   },
   {
     content: `The easiest win is writing your own rules.`,
-    date: '2025-02-10',
-    xUrl: 'https://x.com/janhesters/status/1889013389030047799',
+    date: "2025-02-10",
+    xUrl: "https://x.com/janhesters/status/1889013389030047799",
   },
   {
     content: `Big companies are ALWAYS slow.
@@ -38,8 +38,8 @@ At Hopin, we shipped an MVP in 3 months that felt like 80% of the final app*.
 Big companies can only maintain their lead through siloed knowledge.
 
 4 - 7 senior engineers is all you need to be faster.`,
-    date: '2025-01-28',
-    xUrl: 'https://x.com/janhesters/status/1884221136063402167',
+    date: "2025-01-28",
+    xUrl: "https://x.com/janhesters/status/1884221136063402167",
   },
   {
     content: `Be polite to your LLM.
@@ -49,34 +49,29 @@ Big companies can only maintain their lead through siloed knowledge.
 Humans work better with mutual respect. LLMs learned that from us.
 
 <a href="https://arxiv.org/html/2402.14531v1">https://arxiv.org/html/2402.14531v1</a>`,
-    date: '2025-01-27',
-    xUrl: 'https://x.com/janhesters/status/1883686109319659723',
+    date: "2025-01-27",
+    xUrl: "https://x.com/janhesters/status/1883686109319659723",
   },
   {
     content: `If you fire your mid-level engineers to replace them with AI, you're NGMI.
 
 Better train them in AIDD and get free senior-level engineers.`,
-    date: '2025-01-26',
-    xUrl: 'https://x.com/janhesters/status/1883521407600169430',
+    date: "2025-01-26",
+    xUrl: "https://x.com/janhesters/status/1883521407600169430",
   },
   {
+    child: {
+      content: `Of course in this analogy, the tanks can build new highways.`,
+      date: "2025-01-24",
+      xUrl: "https://x.com/janhesters/status/1882773950331330725",
+    },
     content: `Agents will work like tanks or trucks, built to handle any road.
 
 Legacy code will act as highways, designed for repetitive tasks that need frequent execution.`,
-    date: '2025-01-24',
-    xUrl: 'https://x.com/janhesters/status/1882773753467392134',
-    child: {
-      content: `Of course in this analogy, the tanks can build new highways.`,
-      date: '2025-01-24',
-      xUrl: 'https://x.com/janhesters/status/1882773950331330725',
-    },
+    date: "2025-01-24",
+    xUrl: "https://x.com/janhesters/status/1882773753467392134",
   },
   {
-    content: `Read the classics.
-
-Over and over again.`,
-    date: '2025-01-17',
-    xUrl: 'https://x.com/janhesters/status/1880337661879284040',
     child: {
       content: `- Fabric of Reality
 - Beginning of Infinity
@@ -90,19 +85,16 @@ Over and over again.`,
 - 道德经
 - Human Action
 - The Structure of Magic`,
-      date: '2025-01-17',
-      xUrl: 'https://x.com/janhesters/status/1880337664920150081',
+      date: "2025-01-17",
+      xUrl: "https://x.com/janhesters/status/1880337664920150081",
     },
+    content: `Read the classics.
+
+Over and over again.`,
+    date: "2025-01-17",
+    xUrl: "https://x.com/janhesters/status/1880337661879284040",
   },
   {
-    content: `How to handle any production bug:
-
-📝 1. Create a ticket*.
-🧪 2. Write a test to ensure it never happens again.
-❌ 3. Watch the test fail and the bug occur.
-✅ 4. Fix the bug (and watch the test pass).`,
-    date: '2025-01-16',
-    xUrl: 'https://x.com/janhesters/status/1879884560554721573',
     child: {
       content: `Bug Report Checklist 🐞📋
 
@@ -114,9 +106,17 @@ Each bug report should include:
 - [ ] Instructions to reproduce
 - [ ] Environment (browser / OS versions, extensions)
 - [ ] Bonus: Video / screenshot demonstrating the bug`,
-      date: '2025-01-16',
-      xUrl: 'https://x.com/janhesters/status/1879884560869298590',
+      date: "2025-01-16",
+      xUrl: "https://x.com/janhesters/status/1879884560869298590",
     },
+    content: `How to handle any production bug:
+
+📝 1. Create a ticket*.
+🧪 2. Write a test to ensure it never happens again.
+❌ 3. Watch the test fail and the bug occur.
+✅ 4. Fix the bug (and watch the test pass).`,
+    date: "2025-01-16",
+    xUrl: "https://x.com/janhesters/status/1879884560554721573",
   },
   {
     content: `What makes a good developer? 
@@ -151,8 +151,8 @@ Each bug report should include:
 • <b>Disruptive attitude</b> - Negatively impacts team morale by being uncooperative or entitled.
 
 Contrary to what most believe, these soft skills & attributes are often way more important than just raw knowledge about a tech stack.`,
-    date: '2025-01-15',
-    xUrl: 'https://x.com/janhesters/status/1879517643868451025',
+    date: "2025-01-15",
+    xUrl: "https://x.com/janhesters/status/1879517643868451025",
   },
   {
     content: `With so many things in life,
@@ -164,15 +164,15 @@ Relationships, programming, learning a new language, working out etc.
 If anything is fun to you when you start out,
 
 wait until you get good at it!`,
-    date: '2025-01-04',
-    xUrl: 'https://x.com/janhesters/status/1875664134177747215',
+    date: "2025-01-04",
+    xUrl: "https://x.com/janhesters/status/1875664134177747215",
   },
   {
     content: `The simulation made social media popular because generating text and videos is easy.
 
 Imagine the challenge of rendering a world as complex as ours if everyone were outside, touching grass.`,
-    date: '2024-12-05',
-    xUrl: 'https://x.com/janhesters/status/1864654706905113060',
+    date: "2024-12-05",
+    xUrl: "https://x.com/janhesters/status/1864654706905113060",
   },
   {
     content: `The last 20% of your MVP take as long as the first 80%.
@@ -180,7 +180,7 @@ Imagine the challenge of rendering a world as complex as ours if everyone were o
 In other words,
 
 the first 80% of your MVP are actually the first 50%.`,
-    date: '2024-12-04',
-    xUrl: 'https://x.com/janhesters/status/1864340386128199848',
+    date: "2024-12-04",
+    xUrl: "https://x.com/janhesters/status/1864340386128199848",
   },
 ];
