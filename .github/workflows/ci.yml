@@ -17,9 +17,6 @@ jobs:
   e2e:
     name: Mobile navigation E2E
     runs-on: ubuntu-latest
-    env:
-      BEEHIIV_API_KEY: e2e-test
-      BEEHIIV_PUBLICATION_ID: e2e-test
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -27,6 +24,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Copy test env vars
+        run: |
+          cp .env.example .env
+          grep -v '^#' .env.example | grep -v '^\s*$' >> "$GITHUB_ENV"
       - name: Install Playwright Chromium
         run: npx playwright install chromium --with-deps
       - run: npm run test:e2e

@@ -17,7 +17,12 @@ import {
 
 import type { Route } from "./+types/root";
 import { Button, buttonVariants } from "./components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "./components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "./components/ui/sheet";
 import { getColorScheme } from "./features/color-scheme/color-scheme.server";
 import { ColorSchemeScript } from "./features/color-scheme/color-scheme-script";
 import { useColorScheme } from "./features/color-scheme/use-color-scheme";
@@ -155,7 +160,13 @@ export function Layout({ children }: { children: ReactNode }) {
                 </Button>
               </SheetTrigger>
 
-              <SheetContent className="p-6" side="left">
+              <SheetContent
+                aria-describedby={undefined}
+                className="p-6"
+                side="left"
+              >
+                <SheetTitle className="sr-only">Navigation menu</SheetTitle>
+
                 <nav className="grid gap-6 text-lg font-medium">
                   {navLinks.map((link) => (
                     <NavLink

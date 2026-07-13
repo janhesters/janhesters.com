@@ -1,10 +1,8 @@
 import axios from "axios";
-import invariant from "tiny-invariant";
 
-const { BEEHIIV_API_KEY, BEEHIIV_PUBLICATION_ID } = process.env;
+import { getEnv } from "~/lib/env.server";
 
-invariant(BEEHIIV_API_KEY, "BEEHIIV_API_KEY is not set");
-invariant(BEEHIIV_PUBLICATION_ID, "BEEHIIV_PUBLICATION_ID is not set");
+const { BEEHIIV_API_KEY, BEEHIIV_PUBLICATION_ID } = getEnv();
 
 const api = axios.create({
   baseURL: "https://api.beehiiv.com/v2",

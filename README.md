@@ -22,6 +22,7 @@ Install the dependencies:
 
 ```bash
 npm install
+cp .env.example .env
 ```
 
 ### Development
