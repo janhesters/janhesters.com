@@ -16,7 +16,7 @@ test("given: a visitor on mobile, should: open the navigation menu", async ({
 
   await menuButton.click();
 
-  const menu = page.getByRole("dialog");
+  const menu = page.getByRole("dialog", { name: "Navigation menu" });
   await expect(menu).toBeVisible();
   await expect(menu.getByRole("link", { name: "Blog" })).toBeVisible();
 
