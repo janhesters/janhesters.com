@@ -1,3 +1,4 @@
+import { fileURLToPath, URL } from "node:url";
 import mdx from "@mdx-js/rollup";
 import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
@@ -44,6 +45,8 @@ export default defineConfig({
     reactRouter(),
   ],
   resolve: {
-    tsconfigPaths: true,
+    alias: {
+      "~": fileURLToPath(new URL("./app", import.meta.url)),
+    },
   },
 });
