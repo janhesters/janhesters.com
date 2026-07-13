@@ -1,5 +1,3 @@
-import "dotenv/config";
-
 /**
  * Extracts the slug from a blog URL.
  *
@@ -90,27 +88,18 @@ export const getSocialsMeta = ({
  * @returns The domain URL as a string.
  * @throws {Error} If the host cannot be determined from the request headers.
  */
-const environmentOrigin = process.env.VERCEL_URL
-  ? // Vercel: VERCEL_URL is like "my-site.vercel.app" or with protocol
-    process.env.VERCEL_URL.startsWith("http")
-    ? process.env.VERCEL_URL
-    : `https://${process.env.VERCEL_URL}`
-  : process.env.SITE_ORIGIN; // e.g. "http://localhost:5173"
-
 export function getDomainUrl(request: Request): string {
-  // 1) Env var override
+  const environmentOrigin = getEnvironmentOrigin();
   if (environmentOrigin) {
     return removeTrailingSlash(environmentOrigin);
   }
 
-  // 2) Derive from the request URL (works in prerender & real requests)
   try {
     return new URL(request.url).origin;
   } catch {
-    // ignore parse errors
+    // Fall back to the forwarded host headers.
   }
 
-  // 3) Fallback to headers
   const host =
     request.headers.get("X-Forwarded-Host") ?? request.headers.get("host");
   if (!host) {
@@ -119,8 +108,22 @@ export function getDomainUrl(request: Request): string {
         "Set VERCEL_URL (on Vercel) or SITE_ORIGIN (locally) if needed.",
     );
   }
+
   const protocol = host.includes("localhost") ? "http" : "https";
   return `${protocol}://${host}`;
+}
+
+function getEnvironmentOrigin() {
+  if (typeof process === "undefined") {
+    return undefined;
+  }
+
+  const { SITE_ORIGIN, VERCEL_URL } = process.env;
+  if (!VERCEL_URL) {
+    return SITE_ORIGIN;
+  }
+
+  return VERCEL_URL.startsWith("http") ? VERCEL_URL : `https://${VERCEL_URL}`;
 }
 
 /**
